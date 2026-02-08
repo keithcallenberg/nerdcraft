@@ -2,11 +2,27 @@
 
 from __future__ import annotations
 import curses
+from typing import Dict
 from render.camera import Camera
 from world.world import World
 from world.block import BlockType, get_properties
 from entity.player import Player
 from game.config import PLAYER_CHAR
+from config import GameConfig
+
+
+# Map color names to curses color constants
+CURSES_COLORS: Dict[str, int] = {
+    'default': -1,
+    'black': curses.COLOR_BLACK,
+    'red': curses.COLOR_RED,
+    'green': curses.COLOR_GREEN,
+    'yellow': curses.COLOR_YELLOW,
+    'blue': curses.COLOR_BLUE,
+    'magenta': curses.COLOR_MAGENTA,
+    'cyan': curses.COLOR_CYAN,
+    'white': curses.COLOR_WHITE,
+}
 
 
 class Renderer:
@@ -15,6 +31,7 @@ class Renderer:
     def __init__(self, stdscr):
         """Initialize renderer with curses screen."""
         self.stdscr = stdscr
+        self.cfg = GameConfig.get()
         self._setup_curses()
         self._init_colors()
 
@@ -32,29 +49,25 @@ class Renderer:
         self.stdscr.keypad(True)  # Enable special keys
 
     def _init_colors(self) -> None:
-        """Initialize color pairs for block types."""
-        if curses.has_colors():
-            curses.start_color()
-            curses.use_default_colors()
+        """Initialize color pairs from JSON configuration."""
+        if not curses.has_colors():
+            return
 
-            # Color pairs: (pair_id, foreground, background)
-            # 0: default (reserved)
-            # 1: grass (green)
-            curses.init_pair(1, curses.COLOR_GREEN, -1)
-            # 2: dirt (yellow/brown)
-            curses.init_pair(2, curses.COLOR_YELLOW, -1)
-            # 3: stone (white)
-            curses.init_pair(3, curses.COLOR_WHITE, -1)
-            # 4: coal (dark gray - use blue as fallback)
-            curses.init_pair(4, curses.COLOR_BLUE, -1)
-            # 5: iron (cyan)
-            curses.init_pair(5, curses.COLOR_CYAN, -1)
-            # 6: gold (yellow)
-            curses.init_pair(6, curses.COLOR_YELLOW, -1)
-            # 7: diamond (cyan/bright)
-            curses.init_pair(7, curses.COLOR_CYAN, -1)
-            # 8: player (red)
-            curses.init_pair(8, curses.COLOR_RED, -1)
+        curses.start_color()
+        curses.use_default_colors()
+
+        # Initialize color pairs from config
+        for name, color_cfg in self.cfg.colors.items():
+            if color_cfg.pair_id == 0:
+                continue  # Skip default pair (reserved)
+
+            fg = CURSES_COLORS.get(color_cfg.foreground, -1)
+            bg = CURSES_COLORS.get(color_cfg.background, -1)
+
+            try:
+                curses.init_pair(color_cfg.pair_id, fg, bg)
+            except curses.error:
+                pass  # Some color pairs may not be supported
 
     def render(self, world: World, player: Player) -> None:
         """Render the current game state."""
@@ -98,13 +111,17 @@ class Renderer:
         """Render the player character."""
         col, row = self.camera.world_to_screen(player.x, player.y)
 
-        # Render player at their position (may span multiple rows due to height)
+        # Get player color from config
+        player_color = self.cfg.get_color('red')
+        color_pair = player_color.pair_id if player_color else 8
+
+        # Render player at their position
         if 0 <= col < self.width and 0 <= row < self.view_height:
             try:
                 if curses.has_colors():
                     self.stdscr.addch(
                         row, col, PLAYER_CHAR,
-                        curses.color_pair(8) | curses.A_BOLD
+                        curses.color_pair(color_pair) | curses.A_BOLD
                     )
                 else:
                     self.stdscr.addch(row, col, PLAYER_CHAR, curses.A_BOLD)

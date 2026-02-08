@@ -1,13 +1,17 @@
-"""Block types and their properties."""
+"""Block types and their properties, loaded from JSON configuration."""
 
 from __future__ import annotations
 from enum import Enum, auto
 from dataclasses import dataclass
-from typing import Dict
+from typing import Dict, Optional
 
 
 class BlockType(Enum):
-    """All block types in the game."""
+    """All block types in the game.
+
+    These are dynamically mapped to JSON config block names.
+    The enum names should match the JSON keys (uppercase vs lowercase).
+    """
     AIR = auto()
     GRASS = auto()
     DIRT = auto()
@@ -30,27 +34,66 @@ class BlockProperties:
     color_pair: int = 0  # Curses color pair index
 
 
-# Block properties registry
-BLOCK_PROPERTIES: dict[BlockType, BlockProperties] = {
-    BlockType.AIR: BlockProperties(char=" ", solid=False, breakable=False, color_pair=0),
-    BlockType.GRASS: BlockProperties(char="#", solid=True, breakable=True, color_pair=1),
-    BlockType.DIRT: BlockProperties(char="#", solid=True, breakable=True, color_pair=2),
-    BlockType.STONE: BlockProperties(char="#", solid=True, breakable=True, color_pair=3),
-    BlockType.COAL_ORE: BlockProperties(char="o", solid=True, breakable=True, color_pair=4),
-    BlockType.IRON_ORE: BlockProperties(char="o", solid=True, breakable=True, color_pair=5),
-    BlockType.GOLD_ORE: BlockProperties(char="o", solid=True, breakable=True, color_pair=6),
-    BlockType.DIAMOND_ORE: BlockProperties(char="*", solid=True, breakable=True, color_pair=7),
-    BlockType.BEDROCK: BlockProperties(char="X", solid=True, breakable=False, color_pair=3),
-    BlockType.WOOD: BlockProperties(char="|", solid=True, breakable=True, color_pair=2),
-    BlockType.LEAVES: BlockProperties(char="*", solid=False, breakable=True, color_pair=1),
-}
+# Block properties registry - will be populated from JSON
+_block_properties: Dict[BlockType, BlockProperties] = {}
+_initialized = False
+
+
+def _get_json_name(block_type: BlockType) -> str:
+    """Convert BlockType enum to JSON config name."""
+    return block_type.name.lower()
+
+
+def _init_from_config() -> None:
+    """Initialize block properties from JSON configuration."""
+    global _block_properties, _initialized
+
+    if _initialized:
+        return
+
+    from config import GameConfig
+    cfg = GameConfig.get()
+
+    for block_type in BlockType:
+        json_name = _get_json_name(block_type)
+        block_cfg = cfg.get_block(json_name)
+
+        if block_cfg:
+            color_pair = cfg.get_block_color_pair(json_name)
+            _block_properties[block_type] = BlockProperties(
+                char=block_cfg.char,
+                solid=block_cfg.solid,
+                breakable=block_cfg.breakable,
+                color_pair=color_pair
+            )
+        else:
+            # Fallback for blocks not in config
+            _block_properties[block_type] = BlockProperties(
+                char='?',
+                solid=True,
+                breakable=True,
+                color_pair=0
+            )
+
+    _initialized = True
 
 
 def get_properties(block_type: BlockType) -> BlockProperties:
     """Get properties for a block type."""
-    return BLOCK_PROPERTIES[block_type]
+    _init_from_config()
+    return _block_properties[block_type]
 
 
 def is_solid(block_type: BlockType) -> bool:
     """Check if a block type is solid (collidable)."""
-    return BLOCK_PROPERTIES[block_type].solid
+    _init_from_config()
+    return _block_properties[block_type].solid
+
+
+def reload_config() -> None:
+    """Reload block properties from JSON configuration."""
+    global _initialized
+    _initialized = False
+    from config import GameConfig
+    GameConfig.reload()
+    _init_from_config()

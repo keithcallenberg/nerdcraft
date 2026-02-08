@@ -115,14 +115,16 @@ class GameEngine:
         self.renderer.render(self.world, self.player)
 
     def _mine_block(self) -> None:
-        """Mine the block in front of the player."""
-        block_x, block_y = self.player.get_block_in_front()
-        block = self.world.get_block(block_x, block_y)
+        """Mine the first breakable block near the player."""
+        # Try each mineable position in priority order
+        for block_x, block_y in self.player.get_minable_positions():
+            block = self.world.get_block(block_x, block_y)
 
-        if block != BlockType.AIR:
-            props = get_properties(block)
-            if props.breakable:
-                self.world.set_block(block_x, block_y, BlockType.AIR)
+            if block != BlockType.AIR:
+                props = get_properties(block)
+                if props.breakable:
+                    self.world.set_block(block_x, block_y, BlockType.AIR)
+                    return  # Only mine one block per press
 
     def _place_block(self) -> None:
         """Place a block in front of the player."""

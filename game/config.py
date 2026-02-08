@@ -1,30 +1,34 @@
-"""Game configuration constants."""
+"""Game configuration constants loaded from JSON."""
+
+from __future__ import annotations
+from config import GameConfig
+
+# Get the singleton config instance
+_cfg = GameConfig.get()
 
 # Game loop
-TICK_RATE = 60  # Updates per second
-TICK_DURATION = 1.0 / TICK_RATE  # Seconds per tick
+TICK_RATE = _cfg.tick_rate
+TICK_DURATION = _cfg.tick_duration
 
 # World dimensions
-CHUNK_SIZE = 16  # Blocks per chunk (width and height)
-WORLD_WIDTH_CHUNKS = 64  # Total chunks horizontally
-WORLD_HEIGHT_CHUNKS = 16  # Total chunks vertically
-WORLD_WIDTH = WORLD_WIDTH_CHUNKS * CHUNK_SIZE  # Total blocks horizontally
-WORLD_HEIGHT = WORLD_HEIGHT_CHUNKS * CHUNK_SIZE  # Total blocks vertically
+CHUNK_SIZE = _cfg.chunk_size
+WORLD_WIDTH_CHUNKS = _cfg.world_width_chunks
+WORLD_HEIGHT_CHUNKS = _cfg.world_height_chunks
+WORLD_WIDTH = _cfg.world_width
+WORLD_HEIGHT = _cfg.world_height
 
 # Terrain generation
-SEA_LEVEL = WORLD_HEIGHT // 2  # Surface level
-DIRT_DEPTH = 4  # Dirt blocks below grass
-STONE_DEPTH = 20  # Stone starts this many blocks below surface
+SEA_LEVEL = _cfg.sea_level
+DIRT_DEPTH = _cfg.dirt_depth
+STONE_DEPTH = _cfg.stone_depth
 
 # Physics
-GRAVITY = 30.0  # Blocks per second squared (downward)
-PLAYER_SPEED = 8.0  # Blocks per second
-JUMP_VELOCITY = 12.0  # Initial upward velocity when jumping
-MAX_FALL_SPEED = 25.0  # Terminal velocity
+GRAVITY = _cfg.gravity
+MAX_FALL_SPEED = _cfg.max_fall_speed
 
-# Player dimensions (in blocks)
-PLAYER_WIDTH = 0.6
-PLAYER_HEIGHT = 1.8
-
-# Rendering
-PLAYER_CHAR = "@"
+# Player
+PLAYER_SPEED = _cfg.player_speed
+JUMP_VELOCITY = _cfg.jump_velocity
+PLAYER_WIDTH = _cfg.player_width
+PLAYER_HEIGHT = _cfg.player_height
+PLAYER_CHAR = _cfg.player_char

@@ -66,21 +66,42 @@ class Player:
             self.y + self.height
         )
 
-    def get_block_in_front(self) -> tuple[int, int]:
-        """Get the block coordinates in front of the player."""
+    def _get_front_x(self) -> int:
+        """Get X coordinate of block in front of player."""
         if self.facing_right:
-            block_x = int(self.x + self.width / 2 + 0.5)
+            return int(self.x + self.width / 2 + 0.5)
         else:
-            block_x = int(self.x - self.width / 2 - 0.5)
-        # Target block at player's mid-height
+            return int(self.x - self.width / 2 - 0.5)
+
+    def get_block_in_front(self) -> tuple[int, int]:
+        """Get the block coordinates in front of the player at mid-height."""
+        block_x = self._get_front_x()
         block_y = int(self.y + self.height / 2)
         return (block_x, block_y)
 
     def get_block_below_front(self) -> tuple[int, int]:
         """Get the block coordinates below and in front of the player."""
-        if self.facing_right:
-            block_x = int(self.x + self.width / 2 + 0.5)
-        else:
-            block_x = int(self.x - self.width / 2 - 0.5)
+        block_x = self._get_front_x()
         block_y = int(self.y)
         return (block_x, block_y)
+
+    def get_minable_positions(self) -> list[tuple[int, int]]:
+        """Get all block positions the player can mine, in priority order.
+
+        Returns positions in front of player at different heights,
+        plus the block directly below.
+        """
+        front_x = self._get_front_x()
+        player_x = int(self.x)
+
+        positions = [
+            # In front at mid-height (eye level)
+            (front_x, int(self.y + self.height / 2)),
+            # In front at foot level
+            (front_x, int(self.y)),
+            # In front below feet (dig down and forward)
+            (front_x, int(self.y) - 1),
+            # Directly below player (dig straight down)
+            (player_x, int(self.y) - 1),
+        ]
+        return positions

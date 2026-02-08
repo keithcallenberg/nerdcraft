@@ -14,4 +14,4 @@ https://terraria.org/
 - Python
 
 ## JSON configurability
-A key design decision in the development of Nerdcraft is that many elements of the game are configured through JSON files. For instance, blocks can be designed (i.e. ASCII characters specified) and have their characteristics specified, via JSON files.
+A key design decision in the development of Nerdcraft is that many elements of the game are configured through JSON files. For instance, blocks can be designed (i.e. ASCII characters, colors specified) and have their characteristics specified, via JSON files.

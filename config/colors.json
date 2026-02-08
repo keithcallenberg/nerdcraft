@@ -1,0 +1,45 @@
+{
+  "colors": {
+    "default": {
+      "pair_id": 0,
+      "foreground": "default",
+      "background": "default"
+    },
+    "green": {
+      "pair_id": 1,
+      "foreground": "green",
+      "background": "default"
+    },
+    "yellow": {
+      "pair_id": 2,
+      "foreground": "yellow",
+      "background": "default"
+    },
+    "white": {
+      "pair_id": 3,
+      "foreground": "white",
+      "background": "default"
+    },
+    "blue": {
+      "pair_id": 4,
+      "foreground": "blue",
+      "background": "default"
+    },
+    "cyan": {
+      "pair_id": 5,
+      "foreground": "cyan",
+      "background": "default"
+    },
+    "cyan_bright": {
+      "pair_id": 7,
+      "foreground": "cyan",
+      "background": "default",
+      "bold": true
+    },
+    "red": {
+      "pair_id": 8,
+      "foreground": "red",
+      "background": "default"
+    }
+  }
+}

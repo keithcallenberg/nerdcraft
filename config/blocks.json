@@ -1,0 +1,70 @@
+{
+  "blocks": {
+    "air": {
+      "char": " ",
+      "solid": false,
+      "breakable": false,
+      "color": "default"
+    },
+    "grass": {
+      "char": "#",
+      "solid": true,
+      "breakable": true,
+      "color": "green"
+    },
+    "dirt": {
+      "char": "#",
+      "solid": true,
+      "breakable": true,
+      "color": "yellow"
+    },
+    "stone": {
+      "char": "#",
+      "solid": true,
+      "breakable": true,
+      "color": "white"
+    },
+    "coal_ore": {
+      "char": "o",
+      "solid": true,
+      "breakable": true,
+      "color": "blue"
+    },
+    "iron_ore": {
+      "char": "o",
+      "solid": true,
+      "breakable": true,
+      "color": "cyan"
+    },
+    "gold_ore": {
+      "char": "o",
+      "solid": true,
+      "breakable": true,
+      "color": "yellow"
+    },
+    "diamond_ore": {
+      "char": "*",
+      "solid": true,
+      "breakable": true,
+      "color": "cyan_bright"
+    },
+    "bedrock": {
+      "char": "X",
+      "solid": true,
+      "breakable": false,
+      "color": "white"
+    },
+    "wood": {
+      "char": "|",
+      "solid": true,
+      "breakable": true,
+      "color": "yellow"
+    },
+    "leaves": {
+      "char": "*",
+      "solid": false,
+      "breakable": true,
+      "color": "green"
+    }
+  }
+}

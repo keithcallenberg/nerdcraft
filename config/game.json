@@ -1,6 +1,6 @@
 {
   "game_loop": {
-    "tick_rate": 60
+    "tick_rate": 600
   },
   "world": {
     "chunk_size": 16,
@@ -9,18 +9,18 @@
   },
   "terrain": {
     "sea_level_ratio": 0.5,
-    "dirt_depth": 4,
-    "stone_depth": 20
+    "dirt_depth": 6,
+    "stone_depth": 25
   },
   "physics": {
     "gravity": 30.0,
     "max_fall_speed": 25.0
   },
   "player": {
-    "speed": 8.0,
+    "speed": 7.0,
     "jump_velocity": 12.0,
     "width": 0.6,
-    "height": 1.8,
-    "char": "@"
+    "height": 1.6,
+    "char": "☺"
   }
 }

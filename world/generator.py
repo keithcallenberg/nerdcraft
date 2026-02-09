@@ -94,6 +94,15 @@ class WorldGenerator:
 
     def _get_block_at(self, world_x: int, world_y: int, surface_height: int) -> BlockType:
         """Determine block type at given world coordinates."""
+	    # Trees of height 4 every 25 columns
+        if world_y > surface_height and world_x % 25 == 0 and world_y < surface_height + 5:
+            return BlockType.TRUNK
+        
+        # Leaves for trees
+        if world_y > surface_height + 4 and world_y < surface_height + 7:
+            if world_x % 25 < 3 or world_x % 25 > 22:
+                return BlockType.LEAVES
+
         # Bedrock at bottom
         if world_y <= 0:
             return BlockType.BEDROCK
@@ -116,7 +125,7 @@ class WorldGenerator:
         # Check for caves
         cave_noise = self._noise2d(world_x * 0.1, world_y * 0.1)
         if cave_noise > 0.7 and depth > DIRT_DEPTH + 2:
-            return BlockType.AIR
+            return BlockType.WATER
 
         # Stone with ore generation
         if depth >= STONE_DEPTH:
@@ -162,4 +171,4 @@ class WorldGenerator:
         spawn_x = (WORLD_WIDTH_CHUNKS * CHUNK_SIZE) // 2
         surface_y = self.get_surface_height(spawn_x)
         # Spawn player just above the surface
-        return (float(spawn_x), float(surface_y + 1))
+        return (float(spawn_x), float(surface_y + 10))

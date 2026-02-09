@@ -25,25 +25,25 @@
       "color": "white"
     },
     "coal_ore": {
-      "char": "o",
+      "char": "%",
       "solid": true,
       "breakable": true,
       "color": "blue"
     },
     "iron_ore": {
-      "char": "o",
+      "char": "%",
       "solid": true,
       "breakable": true,
-      "color": "cyan"
+      "color": "red"
     },
     "gold_ore": {
-      "char": "o",
+      "char": "%",
       "solid": true,
       "breakable": true,
       "color": "yellow"
     },
     "diamond_ore": {
-      "char": "*",
+      "char": "%",
       "solid": true,
       "breakable": true,
       "color": "cyan_bright"
@@ -54,17 +54,29 @@
       "breakable": false,
       "color": "white"
     },
-    "wood": {
+    "trunk": {
       "char": "|",
-      "solid": true,
+      "solid": false,
       "breakable": true,
       "color": "yellow"
     },
     "leaves": {
-      "char": "*",
+      "char": "&",
       "solid": false,
       "breakable": true,
-      "color": "green"
+      "color": "green"},
+
+    "concrete": {
+      "char": "█",
+      "solid": true,
+      "breakable": true,
+      "color": "default"},
+
+    "water": {
+      "char": "W",
+      "solid": false,
+      "breakable": false,
+      "color": "cyan"
     }
   }
 }

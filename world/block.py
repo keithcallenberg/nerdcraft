@@ -21,9 +21,10 @@ class BlockType(Enum):
     GOLD_ORE = auto()
     DIAMOND_ORE = auto()
     BEDROCK = auto()
-    WOOD = auto()
+    TRUNK = auto()
     LEAVES = auto()
-
+    WATER = auto()
+    CONCRETE = auto()
 
 @dataclass(frozen=True)
 class BlockProperties:

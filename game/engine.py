@@ -36,7 +36,7 @@ class GameEngine:
         self.input_handler = InputHandler()
 
         # Currently selected block for placement
-        self.selected_block = BlockType.DIRT
+        self.selected_block = BlockType.CONCRETE
 
         # Movement state: -1 = left, 0 = stopped, 1 = right
         self._move_direction = 0
@@ -132,7 +132,7 @@ class GameEngine:
         current = self.world.get_block(block_x, block_y)
 
         # Only place in air
-        if current == BlockType.AIR:
+        if current == BlockType.AIR or current == BlockType.WATER:
             # Check we're not placing inside the player
             left, bottom, right, top = self.player.get_aabb()
             player_min_x = int(left)

@@ -1,106 +1,57 @@
-"""Physics engine with gravity and AABB collision."""
+"""Physics engine with discrete grid-based gravity and jumping."""
 
 from __future__ import annotations
-import math
-from game.config import GRAVITY, MAX_FALL_SPEED, TICK_DURATION
 from entity.player import Player
 from world.world import World
 
 
 class PhysicsEngine:
-    """Handles physics simulation for entities."""
+    """Handles discrete grid-based physics."""
 
-    def __init__(self, world: World):
-        """Initialize physics engine with world reference."""
+    def __init__(self, world: World, gravity_interval: float, jump_height: int):
+        """Initialize physics with world reference and tuning parameters.
+
+        gravity_interval: seconds between each 1-block gravity/jump step.
+        jump_height: number of blocks a jump rises.
+        """
         self.world = world
+        self.gravity_interval = gravity_interval
+        self.jump_height = jump_height
+        self._gravity_timer = 0.0
 
     def update(self, player: Player, dt: float) -> None:
-        """Update player physics for one timestep."""
-        # Apply gravity
-        player.velocity.y -= GRAVITY * dt
+        """Accumulate time and perform discrete gravity steps."""
+        self._gravity_timer += dt
 
-        # Clamp fall speed
-        if player.velocity.y < -MAX_FALL_SPEED:
-            player.velocity.y = -MAX_FALL_SPEED
+        while self._gravity_timer >= self.gravity_interval:
+            self._gravity_timer -= self.gravity_interval
+            self._gravity_step(player)
 
-        # Move and resolve collisions separately for each axis
-        self._move_x(player, player.velocity.x * dt)
-        self._move_y(player, player.velocity.y * dt)
+    def _gravity_step(self, player: Player) -> None:
+        """Perform one discrete gravity or jump step."""
+        if player.jump_remaining > 0:
+            # Rising — try to move up
+            if not self.world.is_solid(player.x, player.y + 1):
+                player.y += 1
+                player.jump_remaining -= 1
+                player.on_ground = False
+            else:
+                # Hit ceiling, cancel remaining jump
+                player.jump_remaining = 0
+        else:
+            # Falling — try to move down
+            if not self.world.is_solid(player.x, player.y - 1):
+                player.y -= 1
+                player.on_ground = False
+            else:
+                player.on_ground = True
 
-    def _move_x(self, player: Player, dx: float) -> None:
-        """Move player horizontally with collision detection."""
-        if dx == 0:
-            return
-
-        new_x = player.x + dx
-        player.x = new_x
-
-        # Check for collisions
-        left, bottom, right, top = player.get_aabb()
-
-        # Get blocks player overlaps with
-        min_bx = int(math.floor(left))
-        max_bx = int(math.floor(right))
-        min_by = int(math.floor(bottom))
-        max_by = int(math.floor(top - 0.001))  # Slight offset to avoid ceiling issues
-
-        for bx in range(min_bx, max_bx + 1):
-            for by in range(min_by, max_by + 1):
-                if self.world.is_solid(bx, by):
-                    # Resolve collision
-                    if dx > 0:
-                        # Moving right, push left
-                        player.x = bx - player.width / 2 - 0.001
-                    else:
-                        # Moving left, push right
-                        player.x = bx + 1 + player.width / 2 + 0.001
-                    player.velocity.x = 0
-                    return
-
-    def _move_y(self, player: Player, dy: float) -> None:
-        """Move player vertically with collision detection."""
-        if dy == 0:
-            return
-
-        new_y = player.y + dy
-        player.y = new_y
-        player.on_ground = False
-
-        # Check for collisions
-        left, bottom, right, top = player.get_aabb()
-
-        # Get blocks player overlaps with
-        min_bx = int(math.floor(left + 0.001))
-        max_bx = int(math.floor(right - 0.001))
-        min_by = int(math.floor(bottom))
-        max_by = int(math.floor(top - 0.001))
-
-        for bx in range(min_bx, max_bx + 1):
-            for by in range(min_by, max_by + 1):
-                if self.world.is_solid(bx, by):
-                    # Resolve collision
-                    if dy < 0:
-                        # Falling, land on block
-                        player.y = by + 1
-                        player.velocity.y = 0
-                        player.on_ground = True
-                    else:
-                        # Jumping, hit ceiling
-                        player.y = by - player.height - 0.001
-                        player.velocity.y = 0
-                    return
-
-    def check_collision(self, player: Player) -> bool:
-        """Check if player is currently colliding with any solid block."""
-        left, bottom, right, top = player.get_aabb()
-
-        min_bx = int(math.floor(left + 0.001))
-        max_bx = int(math.floor(right - 0.001))
-        min_by = int(math.floor(bottom + 0.001))
-        max_by = int(math.floor(top - 0.001))
-
-        for bx in range(min_bx, max_bx + 1):
-            for by in range(min_by, max_by + 1):
-                if self.world.is_solid(bx, by):
-                    return True
+    def try_move(self, player: Player, dx: int, dy: int) -> bool:
+        """Try to move player by (dx, dy). Returns True if successful."""
+        target_x = player.x + dx
+        target_y = player.y + dy
+        if not self.world.is_solid(target_x, target_y):
+            player.x = target_x
+            player.y = target_y
+            return True
         return False

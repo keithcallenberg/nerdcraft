@@ -25,6 +25,7 @@ class BlockType(Enum):
     LEAVES = auto()
     WATER = auto()
     CONCRETE = auto()
+    WOOD = auto()
 
 @dataclass(frozen=True)
 class BlockProperties:

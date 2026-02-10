@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 import curses
-from typing import Dict
+from typing import Dict, List
 from render.camera import Camera
 from world.world import World
 from world.block import BlockType, get_properties
@@ -28,6 +28,10 @@ CURSES_COLORS: Dict[str, int] = {
 class Renderer:
     """Renders the game world using curses."""
 
+    # Row 0 = HUD, rows 1..height-2 = game world, row height-1 = status bar
+    HUD_ROW = 0
+    WORLD_ROW_OFFSET = 1
+
     def __init__(self, stdscr):
         """Initialize renderer with curses screen."""
         self.stdscr = stdscr
@@ -37,8 +41,8 @@ class Renderer:
 
         # Get screen size
         self.height, self.width = stdscr.getmaxyx()
-        # Reserve bottom line for status
-        self.view_height = self.height - 1
+        # Reserve top row for HUD and bottom row for status
+        self.view_height = self.height - 2
 
         self.camera = Camera(self.width, self.view_height)
 
@@ -69,7 +73,10 @@ class Renderer:
             except curses.error:
                 pass  # Some color pairs may not be supported
 
-    def render(self, world: World, player: Player) -> None:
+    def render(self, world: World, player: Player,
+               pending_action: str | None = None,
+               hotbar: List[BlockType] | None = None,
+               hotbar_index: int = 0) -> None:
         """Render the current game state."""
         self.stdscr.erase()
 
@@ -82,16 +89,20 @@ class Renderer:
         # Render player
         self._render_player(player)
 
-        # Render status bar
-        self._render_status(player)
+        # Render HUD (top row)
+        self._render_hud(player, hotbar or [], hotbar_index)
+
+        # Render status bar (bottom row)
+        self._render_status(player, pending_action)
 
         self.stdscr.refresh()
 
     def _render_world(self, world: World) -> None:
         """Render visible world blocks."""
-        for row in range(self.view_height):
+        for view_row in range(self.view_height):
+            screen_row = view_row + self.WORLD_ROW_OFFSET
             for col in range(self.width):
-                world_x, world_y = self.camera.screen_to_world(col, row)
+                world_x, world_y = self.camera.screen_to_world(col, view_row)
                 block = world.get_block(world_x, world_y)
 
                 if block != BlockType.AIR:
@@ -99,17 +110,18 @@ class Renderer:
                     try:
                         if curses.has_colors() and props.color_pair > 0:
                             self.stdscr.addch(
-                                row, col, props.char,
+                                screen_row, col, props.char,
                                 curses.color_pair(props.color_pair)
                             )
                         else:
-                            self.stdscr.addch(row, col, props.char)
+                            self.stdscr.addch(screen_row, col, props.char)
                     except curses.error:
                         pass  # Ignore errors at screen edges
 
     def _render_player(self, player: Player) -> None:
         """Render the player character."""
         col, row = self.camera.world_to_screen(player.x, player.y)
+        screen_row = row + self.WORLD_ROW_OFFSET
 
         # Get player color from config
         player_color = self.cfg.get_color('red')
@@ -120,20 +132,90 @@ class Renderer:
             try:
                 if curses.has_colors():
                     self.stdscr.addch(
-                        row, col, PLAYER_CHAR,
+                        screen_row, col, PLAYER_CHAR,
                         curses.color_pair(color_pair) | curses.A_BOLD
                     )
                 else:
-                    self.stdscr.addch(row, col, PLAYER_CHAR, curses.A_BOLD)
+                    self.stdscr.addch(screen_row, col, PLAYER_CHAR, curses.A_BOLD)
             except curses.error:
                 pass
 
-    def _render_status(self, player: Player) -> None:
+    def _render_hud(self, player: Player, hotbar: List[BlockType],
+                    hotbar_index: int) -> None:
+        """Render HUD row: lives on the left, hotbar on the right."""
+        row = self.HUD_ROW
+
+        # --- Lives (left side) ---
+        heart = '\u2665'  # ♥
+        lives_str = f" {heart * player.lives}"
+        try:
+            if curses.has_colors():
+                self.stdscr.addstr(
+                    row, 0, lives_str,
+                    curses.color_pair(
+                        self.cfg.get_color('red').pair_id
+                    ) | curses.A_BOLD,
+                )
+            else:
+                self.stdscr.addstr(row, 0, lives_str, curses.A_BOLD)
+        except curses.error:
+            pass
+
+        # --- Hotbar (right side) ---
+        if not hotbar:
+            return
+
+        # Build hotbar string and attribute spans
+        # Format: 1[X] 2[X] 3[X] ...
+        slot_parts: list[tuple[str, int]] = []  # (text, curses_attr)
+        for i, block_type in enumerate(hotbar):
+            props = get_properties(block_type)
+            num = str(i + 1)
+            block_char = props.char
+
+            if i == hotbar_index:
+                # Selected slot: highlighted
+                attr = curses.A_REVERSE | curses.A_BOLD
+            else:
+                attr = curses.A_DIM
+
+            # Number label
+            slot_parts.append((num, attr))
+            # Opening bracket
+            slot_parts.append(('[', attr))
+            # Block character in its own color
+            block_attr = attr
+            if curses.has_colors() and props.color_pair > 0:
+                block_attr |= curses.color_pair(props.color_pair)
+            slot_parts.append((block_char, block_attr))
+            # Closing bracket + space
+            slot_parts.append(('] ', attr))
+
+        # Calculate total width to right-align
+        total_len = sum(len(text) for text, _ in slot_parts)
+        start_col = self.width - total_len - 1
+        if start_col < 0:
+            start_col = 0
+
+        col = start_col
+        for text, attr in slot_parts:
+            if col + len(text) > self.width:
+                break
+            try:
+                self.stdscr.addstr(row, col, text, attr)
+            except curses.error:
+                pass
+            col += len(text)
+
+    def _render_status(self, player: Player,
+                       pending_action: str | None = None) -> None:
         """Render status bar at bottom of screen."""
-        status = f" Pos: ({player.x:.1f}, {player.y:.1f}) | "
-        status += f"Ground: {'Yes' if player.on_ground else 'No'} | "
-        status += f"Facing: {'Right' if player.facing_right else 'Left'} | "
-        status += "A/D:Move  S:Stop  W/Space:Jump  M:Mine  P:Place  Q:Quit"
+        if pending_action is not None:
+            label = pending_action.upper()
+            status = f" {label} >> press direction (A/D/W/S)"
+        else:
+            status = f" Pos: ({player.x}, {player.y}) | "
+            status += "A/D:Move  W:Jump  M:Mine  P:Place  1-5/E/R:Hotbar  Q:Quit"
 
         # Truncate if too long
         status = status[:self.width - 1]

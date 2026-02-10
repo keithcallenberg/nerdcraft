@@ -17,9 +17,9 @@ class Camera:
 
     def update(self, player: Player) -> None:
         """Update camera to follow player, centering on them."""
-        # Center camera on player
+        # Center camera on player (player occupies a single cell)
         target_x = player.x - self.width / 2
-        target_y = player.y - self.height / 2 + player.height / 2
+        target_y = player.y - self.height / 2
 
         # Smooth following (lerp)
         lerp_factor = 0.15
@@ -32,7 +32,7 @@ class Camera:
         Returns (col, row) where row 0 is top of screen.
         Y is flipped because world Y is up, but screen Y is down.
         """
-        col = int(world_x - self.x)
+        col = world_x - int(self.x)
         # Flip Y: world Y increases upward, screen row increases downward
         row = int(self.height - 1 - (world_y - self.y))
         return (col, row)

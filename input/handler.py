@@ -14,6 +14,13 @@ class Action(Enum):
     JUMP = auto()
     MINE = auto()
     PLACE = auto()
+    HOTBAR_1 = auto()
+    HOTBAR_2 = auto()
+    HOTBAR_3 = auto()
+    HOTBAR_4 = auto()
+    HOTBAR_5 = auto()
+    HOTBAR_NEXT = auto()
+    HOTBAR_PREV = auto()
     QUIT = auto()
 
 
@@ -46,6 +53,17 @@ class InputHandler:
 
         ord('p'): Action.PLACE,
         ord('P'): Action.PLACE,
+
+        # Hotbar
+        ord('1'): Action.HOTBAR_1,
+        ord('2'): Action.HOTBAR_2,
+        ord('3'): Action.HOTBAR_3,
+        ord('4'): Action.HOTBAR_4,
+        ord('5'): Action.HOTBAR_5,
+        ord('e'): Action.HOTBAR_NEXT,
+        ord('E'): Action.HOTBAR_NEXT,
+        ord('r'): Action.HOTBAR_PREV,
+        ord('R'): Action.HOTBAR_PREV,
 
         # Quit
         ord('q'): Action.QUIT,

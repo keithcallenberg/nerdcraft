@@ -77,6 +77,12 @@
       "solid": false,
       "breakable": false,
       "color": "cyan"
+    },
+    "wood": {
+      "char": "|",
+      "solid": true,
+      "breakable": true,
+      "color": "yellow"
     }
   }
 }

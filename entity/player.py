@@ -1,107 +1,38 @@
-"""Player entity with position, velocity, and actions."""
+"""Player entity with integer grid position."""
 
 from __future__ import annotations
-from typing import Tuple
-from util.vector import Vec2
-from game.config import PLAYER_WIDTH, PLAYER_HEIGHT, PLAYER_SPEED, JUMP_VELOCITY
 
 
 class Player:
-    """The player entity."""
+    """The player entity occupying a single cell."""
 
-    def __init__(self, x: float = 0.0, y: float = 0.0):
-        """Initialize player at given position."""
-        self.position = Vec2(x, y)
-        self.velocity = Vec2(0.0, 0.0)
-        self.width = PLAYER_WIDTH
-        self.height = PLAYER_HEIGHT
+    def __init__(self, x: int = 0, y: int = 0):
+        """Initialize player at given grid position."""
+        self.x = x
+        self.y = y
         self.on_ground = False
-        self.facing_right = True  # Direction player is facing
-
-    @property
-    def x(self) -> float:
-        return self.position.x
-
-    @x.setter
-    def x(self, value: float) -> None:
-        self.position.x = value
-
-    @property
-    def y(self) -> float:
-        return self.position.y
-
-    @y.setter
-    def y(self, value: float) -> None:
-        self.position.y = value
-
-    def move_left(self) -> None:
-        """Start moving left."""
-        self.velocity.x = -PLAYER_SPEED
-        self.facing_right = False
-
-    def move_right(self) -> None:
-        """Start moving right."""
-        self.velocity.x = PLAYER_SPEED
         self.facing_right = True
+        self.jump_remaining = 0  # blocks left to rise
+        self.lives = 3
 
-    def stop_horizontal(self) -> None:
-        """Stop horizontal movement."""
-        self.velocity.x = 0.0
+    def get_block_in_direction(self, direction: str) -> tuple[int, int]:
+        """Get the adjacent block position for a direction."""
+        if direction == 'left':
+            return (self.x - 1, self.y)
+        elif direction == 'right':
+            return (self.x + 1, self.y)
+        elif direction == 'up':
+            return (self.x, self.y + 1)
+        else:  # down
+            return (self.x, self.y - 1)
 
-    def jump(self) -> bool:
-        """Attempt to jump. Returns True if successful."""
-        if self.on_ground:
-            self.velocity.y = JUMP_VELOCITY
-            self.on_ground = False
-            return True
-        return False
-
-    def get_aabb(self) -> tuple[float, float, float, float]:
-        """Get axis-aligned bounding box (left, bottom, right, top)."""
-        half_width = self.width / 2
-        return (
-            self.x - half_width,
-            self.y,
-            self.x + half_width,
-            self.y + self.height
-        )
-
-    def _get_front_x(self) -> int:
-        """Get X coordinate of block in front of player."""
-        if self.facing_right:
-            return int(self.x + self.width / 2 + 0.5)
-        else:
-            return int(self.x - self.width / 2 - 0.5)
-
-    def get_block_in_front(self) -> tuple[int, int]:
-        """Get the block coordinates in front of the player at mid-height."""
-        block_x = self._get_front_x()
-        block_y = int(self.y + self.height / 2)
-        return (block_x, block_y)
-
-    def get_block_below_front(self) -> tuple[int, int]:
-        """Get the block coordinates below and in front of the player."""
-        block_x = self._get_front_x()
-        block_y = int(self.y)
-        return (block_x, block_y)
-
-    def get_minable_positions(self) -> list[tuple[int, int]]:
-        """Get all block positions the player can mine, in priority order.
-
-        Returns positions in front of player at different heights,
-        plus the block directly below.
-        """
-        front_x = self._get_front_x()
-        player_x = int(self.x)
-
-        positions = [
-            # In front at mid-height (eye level)
-            (front_x, int(self.y + self.height / 2)),
-            # In front at foot level
-            (front_x, int(self.y)),
-            # In front below feet (dig down and forward)
-            (front_x, int(self.y) - 1),
-            # Directly below player (dig straight down)
-            (player_x, int(self.y) - 1),
-        ]
-        return positions
+    def get_minable_positions_in_direction(self, direction: str) -> list[tuple[int, int]]:
+        """Get mineable positions for a direction, in priority order."""
+        if direction == 'left':
+            return [(self.x - 1, self.y)]
+        elif direction == 'right':
+            return [(self.x + 1, self.y)]
+        elif direction == 'up':
+            return [(self.x, self.y + 1)]
+        else:  # down
+            return [(self.x, self.y - 1)]

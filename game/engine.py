@@ -1,9 +1,8 @@
 """Main game engine with fixed-timestep game loop."""
 
 from __future__ import annotations
-from typing import Optional
 import time
-from game.config import TICK_DURATION
+from game.config import TICK_DURATION, GRAVITY_INTERVAL, JUMP_HEIGHT
 from world.world import World
 from world.block import BlockType, get_properties
 from world.generator import WorldGenerator
@@ -15,6 +14,29 @@ from input.handler import InputHandler, Action
 
 class GameEngine:
     """Main game engine orchestrating all systems."""
+
+    HOTBAR = [
+        BlockType.CONCRETE,
+        BlockType.DIRT,
+        BlockType.STONE,
+        BlockType.GRASS,
+        BlockType.WOOD,
+    ]
+
+    _HOTBAR_SELECT = {
+        Action.HOTBAR_1: 0,
+        Action.HOTBAR_2: 1,
+        Action.HOTBAR_3: 2,
+        Action.HOTBAR_4: 3,
+        Action.HOTBAR_5: 4,
+    }
+
+    _DIRECTION_MAP = {
+        Action.MOVE_LEFT: 'left',
+        Action.MOVE_RIGHT: 'right',
+        Action.JUMP: 'up',
+        Action.STOP: 'down',
+    }
 
     def __init__(self, stdscr, seed: int | None = None):
         """Initialize game engine with curses screen."""
@@ -31,15 +53,19 @@ class GameEngine:
         self.player = Player(spawn_x, spawn_y)
 
         # Initialize systems
-        self.physics = PhysicsEngine(self.world)
+        self.physics = PhysicsEngine(self.world, GRAVITY_INTERVAL, JUMP_HEIGHT)
         self.renderer = Renderer(stdscr)
         self.input_handler = InputHandler()
 
-        # Currently selected block for placement
-        self.selected_block = BlockType.CONCRETE
+        # Hotbar
+        self._hotbar_index = 0
 
-        # Movement state: -1 = left, 0 = stopped, 1 = right
-        self._move_direction = 0
+        # Pending action awaiting a direction key ('mine', 'place', or None)
+        self._pending_action: str | None = None
+
+    @property
+    def selected_block(self) -> BlockType:
+        return self.HOTBAR[self._hotbar_index]
 
     def run(self) -> None:
         """Run the main game loop."""
@@ -74,7 +100,6 @@ class GameEngine:
 
     def _handle_input(self) -> None:
         """Process all pending input."""
-        # Process all queued keys
         while True:
             key = self.renderer.get_key()
             if key == -1:
@@ -85,26 +110,43 @@ class GameEngine:
             if action == Action.QUIT:
                 self.running = False
                 return
-            elif action == Action.MOVE_LEFT:
-                self._move_direction = -1
-            elif action == Action.MOVE_RIGHT:
-                self._move_direction = 1
-            elif action == Action.STOP:
-                self._move_direction = 0
-            elif action == Action.JUMP:
-                self.player.jump()
-            elif action == Action.MINE:
-                self._mine_block()
-            elif action == Action.PLACE:
-                self._place_block()
 
-        # Apply current movement direction
-        if self._move_direction < 0:
-            self.player.move_left()
-        elif self._move_direction > 0:
-            self.player.move_right()
-        else:
-            self.player.stop_horizontal()
+            # If a mine/place is pending, the next direction key executes it
+            if self._pending_action is not None:
+                direction = self._DIRECTION_MAP.get(action)
+                if direction is not None:
+                    if self._pending_action == 'mine':
+                        self._mine_block(direction)
+                    else:
+                        self._place_block(direction)
+                    self._pending_action = None
+                    continue
+
+            # Hotbar selection
+            if action in self._HOTBAR_SELECT:
+                self._hotbar_index = self._HOTBAR_SELECT[action]
+                continue
+            if action == Action.HOTBAR_NEXT:
+                self._hotbar_index = (self._hotbar_index + 1) % len(self.HOTBAR)
+                continue
+            if action == Action.HOTBAR_PREV:
+                self._hotbar_index = (self._hotbar_index - 1) % len(self.HOTBAR)
+                continue
+
+            if action == Action.MOVE_LEFT:
+                self.physics.try_move(self.player, -1, 0)
+                self.player.facing_right = False
+            elif action == Action.MOVE_RIGHT:
+                self.physics.try_move(self.player, 1, 0)
+                self.player.facing_right = True
+            elif action == Action.JUMP:
+                if self.player.on_ground:
+                    self.player.jump_remaining = self.physics.jump_height
+                    self.player.on_ground = False
+            elif action == Action.MINE:
+                self._pending_action = 'mine'
+            elif action == Action.PLACE:
+                self._pending_action = 'place'
 
     def _update(self, dt: float) -> None:
         """Update game state for one tick."""
@@ -112,12 +154,14 @@ class GameEngine:
 
     def _render(self) -> None:
         """Render current game state."""
-        self.renderer.render(self.world, self.player)
+        self.renderer.render(
+            self.world, self.player, self._pending_action,
+            self.HOTBAR, self._hotbar_index,
+        )
 
-    def _mine_block(self) -> None:
-        """Mine the first breakable block near the player."""
-        # Try each mineable position in priority order
-        for block_x, block_y in self.player.get_minable_positions():
+    def _mine_block(self, direction: str) -> None:
+        """Mine the first breakable block in the given direction."""
+        for block_x, block_y in self.player.get_minable_positions_in_direction(direction):
             block = self.world.get_block(block_x, block_y)
 
             if block != BlockType.AIR:
@@ -126,21 +170,12 @@ class GameEngine:
                     self.world.set_block(block_x, block_y, BlockType.AIR)
                     return  # Only mine one block per press
 
-    def _place_block(self) -> None:
-        """Place a block in front of the player."""
-        block_x, block_y = self.player.get_block_in_front()
+    def _place_block(self, direction: str) -> None:
+        """Place a block in the given direction."""
+        block_x, block_y = self.player.get_block_in_direction(direction)
         current = self.world.get_block(block_x, block_y)
 
-        # Only place in air
+        # Only place in air or water, and not inside the player
         if current == BlockType.AIR or current == BlockType.WATER:
-            # Check we're not placing inside the player
-            left, bottom, right, top = self.player.get_aabb()
-            player_min_x = int(left)
-            player_max_x = int(right)
-            player_min_y = int(bottom)
-            player_max_y = int(top)
-
-            # Don't place if it would intersect player
-            if not (player_min_x <= block_x <= player_max_x and
-                    player_min_y <= block_y <= player_max_y):
+            if not (block_x == self.player.x and block_y == self.player.y):
                 self.world.set_block(block_x, block_y, self.selected_block)

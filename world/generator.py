@@ -81,6 +81,68 @@ class WorldGenerator:
         height_variation = int(noise * 15)
         return SEA_LEVEL + height_variation
 
+    def _get_tree_for_cell(self, cell_index: int) -> tuple | None:
+        """Get tree properties for a cell, or None if no tree spawns.
+
+        Divides the world x-axis into cells of width 20. Each cell has a
+        chance of containing one tree with randomised position and size.
+
+        Returns (tree_x, trunk_height, canopy_radius, canopy_height).
+        """
+        h = self._perm[(cell_index * 7 + 13) & 255]
+        # ~25 % chance of skipping a tree
+        if h < 64:
+            return None
+
+        cell_start = cell_index * 20
+        # Jitter x within the cell, leaving a margin for canopy overhang
+        jitter = self._perm[(cell_index * 13 + 37) & 255] % 14
+        tree_x = cell_start + jitter + 3
+
+        trunk_height = 3 + self._perm[(cell_index * 19 + 73) & 255] % 5   # 3-7
+        canopy_radius = 2 + self._perm[(cell_index * 23 + 97) & 255] % 3  # 2-4
+        canopy_height = 2 + self._perm[(cell_index * 29 + 113) & 255] % 3 # 2-4
+        return (tree_x, trunk_height, canopy_radius, canopy_height)
+
+    def _check_tree_block(self, world_x: int, world_y: int) -> BlockType | None:
+        """Return TRUNK / LEAVES if this position belongs to a tree, else None."""
+        cell = world_x // 20
+
+        for check_cell in range(cell - 1, cell + 2):
+            tree = self._get_tree_for_cell(check_cell)
+            if tree is None:
+                continue
+
+            tree_x, trunk_height, canopy_radius, canopy_height = tree
+            tree_surface = self.get_surface_height(tree_x)
+
+            # Trunk — single column rising from the surface
+            if world_x == tree_x and tree_surface < world_y <= tree_surface + trunk_height:
+                return BlockType.TRUNK
+
+            # Canopy — sits on top of the trunk
+            canopy_base = tree_surface + trunk_height
+            canopy_top = canopy_base + canopy_height
+            dx = abs(world_x - tree_x)
+
+            if dx <= canopy_radius and canopy_base < world_y <= canopy_top:
+                # Fraction through the canopy (0 at bottom, 1 at top)
+                t = (world_y - canopy_base) / canopy_height
+
+                # Parabolic profile peaking in the lower-middle of the canopy
+                t_adj = (t - 0.4) * 2.0
+                shape = max(1.0 - t_adj * t_adj, 0.3)
+                effective_radius = canopy_radius * shape
+
+                # Per-block noise for irregular edges
+                leaf_hash = self._perm[(world_x * 3 + world_y * 7) & 255] / 255.0
+                edge_adjust = (leaf_hash - 0.5) * 1.5
+
+                if dx <= effective_radius + edge_adjust:
+                    return BlockType.LEAVES
+
+        return None
+
     def generate_chunk(self, chunk: Chunk) -> None:
         """Generate terrain for a chunk."""
         for local_x in range(CHUNK_SIZE):
@@ -94,14 +156,11 @@ class WorldGenerator:
 
     def _get_block_at(self, world_x: int, world_y: int, surface_height: int) -> BlockType:
         """Determine block type at given world coordinates."""
-	    # Trees of height 4 every 25 columns
-        if world_y > surface_height and world_x % 25 == 0 and world_y < surface_height + 5:
-            return BlockType.TRUNK
-        
-        # Leaves for trees
-        if world_y > surface_height + 4 and world_y < surface_height + 7:
-            if world_x % 25 < 3 or world_x % 25 > 22:
-                return BlockType.LEAVES
+        # Trees (only above the local surface so they don't poke into terrain)
+        if world_y > surface_height:
+            tree_block = self._check_tree_block(world_x, world_y)
+            if tree_block is not None:
+                return tree_block
 
         # Bedrock at bottom
         if world_y <= 0:
@@ -166,9 +225,9 @@ class WorldGenerator:
                 chunk = world.get_or_create_chunk(chunk_x, chunk_y)
                 self.generate_chunk(chunk)
 
-    def get_spawn_position(self) -> tuple[float, float]:
+    def get_spawn_position(self) -> tuple[int, int]:
         """Get a valid spawn position for the player."""
         spawn_x = (WORLD_WIDTH_CHUNKS * CHUNK_SIZE) // 2
         surface_y = self.get_surface_height(spawn_x)
         # Spawn player just above the surface
-        return (float(spawn_x), float(surface_y + 10))
+        return (spawn_x, surface_y + 2)

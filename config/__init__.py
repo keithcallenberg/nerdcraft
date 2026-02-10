@@ -91,15 +91,11 @@ class GameConfig:
 
         # Physics
         physics = data.get('physics', {})
-        self.gravity = physics.get('gravity', 30.0)
-        self.max_fall_speed = physics.get('max_fall_speed', 25.0)
+        self.gravity_interval = physics.get('gravity_interval', 0.1)
+        self.jump_height = physics.get('jump_height', 5)
 
         # Player
         player = data.get('player', {})
-        self.player_speed = player.get('speed', 8.0)
-        self.jump_velocity = player.get('jump_velocity', 12.0)
-        self.player_width = player.get('width', 0.6)
-        self.player_height = player.get('height', 1.8)
         self.player_char = player.get('char', '@')
 
     def _load_blocks_config(self) -> None:

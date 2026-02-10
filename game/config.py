@@ -23,12 +23,8 @@ DIRT_DEPTH = _cfg.dirt_depth
 STONE_DEPTH = _cfg.stone_depth
 
 # Physics
-GRAVITY = _cfg.gravity
-MAX_FALL_SPEED = _cfg.max_fall_speed
+GRAVITY_INTERVAL = _cfg.gravity_interval
+JUMP_HEIGHT = _cfg.jump_height
 
 # Player
-PLAYER_SPEED = _cfg.player_speed
-JUMP_VELOCITY = _cfg.jump_velocity
-PLAYER_WIDTH = _cfg.player_width
-PLAYER_HEIGHT = _cfg.player_height
 PLAYER_CHAR = _cfg.player_char

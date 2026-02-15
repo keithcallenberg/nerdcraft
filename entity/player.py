@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from entity.inventory import Inventory
+
 
 class Player:
     """The player entity occupying a single cell."""
@@ -13,7 +15,9 @@ class Player:
         self.on_ground = False
         self.facing_right = True
         self.jump_remaining = 0  # blocks left to rise
-        self.lives = 3
+        self.health = 100
+        self.fall_distance = 0  # blocks fallen continuously
+        self.inventory = Inventory()
 
     def get_block_in_direction(self, direction: str) -> tuple[int, int]:
         """Get the adjacent block position for a direction."""

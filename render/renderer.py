@@ -5,8 +5,9 @@ import curses
 from typing import Dict, List
 from render.camera import Camera
 from world.world import World
-from world.block import BlockType, get_properties
+from world.block import BlockType, get_properties, display_name
 from entity.player import Player
+from entity.inventory import Inventory
 from game.config import PLAYER_CHAR
 from config import GameConfig
 
@@ -75,8 +76,9 @@ class Renderer:
 
     def render(self, world: World, player: Player,
                pending_action: str | None = None,
-               hotbar: List[BlockType] | None = None,
-               hotbar_index: int = 0) -> None:
+               hotbar: List[BlockType | None] | None = None,
+               hotbar_index: int = 0,
+               mobs: list | None = None) -> None:
         """Render the current game state."""
         self.stdscr.erase()
 
@@ -85,6 +87,10 @@ class Renderer:
 
         # Render world blocks
         self._render_world(world)
+
+        # Render mobs (between world and player so player draws on top)
+        if mobs:
+            self._render_mobs(mobs)
 
         # Render player
         self._render_player(player)
@@ -118,6 +124,27 @@ class Renderer:
                     except curses.error:
                         pass  # Ignore errors at screen edges
 
+    def _render_mobs(self, mobs: list) -> None:
+        """Render mob entities."""
+        for mob in mobs:
+            if not mob.is_alive:
+                continue
+            col, row = self.camera.world_to_screen(mob.x, mob.y)
+            screen_row = row + self.WORLD_ROW_OFFSET
+            if 0 <= col < self.width and 0 <= row < self.view_height:
+                mob_color = self.cfg.get_color(mob.color)
+                color_pair = mob_color.pair_id if mob_color else 0
+                try:
+                    if curses.has_colors() and color_pair > 0:
+                        self.stdscr.addch(
+                            screen_row, col, mob.char,
+                            curses.color_pair(color_pair) | curses.A_BOLD
+                        )
+                    else:
+                        self.stdscr.addch(screen_row, col, mob.char, curses.A_BOLD)
+                except curses.error:
+                    pass
+
     def _render_player(self, player: Player) -> None:
         """Render the player character."""
         col, row = self.camera.world_to_screen(player.x, player.y)
@@ -140,24 +167,24 @@ class Renderer:
             except curses.error:
                 pass
 
-    def _render_hud(self, player: Player, hotbar: List[BlockType],
+    def _render_hud(self, player: Player, hotbar: List[BlockType | None],
                     hotbar_index: int) -> None:
-        """Render HUD row: lives on the left, hotbar on the right."""
+        """Render HUD row: health on the left, hotbar on the right."""
         row = self.HUD_ROW
 
-        # --- Lives (left side) ---
+        # --- Health (left side) ---
         heart = '\u2665'  # ♥
-        lives_str = f" {heart * player.lives}"
+        hp_str = f" {heart} {player.health}"
         try:
             if curses.has_colors():
                 self.stdscr.addstr(
-                    row, 0, lives_str,
+                    row, 0, hp_str,
                     curses.color_pair(
                         self.cfg.get_color('red').pair_id
                     ) | curses.A_BOLD,
                 )
             else:
-                self.stdscr.addstr(row, 0, lives_str, curses.A_BOLD)
+                self.stdscr.addstr(row, 0, hp_str, curses.A_BOLD)
         except curses.error:
             pass
 
@@ -166,29 +193,28 @@ class Renderer:
             return
 
         # Build hotbar string and attribute spans
-        # Format: 1[X] 2[X] 3[X] ...
+        # Format: 1[X] 2[ ] 3[X] ...
         slot_parts: list[tuple[str, int]] = []  # (text, curses_attr)
         for i, block_type in enumerate(hotbar):
-            props = get_properties(block_type)
             num = str(i + 1)
-            block_char = props.char
 
             if i == hotbar_index:
-                # Selected slot: highlighted
                 attr = curses.A_REVERSE | curses.A_BOLD
             else:
                 attr = curses.A_DIM
 
-            # Number label
             slot_parts.append((num, attr))
-            # Opening bracket
             slot_parts.append(('[', attr))
-            # Block character in its own color
-            block_attr = attr
-            if curses.has_colors() and props.color_pair > 0:
-                block_attr |= curses.color_pair(props.color_pair)
-            slot_parts.append((block_char, block_attr))
-            # Closing bracket + space
+
+            if block_type is not None:
+                props = get_properties(block_type)
+                block_attr = attr
+                if curses.has_colors() and props.color_pair > 0:
+                    block_attr |= curses.color_pair(props.color_pair)
+                slot_parts.append((props.char, block_attr))
+            else:
+                slot_parts.append((' ', attr))
+
             slot_parts.append(('] ', attr))
 
         # Calculate total width to right-align
@@ -215,7 +241,7 @@ class Renderer:
             status = f" {label} >> press direction (A/D/W/S)"
         else:
             status = f" Pos: ({player.x}, {player.y}) | "
-            status += "A/D:Move  W:Jump  M:Mine  P:Place  1-5/E/R:Hotbar  Q:Quit"
+            status += "A/D:Move  W:Jump  M:Mine  P:Place  1-5/E/R:Hotbar  I:Inv  Q:Quit"
 
         # Truncate if too long
         status = status[:self.width - 1]
@@ -224,6 +250,145 @@ class Renderer:
             self.stdscr.addstr(self.height - 1, 0, status, curses.A_REVERSE)
         except curses.error:
             pass
+
+    def render_inventory(self, inventory: Inventory,
+                         hotbar: List[BlockType | None] | None = None,
+                         hotbar_index: int = 0,
+                         cursor: int = 0) -> None:
+        """Render the inventory overlay screen."""
+        self.stdscr.erase()
+
+        hotbar = hotbar or [None] * 5
+
+        # Box dimensions
+        box_w = min(42, self.width - 2)
+        box_h = min(22, self.height - 2)
+        start_col = (self.width - box_w) // 2
+        start_row = (self.height - box_h) // 2
+
+        border_attr = curses.A_BOLD
+
+        # Draw top border
+        top = '+' + '-' * (box_w - 2) + '+'
+        self._safe_addstr(start_row, start_col, top, border_attr)
+
+        # Draw bottom border
+        self._safe_addstr(start_row + box_h - 1, start_col, top, border_attr)
+
+        # Draw side borders and fill interior with spaces
+        for r in range(1, box_h - 1):
+            line = '|' + ' ' * (box_w - 2) + '|'
+            self._safe_addstr(start_row + r, start_col, line, border_attr)
+
+        # Title
+        title = 'INVENTORY'
+        title_col = start_col + (box_w - len(title)) // 2
+        self._safe_addstr(start_row + 1, title_col, title, curses.A_BOLD)
+
+        # --- Hotbar display ---
+        hotbar_label = '  Hotbar: '
+        hb_row = start_row + 3
+        hb_col = start_col + 2
+        self._safe_addstr(hb_row, hb_col, hotbar_label, curses.A_BOLD)
+        hb_col += len(hotbar_label)
+        for i, slot in enumerate(hotbar):
+            num = str(i + 1)
+            if i == hotbar_index:
+                attr = curses.A_REVERSE | curses.A_BOLD
+            else:
+                attr = 0
+            self._safe_addstr(hb_row, hb_col, num, attr)
+            self._safe_addstr(hb_row, hb_col + 1, '[', attr)
+            if slot is not None:
+                props = get_properties(slot)
+                ch_attr = attr
+                if curses.has_colors() and props.color_pair > 0:
+                    ch_attr |= curses.color_pair(props.color_pair)
+                self._safe_addstr(hb_row, hb_col + 2, props.char, ch_attr)
+            else:
+                self._safe_addstr(hb_row, hb_col + 2, ' ', attr)
+            self._safe_addstr(hb_row, hb_col + 3, '] ', attr)
+            hb_col += 5
+
+        # --- Item list ---
+        items = inventory.items()
+        inner_w = box_w - 4  # padding inside borders
+        items_start_row = start_row + 5
+
+        if not items:
+            msg = 'Empty'
+            msg_col = start_col + (box_w - len(msg)) // 2
+            self._safe_addstr(start_row + box_h // 2, msg_col, msg, curses.A_DIM)
+        else:
+            max_items = box_h - 8  # room for title, hotbar, footer, borders
+            for i, (block_type, count) in enumerate(items):
+                if i >= max_items:
+                    break
+                row = items_start_row + i
+                col = start_col + 2
+
+                props = get_properties(block_type)
+                name = display_name(block_type)
+                count_str = f'x {count}'
+
+                # Cursor marker
+                if i == cursor:
+                    row_attr = curses.A_REVERSE
+                    self._safe_addstr(row, col, '>', curses.A_BOLD)
+                else:
+                    row_attr = 0
+                    self._safe_addstr(row, col, ' ')
+
+                # block_char in its color
+                char_attr = row_attr
+                if curses.has_colors() and props.color_pair > 0:
+                    char_attr |= curses.color_pair(props.color_pair)
+                self._safe_addstr(row, col + 2, props.char, char_attr | curses.A_BOLD)
+
+                # name + dots + count
+                avail = inner_w - 4  # space after "> X "
+                dots_len = avail - len(name) - 1 - len(count_str) - 1
+                if dots_len < 1:
+                    dots_len = 1
+                dots = '.' * dots_len
+                text = f' {name} {dots} {count_str}'
+                self._safe_addstr(row, col + 3, text, row_attr)
+
+        # Footer
+        footer = '[W/S] Select  [1-5] Hotbar  [I] Close'
+        footer_col = start_col + (box_w - len(footer)) // 2
+        self._safe_addstr(start_row + box_h - 2, footer_col, footer, curses.A_DIM)
+
+        self.stdscr.refresh()
+
+    def _safe_addstr(self, row: int, col: int, text: str, attr: int = 0) -> None:
+        """Write a string to screen, ignoring curses errors at edges."""
+        try:
+            self.stdscr.addstr(row, col, text, attr)
+        except curses.error:
+            pass
+
+    def render_death_screen(self) -> None:
+        """Render a full-screen death message."""
+        self.stdscr.erase()
+
+        msg = "YOU DIED"
+        mid_row = self.height // 2
+        mid_col = (self.width - len(msg)) // 2
+
+        # Get red color
+        red_pair = self.cfg.get_color('red').pair_id if self.cfg.get_color('red') else 0
+
+        try:
+            if curses.has_colors() and red_pair:
+                attr = curses.color_pair(red_pair) | curses.A_BOLD
+            else:
+                attr = curses.A_BOLD
+            self.stdscr.addstr(mid_row, mid_col, msg, attr)
+        except curses.error:
+            pass
+
+        self.stdscr.refresh()
 
     def get_key(self) -> int:
         """Get key press (non-blocking)."""

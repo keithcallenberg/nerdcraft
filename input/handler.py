@@ -21,6 +21,7 @@ class Action(Enum):
     HOTBAR_5 = auto()
     HOTBAR_NEXT = auto()
     HOTBAR_PREV = auto()
+    INVENTORY = auto()
     QUIT = auto()
 
 
@@ -64,6 +65,11 @@ class InputHandler:
         ord('E'): Action.HOTBAR_NEXT,
         ord('r'): Action.HOTBAR_PREV,
         ord('R'): Action.HOTBAR_PREV,
+
+        # Inventory
+        ord('i'): Action.INVENTORY,
+        ord('I'): Action.INVENTORY,
+        ord('\t'): Action.INVENTORY,
 
         # Quit
         ord('q'): Action.QUIT,

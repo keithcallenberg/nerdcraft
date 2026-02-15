@@ -225,6 +225,21 @@ class WorldGenerator:
                 chunk = world.get_or_create_chunk(chunk_x, chunk_y)
                 self.generate_chunk(chunk)
 
+    def spawn_mobs(self, world: World) -> list:
+        """Spawn passive mobs on the world surface."""
+        from entity.mob import Mob
+
+        mobs = []
+        world_width = WORLD_WIDTH_CHUNKS * CHUNK_SIZE
+        for sample_x in range(0, world_width, 40):
+            # Use perm table for deterministic spawning
+            h = self._perm[(sample_x * 11 + 53) & 255]
+            if h % 100 < 30:  # ~30% chance
+                surface_y = self.get_surface_height(sample_x)
+                mob = Mob(sample_x, surface_y + 1)
+                mobs.append(mob)
+        return mobs
+
     def get_spawn_position(self) -> tuple[int, int]:
         """Get a valid spawn position for the player."""
         spawn_x = (WORLD_WIDTH_CHUNKS * CHUNK_SIZE) // 2

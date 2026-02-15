@@ -1,57 +1,67 @@
 """Physics engine with discrete grid-based gravity and jumping."""
 
 from __future__ import annotations
-from entity.player import Player
 from world.world import World
 
 
 class PhysicsEngine:
     """Handles discrete grid-based physics."""
 
-    def __init__(self, world: World, gravity_interval: float, jump_height: int):
-        """Initialize physics with world reference and tuning parameters.
-
-        gravity_interval: seconds between each 1-block gravity/jump step.
-        jump_height: number of blocks a jump rises.
-        """
+    def __init__(self, world: World, gravity_interval: float, jump_height: int,
+                 safe_fall_distance: int = 6, fall_damage_per_block: int = 5):
+        """Initialize physics with world reference and tuning parameters."""
         self.world = world
         self.gravity_interval = gravity_interval
         self.jump_height = jump_height
-        self._gravity_timer = 0.0
+        self.safe_fall_distance = safe_fall_distance
+        self.fall_damage_per_block = fall_damage_per_block
+        self._gravity_timers: dict[int, float] = {}
 
-    def update(self, player: Player, dt: float) -> None:
+    def update(self, entity, dt: float) -> None:
         """Accumulate time and perform discrete gravity steps."""
-        self._gravity_timer += dt
+        eid = id(entity)
+        timer = self._gravity_timers.get(eid, 0.0) + dt
 
-        while self._gravity_timer >= self.gravity_interval:
-            self._gravity_timer -= self.gravity_interval
-            self._gravity_step(player)
+        while timer >= self.gravity_interval:
+            timer -= self.gravity_interval
+            self._gravity_step(entity)
 
-    def _gravity_step(self, player: Player) -> None:
+        self._gravity_timers[eid] = timer
+
+    def _gravity_step(self, entity) -> None:
         """Perform one discrete gravity or jump step."""
-        if player.jump_remaining > 0:
+        if entity.jump_remaining > 0:
             # Rising — try to move up
-            if not self.world.is_solid(player.x, player.y + 1):
-                player.y += 1
-                player.jump_remaining -= 1
-                player.on_ground = False
+            if not self.world.is_solid(entity.x, entity.y + 1):
+                entity.y += 1
+                entity.jump_remaining -= 1
+                entity.on_ground = False
             else:
                 # Hit ceiling, cancel remaining jump
-                player.jump_remaining = 0
+                entity.jump_remaining = 0
+            # Reset fall distance while rising
+            entity.fall_distance = 0
         else:
             # Falling — try to move down
-            if not self.world.is_solid(player.x, player.y - 1):
-                player.y -= 1
-                player.on_ground = False
+            if not self.world.is_solid(entity.x, entity.y - 1):
+                entity.y -= 1
+                entity.fall_distance += 1
+                entity.on_ground = False
             else:
-                player.on_ground = True
+                # Landed — apply fall damage if needed
+                if entity.fall_distance > self.safe_fall_distance:
+                    excess = entity.fall_distance - self.safe_fall_distance
+                    damage = excess * self.fall_damage_per_block
+                    entity.health = max(0, entity.health - damage)
+                entity.fall_distance = 0
+                entity.on_ground = True
 
-    def try_move(self, player: Player, dx: int, dy: int) -> bool:
-        """Try to move player by (dx, dy). Returns True if successful."""
-        target_x = player.x + dx
-        target_y = player.y + dy
+    def try_move(self, entity, dx: int, dy: int) -> bool:
+        """Try to move entity by (dx, dy). Returns True if successful."""
+        target_x = entity.x + dx
+        target_y = entity.y + dy
         if not self.world.is_solid(target_x, target_y):
-            player.x = target_x
-            player.y = target_y
+            entity.x = target_x
+            entity.y = target_y
             return True
         return False

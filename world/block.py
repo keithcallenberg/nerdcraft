@@ -26,6 +26,7 @@ class BlockType(Enum):
     WATER = auto()
     CONCRETE = auto()
     WOOD = auto()
+    LEATHER = auto()
 
 @dataclass(frozen=True)
 class BlockProperties:
@@ -90,6 +91,11 @@ def is_solid(block_type: BlockType) -> bool:
     """Check if a block type is solid (collidable)."""
     _init_from_config()
     return _block_properties[block_type].solid
+
+
+def display_name(block_type: BlockType) -> str:
+    """Get a human-readable display name for a block type (e.g. COAL_ORE -> 'Coal Ore')."""
+    return block_type.name.replace('_', ' ').title()
 
 
 def reload_config() -> None:

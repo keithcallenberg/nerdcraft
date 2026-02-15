@@ -83,6 +83,12 @@
       "solid": true,
       "breakable": true,
       "color": "yellow"
+    },
+    "leather": {
+      "char": "~",
+      "solid": false,
+      "breakable": false,
+      "color": "yellow"
     }
   }
 }

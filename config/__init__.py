@@ -93,6 +93,8 @@ class GameConfig:
         physics = data.get('physics', {})
         self.gravity_interval = physics.get('gravity_interval', 0.1)
         self.jump_height = physics.get('jump_height', 5)
+        self.safe_fall_distance = physics.get('safe_fall_distance', 6)
+        self.fall_damage_per_block = physics.get('fall_damage_per_block', 5)
 
         # Player
         player = data.get('player', {})

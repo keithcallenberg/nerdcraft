@@ -14,7 +14,9 @@
   },
   "physics": {
     "gravity_interval": 0.1,
-    "jump_height": 5
+    "jump_height": 5,
+    "safe_fall_distance": 6,
+    "fall_damage_per_block": 5
   },
   "player": {
     "char": "@"

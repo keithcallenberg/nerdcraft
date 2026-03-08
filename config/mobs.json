@@ -1,0 +1,85 @@
+{
+  "mobs": {
+    "cow": {
+      "name": "Cow",
+      "char": "C",
+      "color": "white",
+      "health": 10,
+      "hostile": false,
+      "detection_range": 0,
+      "attack_damage": 0,
+      "attack_interval": 0.0,
+      "move_interval": 1.5,
+      "drops": [
+        { "item": "LEATHER", "chance": 1.0, "count": 1 }
+      ],
+      "spawn": {
+        "surface": true,
+        "underground": false,
+        "night_only": false,
+        "weight": 60
+      }
+    },
+    "zombie": {
+      "name": "Zombie",
+      "char": "Z",
+      "color": "green",
+      "health": 20,
+      "hostile": true,
+      "detection_range": 12,
+      "attack_damage": 8,
+      "attack_interval": 1.5,
+      "move_interval": 0.8,
+      "drops": [
+        { "item": "DIRT", "chance": 0.5, "count": 1 }
+      ],
+      "spawn": {
+        "surface": true,
+        "underground": true,
+        "night_only": false,
+        "weight": 30
+      }
+    },
+    "spider": {
+      "name": "Spider",
+      "char": "S",
+      "color": "magenta",
+      "health": 12,
+      "hostile": true,
+      "detection_range": 8,
+      "attack_damage": 4,
+      "attack_interval": 1.0,
+      "move_interval": 0.5,
+      "drops": [
+        { "item": "STONE", "chance": 0.3, "count": 1 }
+      ],
+      "spawn": {
+        "surface": false,
+        "underground": true,
+        "night_only": false,
+        "weight": 40
+      }
+    },
+    "skeleton": {
+      "name": "Skeleton",
+      "char": "K",
+      "color": "white",
+      "health": 15,
+      "hostile": true,
+      "detection_range": 16,
+      "attack_damage": 6,
+      "attack_interval": 2.0,
+      "move_interval": 1.2,
+      "drops": [
+        { "item": "STONE", "chance": 0.7, "count": 1 },
+        { "item": "COAL_ORE", "chance": 0.3, "count": 1 }
+      ],
+      "spawn": {
+        "surface": true,
+        "underground": true,
+        "night_only": false,
+        "weight": 20
+      }
+    }
+  }
+}

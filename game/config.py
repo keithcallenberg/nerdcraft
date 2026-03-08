@@ -30,3 +30,7 @@ FALL_DAMAGE_PER_BLOCK = _cfg.fall_damage_per_block
 
 # Player
 PLAYER_CHAR = _cfg.player_char
+
+# Save
+AUTO_SAVE_TICKS = _cfg.save.auto_save_ticks
+SAVE_DIR = _cfg.save.save_dir

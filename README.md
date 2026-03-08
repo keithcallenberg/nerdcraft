@@ -1,17 +1,113 @@
 # Nerdcraft
 
-## Main idea
-A 2D side-scroller game like Terraria but based on ascii art similar to Cursedcraft.
+A 2D side-scroller sandbox game in the spirit of Terraria, rendered entirely in ASCII art.
 
-## Inspiration
-- Cursedcraft (https://codeberg.org/mueller_minki/cursedcraft/) is a portable 3D voxel sandbox game for your TTY! Written in C99 with output via ncurses or fbdev. Software rendered with 32 bit fixed point math.
+```
+ ♥ 100                              1[#] 2[ ] 3[ ] 4[ ] 5[ ]
 
-- Terraria is a 2D side scroller but similarly has elements of Minecraft 
-https://terraria.org/
+         &&&
+        &&&&&
+          |
+##########|############################################
+###########################################################
+```
+
+## Features
+
+- **Procedural world generation** — noise-based terrain with ores, trees, caves and water pockets
+- **Block mining & placement** — mine blocks into your inventory, place them back
+- **Physics** — gravity, jumping, fall damage
+- **Inventory & hotbar** — 5-slot hotbar, full inventory overlay (I key)
+- **Mobs** — passive and hostile creatures defined in JSON
+  - 🐄 **Cow** — passive, wanders randomly, drops leather
+  - 🧟 **Zombie** — hostile, chases player on sight, deals melee damage
+  - 🕷 **Spider** — hostile, fast, spawns underground
+  - 💀 **Skeleton** — hostile, long detection range
+- **Combat** — mine/attack key (M) hits mobs, hostile mobs chase and attack player
+- **Death & respawn** — death screen, automatic respawn at spawn point
+- **Save / Load** — world and player state persisted to disk automatically
+  - Auto-saves every 6 seconds (3600 ticks)
+  - Saves on quit
+  - Loads automatically on next launch
+- **JSON-driven content** — blocks, colors, physics, and mobs all configured via JSON
 
 ## Requirements
-- Linux
-- Python
 
-## JSON configurability
-A key design decision in the development of Nerdcraft is that many elements of the game are configured through JSON files. For instance, blocks can be designed (i.e. ASCII characters, colors specified) and have their characteristics specified, via JSON files.
+- Linux
+- Python 3.10+
+- A terminal that supports curses (virtually any Linux terminal)
+
+## Setup
+
+```bash
+cd /path/to/nerdcraft
+python3 -m venv venv
+source venv/bin/activate
+# No external dependencies required — uses only stdlib
+python3 main.py
+```
+
+## Command-Line Options
+
+```
+python3 main.py [OPTIONS]
+
+Options:
+  --seed INT, -s INT   World generation seed (random if not specified)
+  --save NAME, -n NAME Save slot name (default: "default")
+  --new                Force a fresh world (ignore existing save)
+```
+
+Examples:
+```bash
+# Start or resume the default save
+python3 main.py
+
+# Force a new world with a specific seed
+python3 main.py --new --seed 12345
+
+# Use a named save slot
+python3 main.py --save myadventure
+```
+
+## Controls
+
+| Key | Action |
+|-----|--------|
+| A / ← | Move left |
+| D / → | Move right |
+| W / ↑ / Space | Jump |
+| M then direction | Mine block / attack mob |
+| P then direction | Place block |
+| 1–5 | Select hotbar slot |
+| E / R | Cycle hotbar next/prev |
+| I / Tab | Open inventory |
+| Q / Esc | Quit (auto-saves) |
+
+## World & Content Configuration
+
+All game content lives in `config/`:
+
+| File | What it controls |
+|------|------------------|
+| `config/game.json` | Physics, world size, terrain, save settings |
+| `config/blocks.json` | Block characters, colors, solid/breakable flags |
+| `config/colors.json` | Curses color pair definitions |
+| `config/mobs.json` | Mob types, AI behavior, drops, spawn weights |
+
+See [CONTENT_FORMAT.md](CONTENT_FORMAT.md) for full schema documentation.
+
+## Architecture
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for a full description of all modules.
+
+## Roadmap
+
+See [PLAN.md](PLAN.md) for the full development roadmap.
+
+Next up: **Crafting System** (Phase 3) and **Day/Night Cycle** (Phase 4).
+
+## Inspiration
+
+- [Cursedcraft](https://codeberg.org/mueller_minki/cursedcraft/) — portable TTY voxel sandbox in C99/ncurses
+- [Terraria](https://terraria.org/) — 2D side-scroller sandbox

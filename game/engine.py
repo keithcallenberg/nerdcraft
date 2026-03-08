@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 import time
+from pathlib import Path
+
 from game.config import (
     TICK_DURATION, GRAVITY_INTERVAL, JUMP_HEIGHT,
     SAFE_FALL_DISTANCE, FALL_DAMAGE_PER_BLOCK,
@@ -9,10 +11,12 @@ from game.config import (
 from world.world import World
 from world.block import BlockType, get_properties
 from world.generator import WorldGenerator
+from world.save import SaveManager
 from entity.player import Player
 from entity.physics import PhysicsEngine
 from render.renderer import Renderer
 from input.handler import InputHandler, Action
+from config import GameConfig
 
 
 class GameEngine:
@@ -35,22 +39,41 @@ class GameEngine:
         Action.STOP: 'down',
     }
 
-    def __init__(self, stdscr, seed: int | None = None):
+    def __init__(self, stdscr, seed: int | None = None,
+                 save_name: str = "default", force_new: bool = False):
         """Initialize game engine with curses screen."""
         self.stdscr = stdscr
         self.running = False
+        self._cfg = GameConfig.get()
 
-        # Initialize world
+        # Save/load setup
+        self._save_manager = SaveManager(
+            save_dir=self._cfg.save.save_dir,
+            save_name=save_name,
+        )
+        self._auto_save_ticks = self._cfg.save.auto_save_ticks
+        self._ticks_since_save = 0
+        self._save_flash: float = 0.0   # seconds remaining for "Saved!" flash
+        self._save_flash_duration = 2.0
+
+        # Initialize world and player
         self.world = World()
-        self.generator = WorldGenerator(seed)
-        self.generator.generate_world(self.world)
+        self.player = Player()
 
-        # Initialize player at spawn point
-        spawn_x, spawn_y = self.generator.get_spawn_position()
-        self.player = Player(spawn_x, spawn_y)
-
-        # Spawn mobs
-        self.mobs = self.generator.spawn_mobs(self.world)
+        if not force_new and self._save_manager.save_exists():
+            # Load existing save
+            loaded_seed = self._save_manager.load(self.world, self.player)
+            self.generator = WorldGenerator(loaded_seed)
+            # Spawn mobs fresh (mobs are not saved for now)
+            self.mobs = self.generator.spawn_mobs(self.world)
+        else:
+            # Generate a fresh world
+            self.generator = WorldGenerator(seed)
+            self.generator.generate_world(self.world)
+            spawn_x, spawn_y = self.generator.get_spawn_position()
+            self.player.x = spawn_x
+            self.player.y = spawn_y
+            self.mobs = self.generator.spawn_mobs(self.world)
 
         # Initialize systems
         self.physics = PhysicsEngine(
@@ -96,6 +119,10 @@ class GameEngine:
 
             accumulator += frame_time
 
+            # Tick save flash timer
+            if self._save_flash > 0:
+                self._save_flash -= frame_time
+
             if self._death_timer is not None:
                 # Death screen active — count down, drain input, render
                 self._death_timer -= frame_time
@@ -119,6 +146,18 @@ class GameEngine:
 
             # Small sleep to prevent CPU spinning
             time.sleep(0.001)
+
+        # Save on clean exit
+        self._do_save()
+
+    def _do_save(self) -> None:
+        """Perform a save and reset the auto-save counter."""
+        try:
+            self._save_manager.save(self.world, self.player, self.generator.seed)
+            self._ticks_since_save = 0
+            self._save_flash = self._save_flash_duration
+        except Exception:
+            pass  # Don't crash on save failure
 
     def _handle_input(self) -> None:
         """Process all pending input."""
@@ -177,16 +216,42 @@ class GameEngine:
         self.physics.update(self.player, dt)
 
         # Update mobs
+        dead_mobs = []
         for mob in self.mobs:
-            if mob.is_alive:
-                self.physics.update(mob, dt)
-                dx = mob.update_ai(self.world, dt)
-                if dx != 0:
-                    self.physics.try_move(mob, dx, 0)
+            if not mob.is_alive:
+                dead_mobs.append(mob)
+                continue
+
+            self.physics.update(mob, dt)
+            dx = mob.update_ai(
+                self.world, dt,
+                player_x=self.player.x,
+                player_y=self.player.y,
+            )
+            if dx != 0:
+                self.physics.try_move(mob, dx, 0)
+
+            # Hostile mob attacks player when adjacent
+            if mob.hostile and self.player.health > 0:
+                dist_x = abs(mob.x - self.player.x)
+                dist_y = abs(mob.y - self.player.y)
+                if dist_x <= 1 and dist_y <= 1 and mob.can_attack_now():
+                    damage = mob.get_attack_damage()
+                    self.player.health = max(0, self.player.health - damage)
+                    mob.reset_attack_timer()
+
+        # Remove dead mobs and collect their drops
+        for mob in dead_mobs:
+            self.mobs.remove(mob)
 
         # Trigger death screen
         if self.player.health <= 0 and self._death_timer is None:
             self._death_timer = self._death_duration
+
+        # Auto-save
+        self._ticks_since_save += 1
+        if self._ticks_since_save >= self._auto_save_ticks:
+            self._do_save()
 
     def _respawn(self) -> None:
         """Reset player to spawn after death."""
@@ -260,6 +325,7 @@ class GameEngine:
             self.renderer.render(
                 self.world, self.player, self._pending_action,
                 self._hotbar, self._hotbar_index, self.mobs,
+                save_flash=self._save_flash > 0,
             )
 
     def _mine_block(self, direction: str) -> None:

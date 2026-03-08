@@ -20,5 +20,9 @@
   },
   "player": {
     "char": "@"
+  },
+  "save": {
+    "auto_save_ticks": 3600,
+    "save_dir": "saves"
   }
 }

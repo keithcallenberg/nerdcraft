@@ -226,17 +226,36 @@ class WorldGenerator:
                 self.generate_chunk(chunk)
 
     def spawn_mobs(self, world: World) -> list:
-        """Spawn passive mobs on the world surface."""
+        """Spawn mobs on the world surface using weighted selection from MobRegistry."""
         from entity.mob import Mob
+        from entity.mob_registry import MobRegistry
+
+        registry = MobRegistry.get()
+        surface_pool = registry.surface_mobs()
+        if not surface_pool:
+            return []
+
+        # Build a weighted list for selection
+        weights = [d.spawn.weight for d in surface_pool]
+        total_weight = sum(weights)
 
         mobs = []
         world_width = WORLD_WIDTH_CHUNKS * CHUNK_SIZE
         for sample_x in range(0, world_width, 40):
-            # Use perm table for deterministic spawning
+            # Use perm table for deterministic spawning (~40% chance)
             h = self._perm[(sample_x * 11 + 53) & 255]
-            if h % 100 < 30:  # ~30% chance
+            if h % 100 < 40:
                 surface_y = self.get_surface_height(sample_x)
-                mob = Mob(sample_x, surface_y + 1)
+                # Pick mob type via weighted selection using perm table
+                pick = self._perm[(sample_x * 7 + 97) & 255] % total_weight
+                cumulative = 0
+                chosen_def = surface_pool[0]
+                for defn, w in zip(surface_pool, weights):
+                    cumulative += w
+                    if pick < cumulative:
+                        chosen_def = defn
+                        break
+                mob = Mob(sample_x, surface_y + 1, mob_id=chosen_def.mob_id)
                 mobs.append(mob)
         return mobs
 

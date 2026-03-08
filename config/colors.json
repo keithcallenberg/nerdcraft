@@ -40,6 +40,12 @@
       "pair_id": 8,
       "foreground": "red",
       "background": "default"
+    },
+    "magenta": {
+      "pair_id": 9,
+      "foreground": "magenta",
+      "background": "default",
+      "bold": false
     }
   }
 }

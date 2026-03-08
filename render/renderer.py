@@ -78,7 +78,8 @@ class Renderer:
                pending_action: str | None = None,
                hotbar: List[BlockType | None] | None = None,
                hotbar_index: int = 0,
-               mobs: list | None = None) -> None:
+               mobs: list | None = None,
+               save_flash: bool = False) -> None:
         """Render the current game state."""
         self.stdscr.erase()
 
@@ -99,7 +100,7 @@ class Renderer:
         self._render_hud(player, hotbar or [], hotbar_index)
 
         # Render status bar (bottom row)
-        self._render_status(player, pending_action)
+        self._render_status(player, pending_action, save_flash=save_flash)
 
         self.stdscr.refresh()
 
@@ -234,9 +235,12 @@ class Renderer:
             col += len(text)
 
     def _render_status(self, player: Player,
-                       pending_action: str | None = None) -> None:
+                       pending_action: str | None = None,
+                       save_flash: bool = False) -> None:
         """Render status bar at bottom of screen."""
-        if pending_action is not None:
+        if save_flash:
+            status = " \u2713 World saved!  |  A/D:Move  W:Jump  M:Mine  P:Place  1-5/E/R:Hotbar  I:Inv  Q:Quit"
+        elif pending_action is not None:
             label = pending_action.upper()
             status = f" {label} >> press direction (A/D/W/S)"
         else:

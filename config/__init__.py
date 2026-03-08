@@ -10,6 +10,8 @@ from dataclasses import dataclass
 
 # Find the config directory relative to this file
 CONFIG_DIR = Path(__file__).parent
+# Project root (one level up from config/)
+PROJECT_ROOT = CONFIG_DIR.parent
 
 
 def _load_json(filename: str) -> Dict[str, Any]:
@@ -39,6 +41,13 @@ class ColorConfig:
     foreground: str
     background: str
     bold: bool = False
+
+
+@dataclass
+class SaveConfig:
+    """Configuration for the save/load system."""
+    auto_save_ticks: int
+    save_dir: Path
 
 
 class GameConfig:
@@ -99,6 +108,18 @@ class GameConfig:
         # Player
         player = data.get('player', {})
         self.player_char = player.get('char', '@')
+
+        # Save
+        save = data.get('save', {})
+        save_dir_str = save.get('save_dir', 'saves')
+        # Resolve relative to project root
+        save_dir = Path(save_dir_str)
+        if not save_dir.is_absolute():
+            save_dir = PROJECT_ROOT / save_dir
+        self.save = SaveConfig(
+            auto_save_ticks=save.get('auto_save_ticks', 3600),
+            save_dir=save_dir,
+        )
 
     def _load_blocks_config(self) -> None:
         """Load blocks.json configuration."""

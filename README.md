@@ -32,6 +32,7 @@ A 2D side-scroller sandbox game in the spirit of Terraria, rendered entirely in 
 - **Crafting UI panel** — side-by-side inventory + craftable recipe browser
   - Current crafted blocks: `wood_plank`, `workbench`, `torch`, `stone_brick`
 - **JSON-driven content** — blocks, colors, physics, mobs, and recipes configured via JSON
+- **Day/night visuals** — world blocks are dimmed at night based on the global day clock
 
 ## Requirements
 
@@ -124,7 +125,7 @@ Current integration-style coverage includes:
 
 See [PLAN.md](PLAN.md) for the full development roadmap.
 
-Next up: **Day/Night Cycle** integration work (renderer darkness, torch lighting, night-only spawning).
+Next up: **Day/Night Cycle** follow-ups (torch lighting, night-only spawning, HUD time icon).
 
 ## Inspiration
 

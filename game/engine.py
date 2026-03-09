@@ -19,6 +19,7 @@ from entity.crafting import RecipeEngine
 from render.renderer import Renderer
 from input.handler import InputHandler, Action
 from config import GameConfig
+from game.clock import DayClock
 
 
 class GameEngine:
@@ -78,6 +79,7 @@ class GameEngine:
             self.mobs = self.generator.spawn_mobs(self.world)
 
         # Initialize systems
+        self.clock = DayClock(day_length_ticks=self._cfg.day_length_ticks)
         self.physics = PhysicsEngine(
             self.world, GRAVITY_INTERVAL, JUMP_HEIGHT,
             SAFE_FALL_DISTANCE, FALL_DAMAGE_PER_BLOCK,
@@ -227,6 +229,7 @@ class GameEngine:
     def _update(self, dt: float) -> None:
         """Update game state for one tick."""
         self.physics.update(self.player, dt)
+        self.clock.tick()
 
         # Update mobs
         dead_mobs = []
@@ -383,6 +386,7 @@ class GameEngine:
                 self.world, self.player, self._pending_action,
                 self._hotbar, self._hotbar_index, self.mobs,
                 save_flash=self._save_flash > 0,
+                is_night=self.clock.is_night,
             )
 
     def _mine_block(self, direction: str) -> None:

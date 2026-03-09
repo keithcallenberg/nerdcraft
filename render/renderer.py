@@ -79,7 +79,8 @@ class Renderer:
                hotbar: List[BlockType | None] | None = None,
                hotbar_index: int = 0,
                mobs: list | None = None,
-               save_flash: bool = False) -> None:
+               save_flash: bool = False,
+               is_night: bool = False) -> None:
         """Render the current game state."""
         self.stdscr.erase()
 
@@ -87,7 +88,7 @@ class Renderer:
         self.camera.update(player)
 
         # Render world blocks
-        self._render_world(world)
+        self._render_world(world, is_night=is_night)
 
         # Render mobs (between world and player so player draws on top)
         if mobs:
@@ -104,7 +105,7 @@ class Renderer:
 
         self.stdscr.refresh()
 
-    def _render_world(self, world: World) -> None:
+    def _render_world(self, world: World, is_night: bool = False) -> None:
         """Render visible world blocks."""
         for view_row in range(self.view_height):
             screen_row = view_row + self.WORLD_ROW_OFFSET
@@ -115,13 +116,10 @@ class Renderer:
                 if block != BlockType.AIR:
                     props = get_properties(block)
                     try:
+                        attr = curses.A_DIM if is_night else curses.A_NORMAL
                         if curses.has_colors() and props.color_pair > 0:
-                            self.stdscr.addch(
-                                screen_row, col, props.char,
-                                curses.color_pair(props.color_pair)
-                            )
-                        else:
-                            self.stdscr.addch(screen_row, col, props.char)
+                            attr |= curses.color_pair(props.color_pair)
+                        self.stdscr.addch(screen_row, col, props.char, attr)
                     except curses.error:
                         pass  # Ignore errors at screen edges
 

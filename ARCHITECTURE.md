@@ -40,7 +40,7 @@ Systems are cleanly separated and communicate through well-defined interfaces.
 
 ### `game/engine.py` — GameEngine
 - Central orchestrator
-- Owns: World, Player, mobs list, PhysicsEngine, Renderer, InputHandler
+- Owns: World, Player, mobs list, PhysicsEngine, Renderer, InputHandler, DayClock
 - Hotbar (5 slots), pending action state machine
 - Death timer → respawn flow
 - Inventory overlay mode
@@ -113,7 +113,7 @@ Systems are cleanly separated and communicate through well-defined interfaces.
 ### `render/renderer.py` — Renderer
 - Curses-based rendering
 - HUD row (top): health + hotbar
-- World rows: block chars with color pairs
+- World rows: block chars with color pairs (dimmed at night)
 - Mob and player overlaid
 - Status bar (bottom): position + controls hint
 - Inventory overlay (modal)

@@ -33,6 +33,7 @@ A 2D side-scroller sandbox game in the spirit of Terraria, rendered entirely in 
   - Current crafted blocks: `wood_plank`, `workbench`, `torch`, `stone_brick`
 - **JSON-driven content** — blocks, colors, physics, mobs, and recipes configured via JSON
 - **Day/night visuals** — world blocks are dimmed at night based on the global day clock
+- **Torch lighting** — placed torches emit a configurable local light radius at night
 
 ## Requirements
 
@@ -97,7 +98,7 @@ All game content lives in `config/`:
 | File | What it controls |
 |------|------------------|
 | `config/game.json` | Physics, world size, terrain, save settings, day/night timing |
-| `config/blocks.json` | Block characters, colors, solid/breakable flags |
+| `config/blocks.json` | Block characters, colors, solid/breakable flags, optional `light_radius` |
 | `config/colors.json` | Curses color pair definitions |
 | `config/mobs.json` | Mob types, AI behavior, drops, spawn weights |
 | `config/recipes.json` | Crafting recipe definitions (hand + workbench) |

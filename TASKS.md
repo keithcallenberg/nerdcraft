@@ -63,7 +63,7 @@
 - [x] Create `game/clock.py` — DayClock tracking ticks → time of day
 - [x] Add `day_length_ticks` to `config/game.json`
 - [x] Apply darkness attribute to blocks at night in renderer
-- [ ] Add torch block with `light_radius` property
+- [x] Add torch block with `light_radius` property
 - [ ] Spawn hostile mobs at night (use `night_only` flag from mobs.json)
 - [ ] HUD: time-of-day icon (☀ / ☾)
 

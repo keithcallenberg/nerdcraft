@@ -39,6 +39,7 @@ class BlockProperties:
     solid: bool = True  # Can be collided with
     breakable: bool = True  # Can be mined
     color_pair: int = 0  # Curses color pair index
+    light_radius: int = 0  # Emits light in night rendering
 
 
 # Block properties registry - will be populated from JSON
@@ -71,7 +72,8 @@ def _init_from_config() -> None:
                 char=block_cfg.char,
                 solid=block_cfg.solid,
                 breakable=block_cfg.breakable,
-                color_pair=color_pair
+                color_pair=color_pair,
+                light_radius=block_cfg.light_radius,
             )
         else:
             # Fallback for blocks not in config

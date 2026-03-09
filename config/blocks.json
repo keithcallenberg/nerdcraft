@@ -94,7 +94,8 @@
       "char": "!",
       "solid": false,
       "breakable": true,
-      "color": "yellow"
+      "color": "yellow",
+      "light_radius": 6
     },
     "stone_brick": {
       "char": "B",

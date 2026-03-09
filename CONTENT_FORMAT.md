@@ -56,7 +56,8 @@ Defines every block type. The key must match a `BlockType` enum member (lowercas
       "char": "#",         // single ASCII character for rendering
       "solid": true,       // true = blocks movement
       "breakable": true,   // true = player can mine it
-      "color": "green"     // key from colors.json
+      "color": "green",   // key from colors.json
+      "light_radius": 0    // optional, emits night light in block radius
     }
   }
 }
@@ -66,6 +67,7 @@ Defines every block type. The key must match a `BlockType` enum member (lowercas
 - Must be lowercase snake_case
 - Must match a member of `BlockType` enum in `world/block.py`
 - Adding a new block requires adding to both JSON and the enum
+- `light_radius` defaults to `0` when omitted; set it on emitters (e.g. `torch`)
 
 ---
 

@@ -107,6 +107,8 @@ class Renderer:
 
     def _render_world(self, world: World, is_night: bool = False) -> None:
         """Render visible world blocks."""
+        light_sources = self._collect_visible_light_sources(world) if is_night else []
+
         for view_row in range(self.view_height):
             screen_row = view_row + self.WORLD_ROW_OFFSET
             for col in range(self.width):
@@ -116,12 +118,43 @@ class Renderer:
                 if block != BlockType.AIR:
                     props = get_properties(block)
                     try:
-                        attr = curses.A_DIM if is_night else curses.A_NORMAL
+                        is_lit = self._is_lit(world_x, world_y, light_sources)
+                        attr = curses.A_NORMAL if (not is_night or is_lit) else curses.A_DIM
                         if curses.has_colors() and props.color_pair > 0:
                             attr |= curses.color_pair(props.color_pair)
                         self.stdscr.addch(screen_row, col, props.char, attr)
                     except curses.error:
                         pass  # Ignore errors at screen edges
+
+    def _collect_visible_light_sources(self, world: World) -> list[tuple[int, int, int]]:
+        """Collect light-emitting blocks around the viewport."""
+        max_radius = get_properties(BlockType.TORCH).light_radius
+        if max_radius <= 0:
+            return []
+
+        left_x, top_y = self.camera.screen_to_world(0, 0)
+        right_x, bottom_y = self.camera.screen_to_world(self.width - 1, self.view_height - 1)
+
+        sources: list[tuple[int, int, int]] = []
+        for y in range(top_y - max_radius, bottom_y + max_radius + 1):
+            for x in range(left_x - max_radius, right_x + max_radius + 1):
+                block = world.get_block(x, y)
+                if block == BlockType.AIR:
+                    continue
+                radius = get_properties(block).light_radius
+                if radius > 0:
+                    sources.append((x, y, radius))
+        return sources
+
+    @staticmethod
+    def _is_lit(x: int, y: int, sources: list[tuple[int, int, int]]) -> bool:
+        """Return True when a world position is within any light source radius."""
+        for sx, sy, radius in sources:
+            dx = x - sx
+            dy = y - sy
+            if (dx * dx + dy * dy) <= (radius * radius):
+                return True
+        return False
 
     def _render_mobs(self, mobs: list) -> None:
         """Render mob entities."""

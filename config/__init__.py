@@ -31,6 +31,7 @@ class BlockConfig:
     solid: bool
     breakable: bool
     color: str
+    light_radius: int = 0
 
 
 @dataclass
@@ -133,7 +134,8 @@ class GameConfig:
                 char=props.get('char', '?'),
                 solid=props.get('solid', True),
                 breakable=props.get('breakable', True),
-                color=props.get('color', 'default')
+                color=props.get('color', 'default'),
+                light_radius=props.get('light_radius', 0),
             )
 
     def _load_colors_config(self) -> None:

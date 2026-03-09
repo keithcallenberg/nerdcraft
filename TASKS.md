@@ -69,7 +69,7 @@
 
 ## Phase 5 — Biomes *(future)*
 
-- [ ] Create `config/biomes.json`
+- [x] Create `config/biomes.json`
 - [ ] Add second noise pass for biome map in generator
 - [ ] Per-biome surface/sub-surface blocks, tree density, ore multipliers
 - [ ] New blocks: sand, cactus, snow, ice

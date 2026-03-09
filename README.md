@@ -104,6 +104,7 @@ All game content lives in `config/`:
 | `config/colors.json` | Curses color pair definitions |
 | `config/mobs.json` | Mob types, AI behavior, drops, spawn weights |
 | `config/recipes.json` | Crafting recipe definitions (hand + workbench) |
+| `config/biomes.json` | Biome definitions (surface layers, tree density, ore multipliers, spawn tables) |
 
 See [CONTENT_FORMAT.md](CONTENT_FORMAT.md) for full schema documentation.
 
@@ -128,7 +129,7 @@ Current integration-style coverage includes:
 
 See [PLAN.md](PLAN.md) for the full development roadmap.
 
-Next up: **Day/Night Cycle** follow-up (HUD time icon).
+Next up: **Biomes** (noise-map integration + biome-aware generation).
 
 ## Inspiration
 

@@ -1,0 +1,52 @@
+{
+  "biomes": {
+    "forest": {
+      "name": "Forest",
+      "surface_block": "grass",
+      "subsurface_block": "dirt",
+      "tree_density": 0.45,
+      "ore_multipliers": {
+        "coal_ore": 1.0,
+        "iron_ore": 1.0,
+        "diamond_ore": 0.9
+      },
+      "mob_spawn_table": [
+        { "mob": "cow", "weight": 12 },
+        { "mob": "zombie", "weight": 4 },
+        { "mob": "spider", "weight": 3 }
+      ]
+    },
+    "desert": {
+      "name": "Desert",
+      "surface_block": "sand",
+      "subsurface_block": "sand",
+      "tree_density": 0.02,
+      "ore_multipliers": {
+        "coal_ore": 0.8,
+        "iron_ore": 0.9,
+        "diamond_ore": 1.1
+      },
+      "mob_spawn_table": [
+        { "mob": "zombie", "weight": 7 },
+        { "mob": "skeleton", "weight": 8 },
+        { "mob": "spider", "weight": 4 }
+      ]
+    },
+    "tundra": {
+      "name": "Tundra",
+      "surface_block": "snow",
+      "subsurface_block": "dirt",
+      "tree_density": 0.15,
+      "ore_multipliers": {
+        "coal_ore": 1.1,
+        "iron_ore": 1.2,
+        "diamond_ore": 1.0
+      },
+      "mob_spawn_table": [
+        { "mob": "cow", "weight": 3 },
+        { "mob": "zombie", "weight": 6 },
+        { "mob": "skeleton", "weight": 6 }
+      ]
+    }
+  }
+}

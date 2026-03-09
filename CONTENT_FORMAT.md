@@ -149,7 +149,7 @@ Defines crafting recipes. Item IDs map to block/item names used by inventory and
 
 ---
 
-## `config/biomes.json` *(Phase 5 — planned)*
+## `config/biomes.json`
 
 ```json
 {

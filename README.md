@@ -107,6 +107,17 @@ See [CONTENT_FORMAT.md](CONTENT_FORMAT.md) for full schema documentation.
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for a full description of all modules.
 
+## Testing
+
+Run the automated crafting progression test:
+
+```bash
+cd nerdcraft
+python3 -m unittest discover -s tests -p 'test_*.py'
+```
+
+Current integration-style coverage includes: chop wood → craft planks → craft workbench.
+
 ## Roadmap
 
 See [PLAN.md](PLAN.md) for the full development roadmap.

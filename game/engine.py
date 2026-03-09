@@ -408,6 +408,7 @@ class GameEngine:
                 self._hotbar, self._hotbar_index, self.mobs,
                 save_flash=self._save_flash > 0,
                 is_night=self.clock.is_night,
+                time_icon=self.clock.hud_icon,
             )
 
     def _mine_block(self, direction: str) -> None:

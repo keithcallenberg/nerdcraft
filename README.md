@@ -3,7 +3,7 @@
 A 2D side-scroller sandbox game in the spirit of Terraria, rendered entirely in ASCII art.
 
 ```
- ♥ 100                              1[#] 2[ ] 3[ ] 4[ ] 5[ ]
+ ♥ 100  ☀                           1[#] 2[ ] 3[ ] 4[ ] 5[ ]
 
          &&&
         &&&&&
@@ -33,6 +33,7 @@ A 2D side-scroller sandbox game in the spirit of Terraria, rendered entirely in 
   - Current crafted blocks: `wood_plank`, `workbench`, `torch`, `stone_brick`
 - **JSON-driven content** — blocks, colors, physics, mobs, and recipes configured via JSON
 - **Day/night visuals** — world blocks are dimmed at night based on the global day clock
+- **HUD time icon** — top-left HUD shows ☀ during day and ☾ during night
 - **Night spawning** — mobs with `spawn.night_only: true` can spawn on the surface during night
 - **Torch lighting** — placed torches emit a configurable local light radius at night
 

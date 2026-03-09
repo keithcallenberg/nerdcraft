@@ -80,7 +80,8 @@ class Renderer:
                hotbar_index: int = 0,
                mobs: list | None = None,
                save_flash: bool = False,
-               is_night: bool = False) -> None:
+               is_night: bool = False,
+               time_icon: str = "") -> None:
         """Render the current game state."""
         self.stdscr.erase()
 
@@ -98,7 +99,7 @@ class Renderer:
         self._render_player(player)
 
         # Render HUD (top row)
-        self._render_hud(player, hotbar or [], hotbar_index)
+        self._render_hud(player, hotbar or [], hotbar_index, time_icon=time_icon)
 
         # Render status bar (bottom row)
         self._render_status(player, pending_action, save_flash=save_flash)
@@ -200,13 +201,16 @@ class Renderer:
                 pass
 
     def _render_hud(self, player: Player, hotbar: List[BlockType | None],
-                    hotbar_index: int) -> None:
+                    hotbar_index: int, time_icon: str = "") -> None:
         """Render HUD row: health on the left, hotbar on the right."""
         row = self.HUD_ROW
 
         # --- Health (left side) ---
         heart = '\u2665'  # ♥
-        hp_str = f" {heart} {player.health}"
+        if time_icon:
+            hp_str = f" {heart} {player.health}  {time_icon}"
+        else:
+            hp_str = f" {heart} {player.health}"
         try:
             if curses.has_colors():
                 self.stdscr.addstr(

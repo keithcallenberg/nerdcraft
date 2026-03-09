@@ -65,7 +65,7 @@
 - [x] Apply darkness attribute to blocks at night in renderer
 - [x] Add torch block with `light_radius` property
 - [x] Spawn hostile mobs at night (use `night_only` flag from mobs.json)
-- [ ] HUD: time-of-day icon (☀ / ☾)
+- [x] HUD: time-of-day icon (☀ / ☾)
 
 ## Phase 5 — Biomes *(future)*
 

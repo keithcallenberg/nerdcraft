@@ -15,6 +15,7 @@ A 2D side-scroller sandbox game in the spirit of Terraria, rendered entirely in 
 ## Features
 
 - **Procedural world generation** — noise-based terrain with ores, trees, caves and water pockets
+- **Biome noise map groundwork** — a second low-frequency noise pass now partitions the world into biome regions for upcoming biome-specific generation
 - **Block mining & placement** — mine blocks into your inventory, place them back
 - **Physics** — gravity, jumping, fall damage
 - **Inventory & hotbar** — 5-slot hotbar, full inventory overlay (I key)
@@ -129,7 +130,7 @@ Current integration-style coverage includes:
 
 See [PLAN.md](PLAN.md) for the full development roadmap.
 
-Next up: **Biomes** (noise-map integration + biome-aware generation).
+Next up: **Biomes** (per-biome terrain layers, tree density, ore multipliers, and spawn tables).
 
 ## Inspiration
 

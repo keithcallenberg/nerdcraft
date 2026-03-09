@@ -1,8 +1,10 @@
 """Procedural terrain generation with noise."""
 
 from __future__ import annotations
+import json
 import math
 import random
+from pathlib import Path
 from typing import Optional, Tuple
 from game.config import (
     CHUNK_SIZE, WORLD_WIDTH_CHUNKS, WORLD_HEIGHT_CHUNKS,
@@ -24,6 +26,9 @@ class WorldGenerator:
         self._perm = list(range(256))
         self._rng.shuffle(self._perm)
         self._perm = self._perm + self._perm  # Double for overflow
+
+        # Biome map (second noise pass): sorted by config key for stable ordering
+        self._biome_ids = self._load_biome_ids()
 
     def _noise1d(self, x: float) -> float:
         """Simple 1D value noise for terrain height."""
@@ -72,6 +77,31 @@ class WorldGenerator:
             frequency *= 2
 
         return total / max_value
+
+    def _load_biome_ids(self) -> list[str]:
+        """Load available biome IDs from config/biomes.json."""
+        config_path = Path(__file__).resolve().parent.parent / "config" / "biomes.json"
+        try:
+            with open(config_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            biome_ids = sorted(data.get("biomes", {}).keys())
+            if biome_ids:
+                return biome_ids
+        except (OSError, json.JSONDecodeError):
+            pass
+        return ["forest"]
+
+    def get_biome_id(self, world_x: int) -> str:
+        """Get biome id for an X coordinate via a second coarse noise pass."""
+        if not self._biome_ids:
+            return "forest"
+
+        # Lower frequency than terrain height noise to produce broad regions.
+        biome_noise = self._fbm1d(world_x * 0.004 + 1337.0, octaves=3, persistence=0.55)
+        normalized = (biome_noise + 1.0) / 2.0
+        normalized = max(0.0, min(0.999999, normalized))
+        idx = int(normalized * len(self._biome_ids))
+        return self._biome_ids[idx]
 
     def get_surface_height(self, world_x: int) -> int:
         """Get terrain surface height at given X coordinate."""

@@ -67,6 +67,7 @@ Systems are cleanly separated and communicate through well-defined interfaces.
 ### `world/generator.py` — WorldGenerator
 - Seeded PRNG + permutation table
 - 1D FBM noise → terrain height
+- 1D low-frequency FBM (second pass) → biome region map (`get_biome_id`)
 - 2D value noise → caves, ore veins
 - Tree placement via cell-based algorithm
 - `generate_world(world)` fills all chunks

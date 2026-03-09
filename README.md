@@ -29,7 +29,8 @@ A 2D side-scroller sandbox game in the spirit of Terraria, rendered entirely in 
   - Auto-saves every 6 seconds (3600 ticks)
   - Saves on quit
   - Loads automatically on next launch
-- **JSON-driven content** — blocks, colors, physics, and mobs all configured via JSON
+- **Crafting UI panel** — side-by-side inventory + craftable recipe browser
+- **JSON-driven content** — blocks, colors, physics, mobs, and recipes configured via JSON
 
 ## Requirements
 
@@ -82,7 +83,7 @@ python3 main.py --save myadventure
 | 1–5 | Select hotbar slot |
 | E / R | Cycle hotbar next/prev |
 | I / Tab | Open inventory |
-| C | Open crafting panel *(wiring in progress)* |
+| C | Open crafting panel (selection/craft wiring in progress) |
 | Q / Esc | Quit (auto-saves) |
 
 ## World & Content Configuration

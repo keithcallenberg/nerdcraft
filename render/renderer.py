@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 import curses
-from typing import Dict, List
+from typing import Dict, List, Any
 from render.camera import Camera
 from world.world import World
 from world.block import BlockType, get_properties, display_name
@@ -360,6 +360,93 @@ class Renderer:
 
         # Footer
         footer = '[W/S] Select  [1-5] Hotbar  [I] Close'
+        footer_col = start_col + (box_w - len(footer)) // 2
+        self._safe_addstr(start_row + box_h - 2, footer_col, footer, curses.A_DIM)
+
+        self.stdscr.refresh()
+
+    def render_crafting(self,
+                        inventory: Inventory,
+                        recipes: List[Any],
+                        recipe_cursor: int = 0) -> None:
+        """Render crafting panel with inventory (left) and recipes (right)."""
+        self.stdscr.erase()
+
+        box_w = min(76, self.width - 2)
+        box_h = min(24, self.height - 2)
+        start_col = (self.width - box_w) // 2
+        start_row = (self.height - box_h) // 2
+
+        border_attr = curses.A_BOLD
+        top = '+' + '-' * (box_w - 2) + '+'
+        self._safe_addstr(start_row, start_col, top, border_attr)
+        self._safe_addstr(start_row + box_h - 1, start_col, top, border_attr)
+        for r in range(1, box_h - 1):
+            line = '|' + ' ' * (box_w - 2) + '|'
+            self._safe_addstr(start_row + r, start_col, line, border_attr)
+
+        title = 'CRAFTING'
+        title_col = start_col + (box_w - len(title)) // 2
+        self._safe_addstr(start_row + 1, title_col, title, curses.A_BOLD)
+
+        inner_left = start_col + 2
+        inner_right = start_col + box_w - 3
+        inner_top = start_row + 3
+        inner_bottom = start_row + box_h - 3
+
+        mid_col = start_col + box_w // 2
+        for row in range(inner_top, inner_bottom + 1):
+            self._safe_addstr(row, mid_col, '|', curses.A_DIM)
+
+        self._safe_addstr(inner_top - 1, inner_left, 'Inventory', curses.A_BOLD)
+        self._safe_addstr(inner_top - 1, mid_col + 2, 'Available Recipes', curses.A_BOLD)
+
+        # Left panel: inventory list
+        items = inventory.items()
+        left_width = (mid_col - 1) - inner_left
+        max_rows = max(1, inner_bottom - inner_top + 1)
+
+        if not items:
+            self._safe_addstr(inner_top, inner_left, 'Empty', curses.A_DIM)
+        else:
+            for i, (block_type, count) in enumerate(items[:max_rows]):
+                props = get_properties(block_type)
+                name = display_name(block_type)
+                count_str = f'x {count}'
+                dots_len = max(1, left_width - len(name) - len(count_str) - 4)
+                text = f' {props.char} {name} {"." * dots_len} {count_str}'
+                row = inner_top + i
+                attr = curses.A_NORMAL
+                if curses.has_colors() and props.color_pair > 0:
+                    attr |= curses.color_pair(props.color_pair)
+                self._safe_addstr(row, inner_left, text[:left_width], attr)
+
+        # Right panel: available recipes list
+        right_col = mid_col + 2
+        right_width = inner_right - right_col + 1
+
+        if not recipes:
+            self._safe_addstr(inner_top, right_col, 'No craftable recipes', curses.A_DIM)
+        else:
+            clamped_cursor = max(0, min(recipe_cursor, len(recipes) - 1))
+            for i, recipe in enumerate(recipes[:max_rows]):
+                row = inner_top + i
+                marker = '>' if i == clamped_cursor else ' '
+                attr = curses.A_REVERSE if i == clamped_cursor else curses.A_NORMAL
+                recipe_name = getattr(recipe, 'name', str(recipe))
+
+                outputs = getattr(recipe, 'outputs', ())
+                output_preview = ''
+                if outputs:
+                    first = outputs[0]
+                    out_item = getattr(first, 'item', '?')
+                    out_count = getattr(first, 'count', 1)
+                    output_preview = f' -> {out_count} {out_item.replace("_", " ")}'
+
+                line = f'{marker} {recipe_name}{output_preview}'
+                self._safe_addstr(row, right_col, line[:right_width], attr)
+
+        footer = '[W/S] Select Recipe  [Enter/Space] Craft  [C] Close'
         footer_col = start_col + (box_w - len(footer)) // 2
         self._safe_addstr(start_row + box_h - 2, footer_col, footer, curses.A_DIM)
 

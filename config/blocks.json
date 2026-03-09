@@ -116,7 +116,7 @@
       "color": "yellow"
     },
     "sand": {
-      "char": ".",
+      "char": "$",
       "solid": true,
       "breakable": true,
       "color": "yellow"

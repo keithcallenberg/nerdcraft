@@ -1,7 +1,7 @@
 {
   "game_loop": {
     "tick_rate": 600,
-    "day_length_ticks": 36000
+    "day_length_ticks": 48000
   },
   "world": {
     "chunk_size": 16,
@@ -15,7 +15,7 @@
   },
   "physics": {
     "gravity_interval": 0.1,
-    "jump_height": 5,
+    "jump_height": 4,
     "safe_fall_distance": 6,
     "fall_damage_per_block": 5
   },

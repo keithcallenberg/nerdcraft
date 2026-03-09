@@ -43,7 +43,7 @@
         "diamond_ore": 1.0
       },
       "mob_spawn_table": [
-        { "mob": "cow", "weight": 3 },
+        { "mob": "cow", "weight": 1 },
         { "mob": "zombie", "weight": 6 },
         { "mob": "skeleton", "weight": 6 }
       ]

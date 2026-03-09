@@ -30,6 +30,7 @@ A 2D side-scroller sandbox game in the spirit of Terraria, rendered entirely in 
   - Saves on quit
   - Loads automatically on next launch
 - **Crafting UI panel** — side-by-side inventory + craftable recipe browser
+  - Current crafted blocks: `wood_plank`, `workbench`, `torch`, `stone_brick`
 - **JSON-driven content** — blocks, colors, physics, mobs, and recipes configured via JSON
 
 ## Requirements

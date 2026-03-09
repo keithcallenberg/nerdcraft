@@ -26,6 +26,10 @@ class BlockType(Enum):
     WATER = auto()
     CONCRETE = auto()
     WOOD = auto()
+    WOOD_PLANK = auto()
+    TORCH = auto()
+    STONE_BRICK = auto()
+    WORKBENCH = auto()
     LEATHER = auto()
 
 @dataclass(frozen=True)

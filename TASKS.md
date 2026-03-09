@@ -55,7 +55,7 @@
   - [x] Side-by-side with inventory: left=items, right=available recipes
   - [x] Select recipe with W/S, craft with Enter/Space
 - [x] Wire crafting into `game/engine.py`
-- [ ] Add new block types: `wood_plank`, `torch`, `stone_brick`, `workbench`
+- [x] Add new block types: `wood_plank`, `torch`, `stone_brick`, `workbench`
 - [ ] Test: chop wood → craft planks → craft workbench
 
 ## Phase 4 — Day/Night Cycle + Lighting *(future)*

@@ -84,6 +84,30 @@
       "breakable": true,
       "color": "yellow"
     },
+    "wood_plank": {
+      "char": "=",
+      "solid": true,
+      "breakable": true,
+      "color": "yellow"
+    },
+    "torch": {
+      "char": "!",
+      "solid": false,
+      "breakable": true,
+      "color": "yellow"
+    },
+    "stone_brick": {
+      "char": "B",
+      "solid": true,
+      "breakable": true,
+      "color": "white"
+    },
+    "workbench": {
+      "char": "H",
+      "solid": true,
+      "breakable": true,
+      "color": "yellow"
+    },
     "leather": {
       "char": "~",
       "solid": false,

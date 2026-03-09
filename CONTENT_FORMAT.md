@@ -167,6 +167,8 @@ Defines crafting recipes. Item IDs map to block/item names used by inventory and
         { "mob": "cow", "weight": 10 },
         { "mob": "zombie", "weight": 5 }
       ]
+      // biome table is authoritative for biome spawns;
+      // if a biome table exists, only listed mobs can spawn there
     }
   }
 }

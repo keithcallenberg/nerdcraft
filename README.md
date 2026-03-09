@@ -36,7 +36,8 @@ A 2D side-scroller sandbox game in the spirit of Terraria, rendered entirely in 
 - **JSON-driven content** — blocks, colors, physics, mobs, and recipes configured via JSON
 - **Day/night visuals** — world blocks are dimmed at night based on the global day clock
 - **HUD time icon** — top-left HUD shows ☀ during day and ☾ during night
-- **Night spawning** — mobs with `spawn.night_only: true` can spawn on the surface during night
+- **Biome-specific mob spawning** — each biome's `mob_spawn_table` controls which mobs can spawn there
+- **Night spawning** — mobs with `spawn.night_only: true` can spawn on the surface during night (also filtered by biome spawn tables)
 - **Torch lighting** — placed torches emit a configurable local light radius at night
 
 ## Requirements
@@ -126,12 +127,13 @@ python3 -m unittest discover -s tests -p 'test_*.py'
 Current integration-style coverage includes:
 - chop wood → craft planks → craft workbench
 - day/night clock tick progression and wraparound behavior
+- biome mob spawn table filtering for daytime surface pools
 
 ## Roadmap
 
 See [PLAN.md](PLAN.md) for the full development roadmap.
 
-Next up: **Biomes** (new biome block types and biome-specific mob spawn tables).
+Next up: **Sound / Procedural Audio** (event-driven SFX + generated ambient music).
 
 ## Inspiration
 

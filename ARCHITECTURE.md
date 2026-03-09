@@ -71,7 +71,8 @@ Systems are cleanly separated and communicate through well-defined interfaces.
 - 2D value noise → caves, ore veins
 - Tree placement via cell-based algorithm
 - `generate_world(world)` fills all chunks
-- `spawn_mobs(world)` → list of Mob instances
+- `spawn_mobs(world)` → list of Mob instances (biome spawn-table aware)
+- `spawn_night_hostile(world, occupied_positions)` uses night-only hostiles filtered by biome tables
 
 ### `world/save.py` — SaveManager *(Phase 1, new)*
 - Saves/loads world chunk data + player state

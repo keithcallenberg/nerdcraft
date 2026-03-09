@@ -73,7 +73,7 @@
 - [x] Add second noise pass for biome map in generator
 - [x] Per-biome surface/sub-surface blocks, tree density, ore multipliers
 - [x] New blocks: sand, cactus, snow, ice
-- [ ] Mob spawn tables per biome
+- [x] Mob spawn tables per biome
 
 ## Phase 6 — Sound / Procedural Audio *(stretch)*
 

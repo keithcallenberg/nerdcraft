@@ -23,6 +23,7 @@ class BiomeRules:
     subsurface_block: BlockType
     tree_density: float
     ore_multipliers: dict[BlockType, float]
+    mob_spawn_table: list[tuple[str, int]]
 
 
 class WorldGenerator:
@@ -122,11 +123,23 @@ class WorldGenerator:
                 BlockType.DIAMOND_ORE: float(ore_cfg.get("diamond_ore", 1.0)),
             }
 
+            spawn_table_cfg = cfg.get("mob_spawn_table", [])
+            spawn_table: list[tuple[str, int]] = []
+            for entry in spawn_table_cfg:
+                mob_id = str(entry.get("mob", "")).strip()
+                try:
+                    weight = int(entry.get("weight", 0))
+                except (TypeError, ValueError):
+                    weight = 0
+                if mob_id and weight > 0:
+                    spawn_table.append((mob_id, weight))
+
             rules[biome_id] = BiomeRules(
                 surface_block=surface,
                 subsurface_block=subsurface,
                 tree_density=tree_density,
                 ore_multipliers=multipliers,
+                mob_spawn_table=spawn_table,
             )
 
         if not biome_ids:
@@ -142,6 +155,7 @@ class WorldGenerator:
                         BlockType.GOLD_ORE: 1.0,
                         BlockType.DIAMOND_ORE: 1.0,
                     },
+                    mob_spawn_table=[],
                 )
             }
 
@@ -336,8 +350,43 @@ class WorldGenerator:
                 chunk = world.get_or_create_chunk(chunk_x, chunk_y)
                 self.generate_chunk(chunk)
 
+    def _weighted_pick_mob_id(self, weighted_ids: list[tuple[str, int]], pick: int) -> str | None:
+        """Pick a mob id from (mob_id, weight) pairs using a deterministic integer pick."""
+        if not weighted_ids:
+            return None
+        total_weight = sum(weight for _, weight in weighted_ids)
+        if total_weight <= 0:
+            return None
+
+        pick_mod = pick % total_weight
+        cumulative = 0
+        for mob_id, weight in weighted_ids:
+            cumulative += weight
+            if pick_mod < cumulative:
+                return mob_id
+        return weighted_ids[-1][0]
+
+    def _biome_spawn_candidates(
+        self,
+        world_x: int,
+        allowed_mob_ids: set[str],
+    ) -> tuple[list[tuple[str, int]], bool]:
+        """Return filtered biome spawn entries and whether the biome table is explicitly configured."""
+        biome_id = self.get_biome_id(world_x)
+        biome_rules = self._biome_rules.get(biome_id)
+        if biome_rules is None:
+            return ([], False)
+
+        has_biome_table = len(biome_rules.mob_spawn_table) > 0
+        candidates = [
+            (mob_id, weight)
+            for mob_id, weight in biome_rules.mob_spawn_table
+            if mob_id in allowed_mob_ids and weight > 0
+        ]
+        return (candidates, has_biome_table)
+
     def spawn_mobs(self, world: World) -> list:
-        """Spawn daytime/default surface mobs using weighted selection."""
+        """Spawn daytime/default surface mobs using biome-aware weighted tables."""
         from entity.mob import Mob
         from entity.mob_registry import MobRegistry
 
@@ -346,9 +395,8 @@ class WorldGenerator:
         if not surface_pool:
             return []
 
-        # Build a weighted list for selection
-        weights = [d.spawn.weight for d in surface_pool]
-        total_weight = sum(weights)
+        allowed_surface_ids = {d.mob_id for d in surface_pool}
+        global_weights = [(d.mob_id, d.spawn.weight) for d in surface_pool if d.spawn.weight > 0]
 
         mobs = []
         world_width = WORLD_WIDTH_CHUNKS * CHUNK_SIZE
@@ -357,16 +405,13 @@ class WorldGenerator:
             h = self._perm[(sample_x * 11 + 53) & 255]
             if h % 100 < 40:
                 surface_y = self.get_surface_height(sample_x)
-                # Pick mob type via weighted selection using perm table
-                pick = self._perm[(sample_x * 7 + 97) & 255] % total_weight
-                cumulative = 0
-                chosen_def = surface_pool[0]
-                for defn, w in zip(surface_pool, weights):
-                    cumulative += w
-                    if pick < cumulative:
-                        chosen_def = defn
-                        break
-                mob = Mob(sample_x, surface_y + 1, mob_id=chosen_def.mob_id)
+                # Prefer biome table; fallback to global surface weights if table is empty/invalid.
+                biome_weights, has_biome_table = self._biome_spawn_candidates(sample_x, allowed_surface_ids)
+                candidates = biome_weights if has_biome_table else global_weights
+                mob_id = self._weighted_pick_mob_id(candidates, self._perm[(sample_x * 7 + 97) & 255])
+                if mob_id is None:
+                    continue
+                mob = Mob(sample_x, surface_y + 1, mob_id=mob_id)
                 mobs.append(mob)
         return mobs
 
@@ -387,8 +432,8 @@ class WorldGenerator:
         if not night_pool:
             return None
 
-        weights = [d.spawn.weight for d in night_pool]
-        total_weight = sum(weights)
+        allowed_night_ids = {d.mob_id for d in night_pool}
+        global_weights = [(d.mob_id, d.spawn.weight) for d in night_pool if d.spawn.weight > 0]
         occupied = occupied_positions or set()
 
         world_width = WORLD_WIDTH_CHUNKS * CHUNK_SIZE
@@ -399,16 +444,13 @@ class WorldGenerator:
             if pos in occupied:
                 continue
 
-            pick = self._rng.randrange(total_weight)
-            cumulative = 0
-            chosen_def = night_pool[0]
-            for defn, w in zip(night_pool, weights):
-                cumulative += w
-                if pick < cumulative:
-                    chosen_def = defn
-                    break
+            biome_weights, has_biome_table = self._biome_spawn_candidates(sample_x, allowed_night_ids)
+            candidates = biome_weights if has_biome_table else global_weights
+            mob_id = self._weighted_pick_mob_id(candidates, self._rng.randrange(0, 10_000))
+            if mob_id is None:
+                continue
 
-            return Mob(sample_x, surface_y + 1, mob_id=chosen_def.mob_id)
+            return Mob(sample_x, surface_y + 1, mob_id=mob_id)
 
         return None
 

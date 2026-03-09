@@ -27,9 +27,9 @@
         "diamond_ore": 1.1
       },
       "mob_spawn_table": [
-        { "mob": "zombie", "weight": 7 },
-        { "mob": "skeleton", "weight": 8 },
-        { "mob": "spider", "weight": 4 }
+        { "mob": "zombie", "weight": 2 },
+        { "mob": "skeleton", "weight": 5 },
+        { "mob": "spider", "weight": 6 }
       ]
     },
     "tundra": {

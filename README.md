@@ -40,12 +40,14 @@ A 2D side-scroller sandbox game in the spirit of Terraria, rendered entirely in 
 - **Night spawning** — mobs with `spawn.night_only: true` can spawn on the surface during night (also filtered by biome spawn tables)
 - **Torch lighting** — placed torches emit a configurable local light radius at night
 - **Event-driven SFX cues** — terminal bell/curses beep cues for footsteps, mining/hits, and death
+- **Procedural ambient music** — optional generated drone soundtrack via `numpy` + `sounddevice` (best-effort)
 
 ## Requirements
 
 - Linux
 - Python 3.10+
 - A terminal that supports curses (virtually any Linux terminal)
+- Optional for ambient music: `numpy` and `sounddevice`
 
 ## Setup
 
@@ -53,7 +55,8 @@ A 2D side-scroller sandbox game in the spirit of Terraria, rendered entirely in 
 cd /path/to/nerdcraft
 python3 -m venv venv
 source venv/bin/activate
-# No external dependencies required — uses only stdlib
+# Optional audio dependencies for procedural ambient music
+pip install numpy sounddevice
 python3 main.py
 ```
 
@@ -134,7 +137,7 @@ Current integration-style coverage includes:
 
 See [PLAN.md](PLAN.md) for the full development roadmap.
 
-Next up: **Sound / Procedural Audio** (event-driven SFX + generated ambient music).
+Next up: **Sound / Procedural Audio** config polishing (`config/sounds.json` definitions).
 
 ## Inspiration
 

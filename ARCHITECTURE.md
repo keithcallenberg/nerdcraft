@@ -60,6 +60,11 @@ Systems are cleanly separated and communicate through well-defined interfaces.
 - Uses `curses.beep()` with terminal bell fallback
 - Current events: `footstep`, `mining`, `hit`, `death`
 
+### `game/music.py` — AmbientMusic
+- Optional procedural ambient music system
+- Uses `numpy` + `sounddevice` output stream when available
+- Runs on a background thread with graceful no-op fallback when deps/device are unavailable
+
 ### `world/world.py` — World
 - Chunk-based block storage: `dict[(cx,cy)] → Chunk`
 - World/chunk coordinate conversion

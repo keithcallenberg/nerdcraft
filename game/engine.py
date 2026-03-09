@@ -21,6 +21,7 @@ from input.handler import InputHandler, Action
 from config import GameConfig
 from game.clock import DayClock
 from game.sound import SoundManager, SoundEvent
+from game.music import AmbientMusic
 
 
 class GameEngine:
@@ -88,6 +89,7 @@ class GameEngine:
         self.renderer = Renderer(stdscr)
         self.input_handler = InputHandler()
         self.sound = SoundManager()
+        self.music = AmbientMusic()
 
         # Hotbar: 5 assignable slots, all start empty
         self._hotbar: list[BlockType | None] = [None] * self.HOTBAR_SIZE
@@ -123,52 +125,55 @@ class GameEngine:
         self.running = True
         previous_time = time.time()
         accumulator = 0.0
+        self.music.start()
 
-        while self.running:
-            current_time = time.time()
-            frame_time = current_time - previous_time
-            previous_time = current_time
+        try:
+            while self.running:
+                current_time = time.time()
+                frame_time = current_time - previous_time
+                previous_time = current_time
 
-            # Cap frame time to avoid spiral of death
-            if frame_time > 0.25:
-                frame_time = 0.25
+                # Cap frame time to avoid spiral of death
+                if frame_time > 0.25:
+                    frame_time = 0.25
 
-            accumulator += frame_time
+                accumulator += frame_time
 
-            # Tick save flash timer
-            if self._save_flash > 0:
-                self._save_flash -= frame_time
+                # Tick save flash timer
+                if self._save_flash > 0:
+                    self._save_flash -= frame_time
 
-            if self._death_timer is not None:
-                # Death screen active — count down, drain input, render
-                self._death_timer -= frame_time
-                self._drain_input()
-                self.renderer.render_death_screen()
-                if self._death_timer <= 0:
-                    self._respawn()
-            elif self._inventory_open:
-                # Inventory screen — no physics, just handle inventory input
-                self._handle_inventory_input()
-                self._render()
-            elif self._crafting_open:
-                # Crafting screen — no physics, just handle crafting input
-                self._handle_crafting_input()
-                self._render()
-            else:
-                # Normal gameplay
-                self._handle_input()
+                if self._death_timer is not None:
+                    # Death screen active — count down, drain input, render
+                    self._death_timer -= frame_time
+                    self._drain_input()
+                    self.renderer.render_death_screen()
+                    if self._death_timer <= 0:
+                        self._respawn()
+                elif self._inventory_open:
+                    # Inventory screen — no physics, just handle inventory input
+                    self._handle_inventory_input()
+                    self._render()
+                elif self._crafting_open:
+                    # Crafting screen — no physics, just handle crafting input
+                    self._handle_crafting_input()
+                    self._render()
+                else:
+                    # Normal gameplay
+                    self._handle_input()
 
-                while accumulator >= TICK_DURATION:
-                    self._update(TICK_DURATION)
-                    accumulator -= TICK_DURATION
+                    while accumulator >= TICK_DURATION:
+                        self._update(TICK_DURATION)
+                        accumulator -= TICK_DURATION
 
-                self._render()
+                    self._render()
 
-            # Small sleep to prevent CPU spinning
-            time.sleep(0.001)
-
-        # Save on clean exit
-        self._do_save()
+                # Small sleep to prevent CPU spinning
+                time.sleep(0.001)
+        finally:
+            self.music.stop()
+            # Save on clean exit
+            self._do_save()
 
     def _do_save(self) -> None:
         """Perform a save and reset the auto-save counter."""

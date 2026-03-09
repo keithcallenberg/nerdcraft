@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import math
 import random
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Tuple
 from game.config import (
@@ -13,6 +14,15 @@ from game.config import (
 from world.block import BlockType
 from world.world import World
 from world.chunk import Chunk
+
+
+@dataclass(frozen=True)
+class BiomeRules:
+    """Resolved biome generation rules with safe enum fallbacks."""
+    surface_block: BlockType
+    subsurface_block: BlockType
+    tree_density: float
+    ore_multipliers: dict[BlockType, float]
 
 
 class WorldGenerator:
@@ -28,7 +38,7 @@ class WorldGenerator:
         self._perm = self._perm + self._perm  # Double for overflow
 
         # Biome map (second noise pass): sorted by config key for stable ordering
-        self._biome_ids = self._load_biome_ids()
+        self._biome_ids, self._biome_rules = self._load_biome_rules()
 
     def _noise1d(self, x: float) -> float:
         """Simple 1D value noise for terrain height."""
@@ -78,18 +88,64 @@ class WorldGenerator:
 
         return total / max_value
 
-    def _load_biome_ids(self) -> list[str]:
-        """Load available biome IDs from config/biomes.json."""
+    def _to_block_type(self, block_name: str, fallback: BlockType) -> BlockType:
+        """Resolve config block name to enum with fallback for unknown blocks."""
+        try:
+            return BlockType[block_name.upper()]
+        except KeyError:
+            return fallback
+
+    def _load_biome_rules(self) -> tuple[list[str], dict[str, BiomeRules]]:
+        """Load biome ids + generation rules from config/biomes.json."""
         config_path = Path(__file__).resolve().parent.parent / "config" / "biomes.json"
         try:
             with open(config_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            biome_ids = sorted(data.get("biomes", {}).keys())
-            if biome_ids:
-                return biome_ids
         except (OSError, json.JSONDecodeError):
-            pass
-        return ["forest"]
+            data = {}
+
+        biomes = data.get("biomes", {})
+        biome_ids = sorted(biomes.keys())
+        rules: dict[str, BiomeRules] = {}
+
+        for biome_id in biome_ids:
+            cfg = biomes.get(biome_id, {})
+            surface = self._to_block_type(cfg.get("surface_block", "grass"), BlockType.GRASS)
+            subsurface = self._to_block_type(cfg.get("subsurface_block", "dirt"), BlockType.DIRT)
+            tree_density = max(0.0, min(1.0, float(cfg.get("tree_density", 0.25))))
+
+            ore_cfg = cfg.get("ore_multipliers", {})
+            multipliers = {
+                BlockType.COAL_ORE: float(ore_cfg.get("coal_ore", 1.0)),
+                BlockType.IRON_ORE: float(ore_cfg.get("iron_ore", 1.0)),
+                BlockType.GOLD_ORE: float(ore_cfg.get("gold_ore", 1.0)),
+                BlockType.DIAMOND_ORE: float(ore_cfg.get("diamond_ore", 1.0)),
+            }
+
+            rules[biome_id] = BiomeRules(
+                surface_block=surface,
+                subsurface_block=subsurface,
+                tree_density=tree_density,
+                ore_multipliers=multipliers,
+            )
+
+        if not biome_ids:
+            biome_ids = ["forest"]
+            rules = {
+                "forest": BiomeRules(
+                    surface_block=BlockType.GRASS,
+                    subsurface_block=BlockType.DIRT,
+                    tree_density=0.25,
+                    ore_multipliers={
+                        BlockType.COAL_ORE: 1.0,
+                        BlockType.IRON_ORE: 1.0,
+                        BlockType.GOLD_ORE: 1.0,
+                        BlockType.DIAMOND_ORE: 1.0,
+                    },
+                )
+            }
+
+        return biome_ids, rules
 
     def get_biome_id(self, world_x: int) -> str:
         """Get biome id for an X coordinate via a second coarse noise pass."""
@@ -102,6 +158,11 @@ class WorldGenerator:
         normalized = max(0.0, min(0.999999, normalized))
         idx = int(normalized * len(self._biome_ids))
         return self._biome_ids[idx]
+
+    def _get_biome_rules(self, world_x: int) -> BiomeRules:
+        """Return generation rules for the biome at this x coordinate."""
+        biome_id = self.get_biome_id(world_x)
+        return self._biome_rules.get(biome_id, self._biome_rules[self._biome_ids[0]])
 
     def get_surface_height(self, world_x: int) -> int:
         """Get terrain surface height at given X coordinate."""
@@ -120,8 +181,11 @@ class WorldGenerator:
         Returns (tree_x, trunk_height, canopy_radius, canopy_height).
         """
         h = self._perm[(cell_index * 7 + 13) & 255]
-        # ~25 % chance of skipping a tree
-        if h < 64:
+
+        # Biome-specific density check at the center of this cell.
+        center_x = cell_index * 20 + 10
+        tree_density = self._get_biome_rules(center_x).tree_density
+        if (h / 255.0) > tree_density:
             return None
 
         cell_start = cell_index * 20
@@ -186,6 +250,8 @@ class WorldGenerator:
 
     def _get_block_at(self, world_x: int, world_y: int, surface_height: int) -> BlockType:
         """Determine block type at given world coordinates."""
+        biome = self._get_biome_rules(world_x)
+
         # Trees (only above the local surface so they don't poke into terrain)
         if world_y > surface_height:
             tree_block = self._check_tree_block(world_x, world_y)
@@ -203,47 +269,52 @@ class WorldGenerator:
         # Depth below surface
         depth = surface_height - world_y
 
-        # Grass at surface
+        # Biome surface block
         if depth == 0:
-            return BlockType.GRASS
+            return biome.surface_block
 
-        # Dirt layer
+        # Biome subsurface layer
         if depth < DIRT_DEPTH:
-            return BlockType.DIRT
+            return biome.subsurface_block
 
         # Check for caves
         cave_noise = self._noise2d(world_x * 0.1, world_y * 0.1)
         if cave_noise > 0.7 and depth > DIRT_DEPTH + 2:
             return BlockType.WATER
 
-        # Stone with ore generation
+        # Stone with biome-tuned ore generation
         if depth >= STONE_DEPTH:
-            return self._generate_ore(world_x, world_y, depth)
+            return self._generate_ore(world_x, world_y, depth, biome)
 
-        # Transition zone (mostly dirt, some stone)
+        # Transition zone (mostly dirt/subsurface, some stone)
         if depth >= DIRT_DEPTH:
             return BlockType.STONE
 
-        return BlockType.DIRT
+        return biome.subsurface_block
 
-    def _generate_ore(self, world_x: int, world_y: int, depth: int) -> BlockType:
-        """Generate ore blocks based on depth and noise."""
+    def _generate_ore(self, world_x: int, world_y: int, depth: int, biome: BiomeRules) -> BlockType:
+        """Generate ore blocks based on depth and biome ore multipliers."""
         ore_noise = self._noise2d(world_x * 0.3 + 1000, world_y * 0.3)
 
+        coal_mult = max(0.0, biome.ore_multipliers.get(BlockType.COAL_ORE, 1.0))
+        iron_mult = max(0.0, biome.ore_multipliers.get(BlockType.IRON_ORE, 1.0))
+        gold_mult = max(0.0, biome.ore_multipliers.get(BlockType.GOLD_ORE, 1.0))
+        diamond_mult = max(0.0, biome.ore_multipliers.get(BlockType.DIAMOND_ORE, 1.0))
+
         # Diamond (deep and rare)
-        if depth > 50 and ore_noise > 0.95:
+        if depth > 50 and ore_noise > (0.95 - 0.05 * max(0.0, diamond_mult - 1.0)):
             return BlockType.DIAMOND_ORE
 
         # Gold (medium-deep)
-        if depth > 35 and ore_noise > 0.9:
+        if depth > 35 and ore_noise > (0.9 - 0.05 * max(0.0, gold_mult - 1.0)):
             return BlockType.GOLD_ORE
 
         # Iron (medium depth)
-        if depth > 20 and ore_noise > 0.85:
+        if depth > 20 and ore_noise > (0.85 - 0.05 * max(0.0, iron_mult - 1.0)):
             return BlockType.IRON_ORE
 
         # Coal (common, any depth)
-        if ore_noise > 0.8:
+        if ore_noise > (0.8 - 0.05 * max(0.0, coal_mult - 1.0)):
             return BlockType.COAL_ORE
 
         return BlockType.STONE

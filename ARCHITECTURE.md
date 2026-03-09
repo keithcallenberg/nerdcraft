@@ -1,6 +1,6 @@
 # Nerdcraft Architecture
 
-> Last updated: 2026-03-07
+> Last updated: 2026-03-09
 
 ## Overview
 
@@ -98,6 +98,12 @@ Systems are cleanly separated and communicate through well-defined interfaces.
 ### `entity/inventory.py` — Inventory
 - `dict[BlockType → count]` storage
 - `add()`, `remove()`, `count()`, `items()`
+
+### `entity/crafting.py` — RecipeEngine
+- Loads recipes from `config/recipes.json`
+- `available_recipes(inventory)` returns currently craftable recipes
+- `craft(inventory, recipe_id)` consumes inputs and adds outputs
+- Station-gated recipes are supported (`station: "workbench"`, etc.)
 
 ### `render/renderer.py` — Renderer
 - Curses-based rendering

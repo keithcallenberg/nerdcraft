@@ -1,6 +1,6 @@
 # Nerdcraft Task Tracker
 
-> Last updated: 2026-03-07
+> Last updated: 2026-03-09
 
 ## Phase 1 — Save / Load System ✅ COMPLETE
 
@@ -47,9 +47,9 @@
 - [x] Design and create `config/recipes.json`
   - [x] Hand-craft recipes (no station needed)
   - [x] Workbench recipes
-- [ ] Create `entity/crafting.py` — RecipeEngine
-  - [ ] `available_recipes(inventory)` → list of craftable recipes
-  - [ ] `craft(inventory, recipe_id)` → mutates inventory
+- [x] Create `entity/crafting.py` — RecipeEngine
+  - [x] `available_recipes(inventory)` → list of craftable recipes
+  - [x] `craft(inventory, recipe_id)` → mutates inventory
 - [ ] Add `CRAFT` action to `input/handler.py` (C key)
 - [ ] Add crafting UI panel to `render/renderer.py`
   - [ ] Side-by-side with inventory: left=items, right=available recipes

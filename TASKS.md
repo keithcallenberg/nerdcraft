@@ -77,7 +77,7 @@
 
 ## Phase 6 — Sound / Procedural Audio *(stretch)*
 
-- [ ] Event-driven sound (footsteps, mining, hit, death)
+- [x] Event-driven sound (footsteps, mining, hit, death)
 - [ ] Procedural ambient music via numpy + sounddevice
 - [ ] `config/sounds.json` definitions
 

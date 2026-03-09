@@ -39,6 +39,7 @@ A 2D side-scroller sandbox game in the spirit of Terraria, rendered entirely in 
 - **Biome-specific mob spawning** — each biome's `mob_spawn_table` controls which mobs can spawn there
 - **Night spawning** — mobs with `spawn.night_only: true` can spawn on the surface during night (also filtered by biome spawn tables)
 - **Torch lighting** — placed torches emit a configurable local light radius at night
+- **Event-driven SFX cues** — terminal bell/curses beep cues for footsteps, mining/hits, and death
 
 ## Requirements
 

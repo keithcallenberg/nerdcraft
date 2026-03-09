@@ -55,6 +55,11 @@ Systems are cleanly separated and communicate through well-defined interfaces.
 - Provides wrapped `tick_in_day`, normalized `day_progress`, day/night state
 - Exposes HUD helpers (`☀` / `☾`, `HH:MM` string)
 
+### `game/sound.py` — SoundManager
+- Lightweight event-driven SFX dispatcher (best-effort, non-fatal)
+- Uses `curses.beep()` with terminal bell fallback
+- Current events: `footstep`, `mining`, `hit`, `death`
+
 ### `world/world.py` — World
 - Chunk-based block storage: `dict[(cx,cy)] → Chunk`
 - World/chunk coordinate conversion

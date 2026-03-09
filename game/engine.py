@@ -20,6 +20,7 @@ from render.renderer import Renderer
 from input.handler import InputHandler, Action
 from config import GameConfig
 from game.clock import DayClock
+from game.sound import SoundManager, SoundEvent
 
 
 class GameEngine:
@@ -86,6 +87,7 @@ class GameEngine:
         )
         self.renderer = Renderer(stdscr)
         self.input_handler = InputHandler()
+        self.sound = SoundManager()
 
         # Hotbar: 5 assignable slots, all start empty
         self._hotbar: list[BlockType | None] = [None] * self.HOTBAR_SIZE
@@ -213,10 +215,12 @@ class GameEngine:
                 continue
 
             if action == Action.MOVE_LEFT:
-                self.physics.try_move(self.player, -1, 0)
+                if self.physics.try_move(self.player, -1, 0):
+                    self.sound.play(SoundEvent.FOOTSTEP)
                 self.player.facing_right = False
             elif action == Action.MOVE_RIGHT:
-                self.physics.try_move(self.player, 1, 0)
+                if self.physics.try_move(self.player, 1, 0):
+                    self.sound.play(SoundEvent.FOOTSTEP)
                 self.player.facing_right = True
             elif action == Action.JUMP:
                 if self.player.on_ground:
@@ -259,6 +263,7 @@ class GameEngine:
                 if dist_x <= 1 and dist_y <= 1 and mob.can_attack_now():
                     damage = mob.get_attack_damage()
                     self.player.health = max(0, self.player.health - damage)
+                    self.sound.play(SoundEvent.HIT)
                     mob.reset_attack_timer()
 
         # Remove dead mobs and collect their drops
@@ -283,6 +288,7 @@ class GameEngine:
 
         # Trigger death screen
         if self.player.health <= 0 and self._death_timer is None:
+            self.sound.play(SoundEvent.DEATH)
             self._death_timer = self._death_duration
 
         # Auto-save
@@ -418,6 +424,7 @@ class GameEngine:
             for mob in self.mobs:
                 if mob.is_alive and mob.x == block_x and mob.y == block_y:
                     mob.health -= 5
+                    self.sound.play(SoundEvent.MINING)
                     if not mob.is_alive:
                         for drop in mob.drops:
                             self.player.inventory.add(drop)
@@ -435,6 +442,7 @@ class GameEngine:
                         self.player.inventory.add(BlockType.WOOD)
                     elif block != BlockType.LEAVES:
                         self.player.inventory.add(block)
+                    self.sound.play(SoundEvent.MINING)
                     return  # Only mine one block per press
 
     def _place_block(self, direction: str) -> None:

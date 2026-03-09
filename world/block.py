@@ -31,6 +31,10 @@ class BlockType(Enum):
     STONE_BRICK = auto()
     WORKBENCH = auto()
     LEATHER = auto()
+    SAND = auto()
+    CACTUS = auto()
+    SNOW = auto()
+    ICE = auto()
 
 @dataclass(frozen=True)
 class BlockProperties:

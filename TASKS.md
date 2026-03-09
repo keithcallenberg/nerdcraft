@@ -72,7 +72,7 @@
 - [x] Create `config/biomes.json`
 - [x] Add second noise pass for biome map in generator
 - [x] Per-biome surface/sub-surface blocks, tree density, ore multipliers
-- [ ] New blocks: sand, cactus, snow, ice
+- [x] New blocks: sand, cactus, snow, ice
 - [ ] Mob spawn tables per biome
 
 ## Phase 6 — Sound / Procedural Audio *(stretch)*

@@ -258,6 +258,14 @@ class WorldGenerator:
             if tree_block is not None:
                 return tree_block
 
+            # Sparse cactus columns in sandy biomes.
+            if biome.surface_block == BlockType.SAND:
+                cactus_hash = self._perm[(world_x * 5 + 41) & 255]
+                if cactus_hash % 23 == 0:
+                    cactus_height = 2 + (self._perm[(world_x * 7 + 89) & 255] % 2)
+                    if surface_height < world_y <= surface_height + cactus_height:
+                        return BlockType.CACTUS
+
         # Bedrock at bottom
         if world_y <= 0:
             return BlockType.BEDROCK
@@ -280,6 +288,8 @@ class WorldGenerator:
         # Check for caves
         cave_noise = self._noise2d(world_x * 0.1, world_y * 0.1)
         if cave_noise > 0.7 and depth > DIRT_DEPTH + 2:
+            if biome.surface_block == BlockType.SNOW:
+                return BlockType.ICE
             return BlockType.WATER
 
         # Stone with biome-tuned ore generation

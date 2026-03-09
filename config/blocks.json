@@ -114,6 +114,30 @@
       "solid": false,
       "breakable": false,
       "color": "yellow"
+    },
+    "sand": {
+      "char": ".",
+      "solid": true,
+      "breakable": true,
+      "color": "yellow"
+    },
+    "cactus": {
+      "char": "|",
+      "solid": true,
+      "breakable": true,
+      "color": "green"
+    },
+    "snow": {
+      "char": "*",
+      "solid": true,
+      "breakable": true,
+      "color": "white"
+    },
+    "ice": {
+      "char": "=",
+      "solid": true,
+      "breakable": true,
+      "color": "cyan_bright"
     }
   }
 }

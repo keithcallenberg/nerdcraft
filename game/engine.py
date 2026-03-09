@@ -1,6 +1,7 @@
 """Main game engine with fixed-timestep game loop."""
 
 from __future__ import annotations
+import curses
 import time
 from pathlib import Path
 
@@ -14,6 +15,7 @@ from world.generator import WorldGenerator
 from world.save import SaveManager
 from entity.player import Player
 from entity.physics import PhysicsEngine
+from entity.crafting import RecipeEngine
 from render.renderer import Renderer
 from input.handler import InputHandler, Action
 from config import GameConfig
@@ -94,6 +96,11 @@ class GameEngine:
         self._inventory_open = False
         self._inventory_cursor = 0
 
+        # Crafting overlay state
+        self._recipe_engine = RecipeEngine()
+        self._crafting_open = False
+        self._crafting_cursor = 0
+
         # Death screen timer (None = alive, >0 = showing death screen)
         self._death_timer: float | None = None
         self._death_duration = 2.0  # seconds to show death screen
@@ -133,6 +140,10 @@ class GameEngine:
             elif self._inventory_open:
                 # Inventory screen — no physics, just handle inventory input
                 self._handle_inventory_input()
+                self._render()
+            elif self._crafting_open:
+                # Crafting screen — no physics, just handle crafting input
+                self._handle_crafting_input()
                 self._render()
             else:
                 # Normal gameplay
@@ -210,6 +221,8 @@ class GameEngine:
                 self._pending_action = 'place'
             elif action == Action.INVENTORY:
                 self._inventory_open = True
+            elif action == Action.CRAFT:
+                self._crafting_open = True
 
     def _update(self, dt: float) -> None:
         """Update game state for one tick."""
@@ -308,6 +321,39 @@ class GameEngine:
                 self.running = False
                 return
 
+    def _handle_crafting_input(self) -> None:
+        """Process input while crafting overlay is open."""
+        while True:
+            key = self.renderer.get_key()
+            if key == -1:
+                break
+
+            action = self.input_handler.process_key(key)
+            recipes = self._recipe_engine.available_recipes(self.player.inventory)
+
+            if action == Action.CRAFT:
+                self._crafting_open = False
+            elif action == Action.QUIT:
+                self._crafting_open = False
+            elif action == Action.JUMP:
+                # W / Up = cursor up
+                if self._crafting_cursor > 0:
+                    self._crafting_cursor -= 1
+            elif action == Action.STOP:
+                # S / Down = cursor down
+                if self._crafting_cursor < len(recipes) - 1:
+                    self._crafting_cursor += 1
+            elif key in (10, 13, curses.KEY_ENTER, ord(' ')):
+                # Enter / Space = craft selected recipe
+                if recipes and 0 <= self._crafting_cursor < len(recipes):
+                    recipe = recipes[self._crafting_cursor]
+                    self._recipe_engine.craft(self.player.inventory, recipe.recipe_id)
+                    refreshed = self._recipe_engine.available_recipes(self.player.inventory)
+                    if refreshed:
+                        self._crafting_cursor = min(self._crafting_cursor, len(refreshed) - 1)
+                    else:
+                        self._crafting_cursor = 0
+
     def _render(self) -> None:
         """Render current game state."""
         if self._inventory_open:
@@ -320,6 +366,17 @@ class GameEngine:
             self.renderer.render_inventory(
                 self.player.inventory, self._hotbar,
                 self._hotbar_index, self._inventory_cursor,
+            )
+        elif self._crafting_open:
+            recipes = self._recipe_engine.available_recipes(self.player.inventory)
+            if recipes:
+                self._crafting_cursor = min(self._crafting_cursor, len(recipes) - 1)
+            else:
+                self._crafting_cursor = 0
+            self.renderer.render_crafting(
+                self.player.inventory,
+                recipes,
+                self._crafting_cursor,
             )
         else:
             self.renderer.render(

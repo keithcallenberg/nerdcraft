@@ -239,13 +239,13 @@ class Renderer:
                        save_flash: bool = False) -> None:
         """Render status bar at bottom of screen."""
         if save_flash:
-            status = " \u2713 World saved!  |  A/D:Move  W:Jump  M:Mine  P:Place  1-5/E/R:Hotbar  I:Inv  Q:Quit"
+            status = " \u2713 World saved!  |  A/D:Move  W:Jump  M:Mine  P:Place  1-5/E/R:Hotbar  I:Inv  C:Craft  Q:Quit"
         elif pending_action is not None:
             label = pending_action.upper()
             status = f" {label} >> press direction (A/D/W/S)"
         else:
             status = f" Pos: ({player.x}, {player.y}) | "
-            status += "A/D:Move  W:Jump  M:Mine  P:Place  1-5/E/R:Hotbar  I:Inv  Q:Quit"
+            status += "A/D:Move  W:Jump  M:Mine  P:Place  1-5/E/R:Hotbar  I:Inv  C:Craft  Q:Quit"
 
         # Truncate if too long
         status = status[:self.width - 1]

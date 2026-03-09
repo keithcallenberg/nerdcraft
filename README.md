@@ -83,8 +83,10 @@ python3 main.py --save myadventure
 | 1–5 | Select hotbar slot |
 | E / R | Cycle hotbar next/prev |
 | I / Tab | Open inventory |
-| C | Open crafting panel (selection/craft wiring in progress) |
+| C | Open/close crafting panel |
 | Q / Esc | Quit (auto-saves) |
+
+In the crafting panel: **W/S** selects recipes, **Enter/Space** crafts, **C** closes.
 
 ## World & Content Configuration
 

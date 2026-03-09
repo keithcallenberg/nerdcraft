@@ -50,6 +50,11 @@ Systems are cleanly separated and communicate through well-defined interfaces.
 - Exposes constants loaded from JSON via `GameConfig` singleton
 - All physics, world-size, terrain constants live here
 
+### `game/clock.py` — DayClock *(Phase 4 groundwork)*
+- Tracks global simulation ticks as in-game time-of-day
+- Provides wrapped `tick_in_day`, normalized `day_progress`, day/night state
+- Exposes HUD helpers (`☀` / `☾`, `HH:MM` string)
+
 ### `world/world.py` — World
 - Chunk-based block storage: `dict[(cx,cy)] → Chunk`
 - World/chunk coordinate conversion

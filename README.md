@@ -116,13 +116,15 @@ cd nerdcraft
 python3 -m unittest discover -s tests -p 'test_*.py'
 ```
 
-Current integration-style coverage includes: chop wood → craft planks → craft workbench.
+Current integration-style coverage includes:
+- chop wood → craft planks → craft workbench
+- day/night clock tick progression and wraparound behavior
 
 ## Roadmap
 
 See [PLAN.md](PLAN.md) for the full development roadmap.
 
-Next up: **Crafting System** (Phase 3) and **Day/Night Cycle** (Phase 4).
+Next up: **Day/Night Cycle** integration work (renderer darkness, torch lighting, night-only spawning).
 
 ## Inspiration
 

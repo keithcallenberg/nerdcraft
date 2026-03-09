@@ -60,7 +60,7 @@
 
 ## Phase 4 — Day/Night Cycle + Lighting *(future)*
 
-- [ ] Create `game/clock.py` — DayClock tracking ticks → time of day
+- [x] Create `game/clock.py` — DayClock tracking ticks → time of day
 - [ ] Add `day_length_ticks` to `config/game.json`
 - [ ] Apply darkness attribute to blocks at night in renderer
 - [ ] Add torch block with `light_radius` property

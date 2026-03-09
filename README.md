@@ -95,7 +95,7 @@ All game content lives in `config/`:
 
 | File | What it controls |
 |------|------------------|
-| `config/game.json` | Physics, world size, terrain, save settings |
+| `config/game.json` | Physics, world size, terrain, save settings, day/night timing |
 | `config/blocks.json` | Block characters, colors, solid/breakable flags |
 | `config/colors.json` | Curses color pair definitions |
 | `config/mobs.json` | Mob types, AI behavior, drops, spawn weights |

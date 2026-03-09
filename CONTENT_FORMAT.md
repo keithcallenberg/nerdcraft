@@ -1,6 +1,6 @@
 # Nerdcraft Content Format Reference
 
-> Last updated: 2026-03-07
+> Last updated: 2026-03-09
 
 All game content is defined in JSON files under `config/`.
 This document describes each file's schema with examples.
@@ -14,7 +14,8 @@ Top-level game constants.
 ```json
 {
   "game_loop": {
-    "tick_rate": 600          // physics ticks per second
+    "tick_rate": 600,          // physics ticks per second
+    "day_length_ticks": 36000  // full day+night cycle length in ticks
   },
   "world": {
     "chunk_size": 16,          // blocks per chunk edge

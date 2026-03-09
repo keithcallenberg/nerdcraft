@@ -82,6 +82,7 @@ class GameConfig:
         game_loop = data.get('game_loop', {})
         self.tick_rate = game_loop.get('tick_rate', 60)
         self.tick_duration = 1.0 / self.tick_rate
+        self.day_length_ticks = game_loop.get('day_length_ticks', 36000)
 
         # World
         world = data.get('world', {})

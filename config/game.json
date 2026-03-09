@@ -1,6 +1,7 @@
 {
   "game_loop": {
-    "tick_rate": 600
+    "tick_rate": 600,
+    "day_length_ticks": 36000
   },
   "world": {
     "chunk_size": 16,

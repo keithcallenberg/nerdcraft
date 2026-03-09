@@ -107,6 +107,11 @@ class GameEngine:
         self._death_timer: float | None = None
         self._death_duration = 2.0  # seconds to show death screen
 
+        # Night spawn pacing for hostile, night_only surface mobs
+        self._night_spawn_interval_ticks = 900
+        self._ticks_since_night_spawn = 0
+        self._night_spawn_cap = 18
+
     @property
     def selected_block(self) -> BlockType | None:
         return self._hotbar[self._hotbar_index]
@@ -259,6 +264,22 @@ class GameEngine:
         # Remove dead mobs and collect their drops
         for mob in dead_mobs:
             self.mobs.remove(mob)
+
+        # Night-only hostile surface spawns
+        if self.clock.is_night:
+            self._ticks_since_night_spawn += 1
+            if (
+                self._ticks_since_night_spawn >= self._night_spawn_interval_ticks
+                and len(self.mobs) < self._night_spawn_cap
+            ):
+                self._ticks_since_night_spawn = 0
+                occupied = {(self.player.x, self.player.y)}
+                occupied.update((mob.x, mob.y) for mob in self.mobs if mob.is_alive)
+                spawned = self.generator.spawn_night_hostile(self.world, occupied)
+                if spawned is not None and abs(spawned.x - self.player.x) >= 12:
+                    self.mobs.append(spawned)
+        else:
+            self._ticks_since_night_spawn = 0
 
         # Trigger death screen
         if self.player.health <= 0 and self._death_timer is None:

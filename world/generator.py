@@ -226,7 +226,7 @@ class WorldGenerator:
                 self.generate_chunk(chunk)
 
     def spawn_mobs(self, world: World) -> list:
-        """Spawn mobs on the world surface using weighted selection from MobRegistry."""
+        """Spawn daytime/default surface mobs using weighted selection."""
         from entity.mob import Mob
         from entity.mob_registry import MobRegistry
 
@@ -258,6 +258,48 @@ class WorldGenerator:
                 mob = Mob(sample_x, surface_y + 1, mob_id=chosen_def.mob_id)
                 mobs.append(mob)
         return mobs
+
+    def spawn_night_hostile(
+        self,
+        world: World,
+        occupied_positions: set[tuple[int, int]] | None = None,
+    ):
+        """Spawn one night-only hostile surface mob, if possible."""
+        from entity.mob import Mob
+        from entity.mob_registry import MobRegistry
+
+        registry = MobRegistry.get()
+        night_pool = [
+            d for d in registry.all_defs()
+            if d.hostile and d.spawn.surface and d.spawn.night_only
+        ]
+        if not night_pool:
+            return None
+
+        weights = [d.spawn.weight for d in night_pool]
+        total_weight = sum(weights)
+        occupied = occupied_positions or set()
+
+        world_width = WORLD_WIDTH_CHUNKS * CHUNK_SIZE
+        for _ in range(6):
+            sample_x = self._rng.randrange(0, world_width)
+            surface_y = self.get_surface_height(sample_x)
+            pos = (sample_x, surface_y + 1)
+            if pos in occupied:
+                continue
+
+            pick = self._rng.randrange(total_weight)
+            cumulative = 0
+            chosen_def = night_pool[0]
+            for defn, w in zip(night_pool, weights):
+                cumulative += w
+                if pick < cumulative:
+                    chosen_def = defn
+                    break
+
+            return Mob(sample_x, surface_y + 1, mob_id=chosen_def.mob_id)
+
+        return None
 
     def get_spawn_position(self) -> tuple[int, int]:
         """Get a valid spawn position for the player."""

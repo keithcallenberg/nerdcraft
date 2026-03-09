@@ -20,9 +20,9 @@ A 2D side-scroller sandbox game in the spirit of Terraria, rendered entirely in 
 - **Inventory & hotbar** — 5-slot hotbar, full inventory overlay (I key)
 - **Mobs** — passive and hostile creatures defined in JSON
   - 🐄 **Cow** — passive, wanders randomly, drops leather
-  - 🧟 **Zombie** — hostile, chases player on sight, deals melee damage
+  - 🧟 **Zombie** — hostile, night-only surface spawns, deals melee damage
   - 🕷 **Spider** — hostile, fast, spawns underground
-  - 💀 **Skeleton** — hostile, long detection range
+  - 💀 **Skeleton** — hostile, night-only surface spawns, long detection range
 - **Combat** — mine/attack key (M) hits mobs, hostile mobs chase and attack player
 - **Death & respawn** — death screen, automatic respawn at spawn point
 - **Save / Load** — world and player state persisted to disk automatically
@@ -33,6 +33,7 @@ A 2D side-scroller sandbox game in the spirit of Terraria, rendered entirely in 
   - Current crafted blocks: `wood_plank`, `workbench`, `torch`, `stone_brick`
 - **JSON-driven content** — blocks, colors, physics, mobs, and recipes configured via JSON
 - **Day/night visuals** — world blocks are dimmed at night based on the global day clock
+- **Night spawning** — mobs with `spawn.night_only: true` can spawn on the surface during night
 - **Torch lighting** — placed torches emit a configurable local light radius at night
 
 ## Requirements
@@ -126,7 +127,7 @@ Current integration-style coverage includes:
 
 See [PLAN.md](PLAN.md) for the full development roadmap.
 
-Next up: **Day/Night Cycle** follow-ups (torch lighting, night-only spawning, HUD time icon).
+Next up: **Day/Night Cycle** follow-up (HUD time icon).
 
 ## Inspiration
 

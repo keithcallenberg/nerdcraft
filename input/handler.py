@@ -22,6 +22,7 @@ class Action(Enum):
     HOTBAR_NEXT = auto()
     HOTBAR_PREV = auto()
     INVENTORY = auto()
+    CRAFT = auto()
     QUIT = auto()
 
 
@@ -70,6 +71,10 @@ class InputHandler:
         ord('i'): Action.INVENTORY,
         ord('I'): Action.INVENTORY,
         ord('\t'): Action.INVENTORY,
+
+        # Crafting
+        ord('c'): Action.CRAFT,
+        ord('C'): Action.CRAFT,
 
         # Quit
         ord('q'): Action.QUIT,

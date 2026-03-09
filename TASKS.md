@@ -50,7 +50,7 @@
 - [x] Create `entity/crafting.py` — RecipeEngine
   - [x] `available_recipes(inventory)` → list of craftable recipes
   - [x] `craft(inventory, recipe_id)` → mutates inventory
-- [ ] Add `CRAFT` action to `input/handler.py` (C key)
+- [x] Add `CRAFT` action to `input/handler.py` (C key)
 - [ ] Add crafting UI panel to `render/renderer.py`
   - [ ] Side-by-side with inventory: left=items, right=available recipes
   - [ ] Select recipe with W/S, craft with Enter/Space

@@ -44,9 +44,9 @@
 
 ## Phase 3 — Crafting System *(next)*
 
-- [ ] Design and create `config/recipes.json`
-  - [ ] Hand-craft recipes (no station needed)
-  - [ ] Workbench recipes
+- [x] Design and create `config/recipes.json`
+  - [x] Hand-craft recipes (no station needed)
+  - [x] Workbench recipes
 - [ ] Create `entity/crafting.py` — RecipeEngine
   - [ ] `available_recipes(inventory)` → list of craftable recipes
   - [ ] `craft(inventory, recipe_id)` → mutates inventory

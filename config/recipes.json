@@ -1,0 +1,53 @@
+{
+  "recipes": [
+    {
+      "id": "wood_to_planks",
+      "name": "Wood Planks",
+      "inputs": [
+        { "item": "wood", "count": 1 }
+      ],
+      "outputs": [
+        { "item": "wood_plank", "count": 4 }
+      ],
+      "station": null,
+      "description": "Craft basic planks from raw wood."
+    },
+    {
+      "id": "planks_to_workbench",
+      "name": "Workbench",
+      "inputs": [
+        { "item": "wood_plank", "count": 4 }
+      ],
+      "outputs": [
+        { "item": "workbench", "count": 1 }
+      ],
+      "station": null,
+      "description": "Build a workbench to unlock advanced crafting."
+    },
+    {
+      "id": "planks_to_torch",
+      "name": "Torch",
+      "inputs": [
+        { "item": "wood_plank", "count": 1 },
+        { "item": "coal_ore", "count": 1 }
+      ],
+      "outputs": [
+        { "item": "torch", "count": 4 }
+      ],
+      "station": "workbench",
+      "description": "Craft torches for portable light."
+    },
+    {
+      "id": "stone_to_bricks",
+      "name": "Stone Bricks",
+      "inputs": [
+        { "item": "stone", "count": 4 }
+      ],
+      "outputs": [
+        { "item": "stone_brick", "count": 4 }
+      ],
+      "station": "workbench",
+      "description": "Shape stone into building bricks."
+    }
+  ]
+}

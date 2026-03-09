@@ -94,6 +94,7 @@ All game content lives in `config/`:
 | `config/blocks.json` | Block characters, colors, solid/breakable flags |
 | `config/colors.json` | Curses color pair definitions |
 | `config/mobs.json` | Mob types, AI behavior, drops, spawn weights |
+| `config/recipes.json` | Crafting recipe definitions (hand + workbench) |
 
 See [CONTENT_FORMAT.md](CONTENT_FORMAT.md) for full schema documentation.
 

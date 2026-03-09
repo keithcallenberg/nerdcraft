@@ -121,22 +121,24 @@ Defines all mob types. Loaded by a `MobRegistry` at startup.
 
 ---
 
-## `config/recipes.json` *(Phase 3 — planned)*
+## `config/recipes.json`
 
-Defines crafting recipes. All items are block type names.
+Defines crafting recipes. Item IDs map to block/item names used by inventory and world content.
 
 ```json
 {
   "recipes": [
     {
-      "id": "wooden_planks",
+      "id": "wood_to_planks",      // unique recipe id (snake_case)
+      "name": "Wood Planks",       // display name for UI
       "inputs": [
         { "item": "wood", "count": 1 }
       ],
       "outputs": [
         { "item": "wood_plank", "count": 4 }
       ],
-      "station": null        // null = hand-craft; "workbench" = needs workbench
+      "station": null,               // null = hand-craft; "workbench" = needs workbench
+      "description": "Craft basic planks from raw wood."
     }
   ]
 }

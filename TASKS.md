@@ -1,6 +1,6 @@
 # Nerdcraft Task Tracker
 
-> Last updated: 2026-03-09
+> Last updated: 2026-03-10
 
 ## Phase 1 — Save / Load System ✅ COMPLETE
 
@@ -79,7 +79,7 @@
 
 - [x] Event-driven sound (footsteps, mining, hit, death)
 - [x] Procedural ambient music via numpy + sounddevice
-- [ ] `config/sounds.json` definitions
+- [x] `config/sounds.json` definitions
 
 ## Phase 7 — Multiplayer *(future)*
 

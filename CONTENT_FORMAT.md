@@ -173,3 +173,23 @@ Defines crafting recipes. Item IDs map to block/item names used by inventory and
   }
 }
 ```
+
+---
+
+## `config/sounds.json`
+
+Defines event-driven terminal SFX behaviour.
+
+```json
+{
+  "events": {
+    "<event_id>": {
+      "enabled": true,   // false disables this event entirely
+      "cooldown": 0.08,  // minimum seconds between plays for this event
+      "beep_count": 1    // number of terminal beeps per trigger
+    }
+  }
+}
+```
+
+Current built-in event IDs: `footstep`, `mining`, `hit`, `death`.

@@ -33,7 +33,7 @@ A 2D side-scroller sandbox game in the spirit of Terraria, rendered entirely in 
   - Loads automatically on next launch
 - **Crafting UI panel** — side-by-side inventory + craftable recipe browser
   - Current crafted blocks: `wood_plank`, `workbench`, `torch`, `stone_brick`
-- **JSON-driven content** — blocks, colors, physics, mobs, and recipes configured via JSON
+- **JSON-driven content** — blocks, colors, physics, mobs, recipes, biomes, and sounds configured via JSON
 - **Day/night visuals** — world blocks are dimmed at night based on the global day clock
 - **HUD time icon** — top-left HUD shows ☀ during day and ☾ during night
 - **Biome-specific mob spawning** — each biome's `mob_spawn_table` controls which mobs can spawn there
@@ -112,6 +112,7 @@ All game content lives in `config/`:
 | `config/mobs.json` | Mob types, AI behavior, drops, spawn weights |
 | `config/recipes.json` | Crafting recipe definitions (hand + workbench) |
 | `config/biomes.json` | Biome definitions (surface layers, tree density, ore multipliers, spawn tables) |
+| `config/sounds.json` | Event SFX cue tuning (`enabled`, cooldown, bell/beep count per event) |
 
 See [CONTENT_FORMAT.md](CONTENT_FORMAT.md) for full schema documentation.
 
@@ -137,7 +138,7 @@ Current integration-style coverage includes:
 
 See [PLAN.md](PLAN.md) for the full development roadmap.
 
-Next up: **Sound / Procedural Audio** config polishing (`config/sounds.json` definitions).
+Next up: **Multiplayer** foundations (`asyncio` server/client architecture).
 
 ## Inspiration
 

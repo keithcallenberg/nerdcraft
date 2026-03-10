@@ -1,0 +1,24 @@
+{
+  "events": {
+    "footstep": {
+      "enabled": true,
+      "cooldown": 0.08,
+      "beep_count": 1
+    },
+    "mining": {
+      "enabled": true,
+      "cooldown": 0.05,
+      "beep_count": 1
+    },
+    "hit": {
+      "enabled": true,
+      "cooldown": 0.15,
+      "beep_count": 2
+    },
+    "death": {
+      "enabled": true,
+      "cooldown": 0.5,
+      "beep_count": 3
+    }
+  }
+}

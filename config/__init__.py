@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 from typing import Any, Dict, Optional
 from dataclasses import dataclass
+from collections.abc import Mapping
 
 
 # Find the config directory relative to this file
@@ -51,6 +52,14 @@ class SaveConfig:
     save_dir: Path
 
 
+@dataclass
+class SoundEventConfig:
+    """Configuration for a single sound event cue."""
+    enabled: bool = True
+    cooldown: float = 0.1
+    beep_count: int = 1
+
+
 class GameConfig:
     """Centralized game configuration loaded from JSON files."""
 
@@ -61,6 +70,7 @@ class GameConfig:
         self._load_game_config()
         self._load_blocks_config()
         self._load_colors_config()
+        self._load_sounds_config()
 
     @classmethod
     def get(cls) -> GameConfig:
@@ -150,6 +160,20 @@ class GameConfig:
                 foreground=props.get('foreground', 'default'),
                 background=props.get('background', 'default'),
                 bold=props.get('bold', False)
+            )
+
+    def _load_sounds_config(self) -> None:
+        """Load sounds.json configuration."""
+        data = _load_json('sounds.json')
+        self.sounds: Dict[str, SoundEventConfig] = {}
+
+        for name, props in data.get('events', {}).items():
+            if not isinstance(props, Mapping):
+                continue
+            self.sounds[name] = SoundEventConfig(
+                enabled=bool(props.get('enabled', True)),
+                cooldown=float(props.get('cooldown', 0.1)),
+                beep_count=max(1, int(props.get('beep_count', 1))),
             )
 
     def get_block(self, name: str) -> BlockConfig:

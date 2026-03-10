@@ -88,6 +88,12 @@
 - [ ] Multiple player entities visible
 - [ ] Simple connect-by-IP lobby
 
+## Phase 8 — Items and Weapons/Tools/Consumables
+
+- [ ] Non-block items, can be in inventory like blocks but cannot be placed. eg. meat dropped by cows, apples dropped by mining leaves, etc.
+- [ ] Tools or weapons can be placed in hotbar and each serves a particular purpose, eg. picks for mining, swords do more damage, etc. Each has a particular material tier, as in Terraria or Minecraft. Consumables (eg. apple) restore health. Remove "p" and "m" keysbinds, instead replace with "space" key which uses whichever item you have selected. (eg. consumes a consumable, mines with a tool, attacks with a weapon, mines or attacks with fist) 
+- [ ] Higher tier weapons simply do more damage, while higher tools mine a wider range of blocks (eg. you can mine grass and dirt with your fist, but you need to craft a wood pick for stone and coal ore, then a stone pick for iron ore, iron pick for gold/diamond, etc.)
+
 ## Completed
 
 - [x] Initial game engine with fixed-timestep loop

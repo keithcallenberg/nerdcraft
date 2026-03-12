@@ -388,7 +388,7 @@ class Renderer:
                 else:
                     props = get_item_properties(item_type)
                     name = item_display_name(item_type)
-                    color_pair = 0
+                    color_pair = props.color_pair
                     item_char = props.char
                 count_str = f'x {count}'
 
@@ -475,7 +475,7 @@ class Renderer:
                 else:
                     props = get_item_properties(item_type)
                     name = item_display_name(item_type)
-                    color_pair = 0
+                    color_pair = props.color_pair
                     item_char = props.char
 
                 count_str = f'x {count}'

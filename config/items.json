@@ -1,0 +1,52 @@
+{
+  "items": {
+    "apple": {
+      "char": "a",
+      "color": "red",
+      "item_class": "consumable",
+      "heal_amount": 12
+    },
+    "raw_meat": {
+      "char": "m",
+      "color": "red",
+      "item_class": "consumable",
+      "heal_amount": 20
+    },
+    "wood_pickaxe": {
+      "char": "T",
+      "color": "yellow",
+      "item_class": "tool",
+      "mining_tier": 1
+    },
+    "stone_pickaxe": {
+      "char": "T",
+      "color": "white",
+      "item_class": "tool",
+      "mining_tier": 2
+    },
+    "iron_pickaxe": {
+      "char": "T",
+      "color": "cyan_bright",
+      "item_class": "tool",
+      "mining_tier": 3
+    },
+    "wood_sword": {
+      "char": "/",
+      "color": "yellow",
+      "item_class": "weapon",
+      "attack_damage": 8
+    },
+    "stone_sword": {
+      "char": "/",
+      "color": "white",
+      "item_class": "weapon",
+      "attack_damage": 12
+    },
+    "iron_sword": {
+      "char": "/",
+      "color": "cyan_bright",
+      "item_class": "weapon",
+      "attack_damage": 16
+    }
+  }
+}

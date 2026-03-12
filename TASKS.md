@@ -88,11 +88,41 @@
 - [ ] Multiple player entities visible
 - [ ] Simple connect-by-IP lobby
 
-## Phase 8 — Items and Weapons/Tools/Consumables
+## Phase 8 — Items, Tools, Weapons, and Consumables *(next)*
 
-- [ ] Non-block items, can be in inventory like blocks but cannot be placed. eg. meat dropped by cows, apples dropped by mining leaves, etc.
-- [ ] Tools or weapons can be placed in hotbar and each serves a particular purpose, eg. picks for mining, swords do more damage, etc. Each has a particular material tier, as in Terraria or Minecraft. Consumables (eg. apple) restore health. Remove "p" and "m" keysbinds, instead replace with "space" key which uses whichever item you have selected. (eg. consumes a consumable, mines with a tool, attacks with a weapon, mines or attacks with fist) 
-- [ ] Higher tier weapons simply do more damage, while higher tools mine a wider range of blocks (eg. you can mine grass and dirt with your fist, but you need to craft a wood pick for stone and coal ore, then a stone pick for iron ore, iron pick for gold/diamond, etc.)
+- [ ] Add a true non-block item system
+  - [ ] Create item definitions (e.g., `config/items.json`) for materials, tools, weapons, and consumables
+  - [ ] Add support for inventory entries that are items (storable/selectable but not placeable as world blocks)
+  - [ ] Add initial item drops: meat from cows, apples from leaf mining, etc.
+
+- [ ] Implement tool/weapon/consumable behavior by selected hotbar slot
+  - [ ] Add tool classes (pickaxe, etc.) with tier + mining capability metadata
+  - [ ] Add weapon classes (sword, etc.) with tier + damage metadata
+  - [ ] Add consumables (apple, etc.) with effects like health restoration
+  - [ ] Route player action through selected item context:
+    - [ ] Tool selected → mine using tool rules
+    - [ ] Weapon selected → attack using weapon damage
+    - [ ] Consumable selected → consume + apply effect
+    - [ ] Empty hand selected → fallback fist mine/attack behavior
+
+- [ ] Replace legacy mine/place action keys with unified "use" input
+  - [ ] Remove old `P` and `M` keybind logic
+  - [ ] Bind `Space` to a unified "use selected hotbar item" action
+  - [ ] Update HUD/help text and README controls section
+
+- [ ] Add progression rules for tiered mining + combat
+  - [ ] Define minimum tool tiers required per block/ore family
+    - [ ] Fist: grass/dirt/basic blocks only
+    - [ ] Wood pick: stone + coal tier
+    - [ ] Stone pick: iron tier
+    - [ ] Iron pick: gold/diamond tier
+  - [ ] Ensure higher-tier weapons scale damage above lower tiers
+  - [ ] Enforce failed-mine feedback when tier is insufficient
+
+- [ ] Integrate with crafting/economy loop
+  - [ ] Add recipes for tools/weapons/consumables across tiers
+  - [ ] Ensure material drops + recipes support natural progression from fist → wood → stone → iron
+  - [ ] Test full loop: gather → craft tool → unlock new ores → upgrade gear
 
 ## Completed
 

@@ -368,10 +368,16 @@ class Renderer:
             self._safe_addstr(start_row + box_h // 2, msg_col, msg, curses.A_DIM)
         else:
             max_items = box_h - 8  # room for title, hotbar, footer, borders
-            for i, (item_type, count) in enumerate(items):
-                if i >= max_items:
-                    break
-                row = items_start_row + i
+
+            # Scroll window to keep cursor visible in long inventories.
+            total_items = len(items)
+            max_start = max(0, total_items - max_items)
+            visible_start = min(max_start, max(0, cursor - max_items + 1))
+            visible_items = items[visible_start:visible_start + max_items]
+
+            for visible_i, (item_type, count) in enumerate(visible_items):
+                absolute_i = visible_start + visible_i
+                row = items_start_row + visible_i
                 col = start_col + 2
 
                 if isinstance(item_type, BlockType):
@@ -387,7 +393,7 @@ class Renderer:
                 count_str = f'x {count}'
 
                 # Cursor marker
-                if i == cursor:
+                if absolute_i == cursor:
                     row_attr = curses.A_REVERSE
                     self._safe_addstr(row, col, '>', curses.A_BOLD)
                 else:
@@ -410,7 +416,7 @@ class Renderer:
                 self._safe_addstr(row, col + 3, text, row_attr)
 
         # Footer
-        footer = '[W/S] Select  [1-5] Hotbar  [I] Close'
+        footer = '[W/S] Scroll  [1-5] Hotbar  [I] Close'
         footer_col = start_col + (box_w - len(footer)) // 2
         self._safe_addstr(start_row + box_h - 2, footer_col, footer, curses.A_DIM)
 

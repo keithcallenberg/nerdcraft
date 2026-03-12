@@ -17,7 +17,7 @@ from entity.player import Player
 from entity.physics import PhysicsEngine
 from entity.crafting import RecipeEngine
 from entity.inventory import InventoryType
-from entity.item import ItemType, get_item_properties
+from entity.item import ItemType, ItemClass, get_item_properties
 from render.renderer import Renderer
 from input.handler import InputHandler, Action
 from config import GameConfig
@@ -30,6 +30,16 @@ class GameEngine:
     """Main game engine orchestrating all systems."""
 
     HOTBAR_SIZE = 5
+
+    # Mining tier requirements by block type.
+    # 0=fist/basic, 1=wood pick, 2=stone pick, 3=iron pick
+    _MINING_TIER_REQUIRED = {
+        BlockType.STONE: 1,
+        BlockType.COAL_ORE: 1,
+        BlockType.IRON_ORE: 2,
+        BlockType.GOLD_ORE: 3,
+        BlockType.DIAMOND_ORE: 3,
+    }
 
     _HOTBAR_SELECT = {
         Action.HOTBAR_1: 0,
@@ -110,6 +120,10 @@ class GameEngine:
         self._death_timer: float | None = None
         self._death_duration = 2.0  # seconds to show death screen
 
+        # Short status feedback for failed actions, etc.
+        self._status_flash: str | None = None
+        self._status_flash_timer: float = 0.0
+
         # Night spawn pacing for hostile, night_only surface mobs
         self._night_spawn_interval_ticks = 900
         self._ticks_since_night_spawn = 0
@@ -141,6 +155,11 @@ class GameEngine:
                 # Tick save flash timer
                 if self._save_flash > 0:
                     self._save_flash -= frame_time
+
+                if self._status_flash_timer > 0:
+                    self._status_flash_timer -= frame_time
+                    if self._status_flash_timer <= 0:
+                        self._status_flash = None
 
                 if self._death_timer is not None:
                     # Death screen active — count down, drain input, render
@@ -405,7 +424,12 @@ class GameEngine:
                 save_flash=self._save_flash > 0,
                 is_night=self.clock.is_night,
                 time_icon=self.clock.hud_icon,
+                status_message=self._status_flash,
             )
+
+    def _set_status_flash(self, message: str, duration: float = 1.2) -> None:
+        self._status_flash = message
+        self._status_flash_timer = duration
 
     def _facing_direction(self) -> str:
         return 'right' if self.player.facing_right else 'left'
@@ -416,28 +440,53 @@ class GameEngine:
         direction = self._facing_direction()
 
         if selected is None:
-            self._mine_block(direction)
+            self._mine_block(direction, attack_damage=5, mining_tier=0)
             return
 
         if isinstance(selected, ItemType):
             props = get_item_properties(selected)
-            if props.consumable:
+            if props.item_class == ItemClass.CONSUMABLE:
                 if self.player.inventory.remove(selected):
                     self.player.health = min(100, self.player.health + props.heal_amount)
                     if self.player.inventory.count(selected) <= 0:
                         self._hotbar[self._hotbar_index] = None
+                return
+
+            if props.item_class == ItemClass.WEAPON:
+                self._mine_block(
+                    direction,
+                    attack_damage=max(1, props.attack_damage),
+                    mining_tier=0,
+                    allow_block_break=False,
+                )
+                return
+
+            if props.item_class == ItemClass.TOOL:
+                self._mine_block(
+                    direction,
+                    attack_damage=5,
+                    mining_tier=props.mining_tier,
+                )
+                return
+
             return
 
         # Blocks remain placeable for now.
         self._place_block(direction, selected)
 
-    def _mine_block(self, direction: str) -> None:
+    def _mine_block(
+        self,
+        direction: str,
+        attack_damage: int = 5,
+        mining_tier: int = 0,
+        allow_block_break: bool = True,
+    ) -> None:
         """Mine the first breakable block or attack a mob in the given direction."""
         for block_x, block_y in self.player.get_minable_positions_in_direction(direction):
             # Check for mobs at this position first
             for mob in self.mobs:
                 if mob.is_alive and mob.x == block_x and mob.y == block_y:
-                    mob.health -= 5
+                    mob.health -= attack_damage
                     self.sound.play(SoundEvent.MINING)
                     if not mob.is_alive:
                         for drop in mob.drops:
@@ -448,8 +497,22 @@ class GameEngine:
             block = self.world.get_block(block_x, block_y)
 
             if block != BlockType.AIR:
+                if not allow_block_break:
+                    return
+
                 props = get_properties(block)
                 if props.breakable:
+                    required_tier = self._MINING_TIER_REQUIRED.get(block, 0)
+                    if mining_tier < required_tier:
+                        if required_tier == 1:
+                            needed = "wood pickaxe"
+                        elif required_tier == 2:
+                            needed = "stone pickaxe"
+                        else:
+                            needed = "iron pickaxe"
+                        self._set_status_flash(f"Need {needed} for {block.name.lower()}")
+                        return
+
                     self.world.set_block(block_x, block_y, BlockType.AIR)
                     # Add to inventory (leaves not collected, trunk gives wood)
                     if block == BlockType.TRUNK:

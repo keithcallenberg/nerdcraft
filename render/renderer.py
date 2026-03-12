@@ -81,7 +81,8 @@ class Renderer:
                mobs: list | None = None,
                save_flash: bool = False,
                is_night: bool = False,
-               time_icon: str = "") -> None:
+               time_icon: str = "",
+               status_message: str | None = None) -> None:
         """Render the current game state."""
         self.stdscr.erase()
 
@@ -102,7 +103,7 @@ class Renderer:
         self._render_hud(player, hotbar or [], hotbar_index, time_icon=time_icon)
 
         # Render status bar (bottom row)
-        self._render_status(player, save_flash=save_flash)
+        self._render_status(player, save_flash=save_flash, status_message=status_message)
 
         self.stdscr.refresh()
 
@@ -274,9 +275,12 @@ class Renderer:
             col += len(text)
 
     def _render_status(self, player: Player,
-                       save_flash: bool = False) -> None:
+                       save_flash: bool = False,
+                       status_message: str | None = None) -> None:
         """Render status bar at bottom of screen."""
-        if save_flash:
+        if status_message:
+            status = f" {status_message}"
+        elif save_flash:
             status = " \u2713 World saved!  |  A/D:Move  W:Jump  Space:Use  1-5/E/R:Hotbar  I:Inv  C:Craft  Q:Quit"
         else:
             status = f" Pos: ({player.x}, {player.y}) | "

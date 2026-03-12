@@ -48,6 +48,84 @@
       ],
       "station": "workbench",
       "description": "Shape stone into building bricks."
+    },
+    {
+      "id": "wood_pickaxe",
+      "name": "Wood Pickaxe",
+      "inputs": [
+        { "item": "wood_plank", "count": 3 },
+        { "item": "wood", "count": 2 }
+      ],
+      "outputs": [
+        { "item": "wood_pickaxe", "count": 1 }
+      ],
+      "station": "workbench",
+      "description": "Basic mining tool for stone and coal."
+    },
+    {
+      "id": "stone_pickaxe",
+      "name": "Stone Pickaxe",
+      "inputs": [
+        { "item": "stone", "count": 3 },
+        { "item": "wood", "count": 2 }
+      ],
+      "outputs": [
+        { "item": "stone_pickaxe", "count": 1 }
+      ],
+      "station": "workbench",
+      "description": "Mid-tier mining tool for iron ore."
+    },
+    {
+      "id": "iron_pickaxe",
+      "name": "Iron Pickaxe",
+      "inputs": [
+        { "item": "iron_ore", "count": 3 },
+        { "item": "wood", "count": 2 }
+      ],
+      "outputs": [
+        { "item": "iron_pickaxe", "count": 1 }
+      ],
+      "station": "workbench",
+      "description": "Advanced mining tool for gold and diamond ores."
+    },
+    {
+      "id": "wood_sword",
+      "name": "Wood Sword",
+      "inputs": [
+        { "item": "wood_plank", "count": 2 },
+        { "item": "wood", "count": 1 }
+      ],
+      "outputs": [
+        { "item": "wood_sword", "count": 1 }
+      ],
+      "station": "workbench",
+      "description": "Basic melee weapon."
+    },
+    {
+      "id": "stone_sword",
+      "name": "Stone Sword",
+      "inputs": [
+        { "item": "stone", "count": 2 },
+        { "item": "wood", "count": 1 }
+      ],
+      "outputs": [
+        { "item": "stone_sword", "count": 1 }
+      ],
+      "station": "workbench",
+      "description": "Stronger melee weapon."
+    },
+    {
+      "id": "iron_sword",
+      "name": "Iron Sword",
+      "inputs": [
+        { "item": "iron_ore", "count": 2 },
+        { "item": "wood", "count": 1 }
+      ],
+      "outputs": [
+        { "item": "iron_sword", "count": 1 }
+      ],
+      "station": "workbench",
+      "description": "High-damage melee weapon."
     }
   ]
 }

@@ -8,7 +8,7 @@
     },
     "raw_meat": {
       "char": "m",
-      "color": "red",
+      "color": "magenta",
       "item_class": "consumable",
       "heal_amount": 20
     },
@@ -26,7 +26,7 @@
     },
     "iron_pickaxe": {
       "char": "T",
-      "color": "cyan_bright",
+      "color": "cyan",
       "item_class": "tool",
       "mining_tier": 3
     },
@@ -44,9 +44,15 @@
     },
     "iron_sword": {
       "char": "/",
-      "color": "cyan_bright",
+      "color": "cyan",
       "item_class": "weapon",
       "attack_damage": 16
+    }
+    "diamond_sword": {
+      "char": "/",
+      "color": "cyan-bright",
+      "item_class": "weapon",
+      "attack_damage": 24
     }
   }
 }

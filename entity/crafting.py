@@ -6,7 +6,8 @@ from dataclasses import dataclass
 from typing import Optional
 
 from config import _load_json
-from entity.inventory import Inventory
+from entity.inventory import Inventory, InventoryType
+from entity.item import ItemType
 from world.block import BlockType
 
 
@@ -64,11 +65,13 @@ class RecipeEngine:
             )
         return parsed
 
-    def _to_block_type(self, item_name: str) -> BlockType:
-        try:
-            return BlockType[item_name.upper()]
-        except KeyError as exc:
-            raise ValueError(f"Unknown recipe item/block type: {item_name}") from exc
+    def _to_inventory_type(self, item_name: str) -> InventoryType:
+        upper = item_name.upper()
+        if upper in BlockType.__members__:
+            return BlockType[upper]
+        if upper in ItemType.__members__:
+            return ItemType[upper]
+        raise ValueError(f"Unknown recipe item type: {item_name}")
 
     def get_recipe(self, recipe_id: str) -> Optional[Recipe]:
         """Get a recipe by ID."""
@@ -97,15 +100,15 @@ class RecipeEngine:
 
         # Consume inputs.
         for req in recipe.inputs:
-            block_type = self._to_block_type(req.item)
+            item_type = self._to_inventory_type(req.item)
             for _ in range(req.count):
-                inventory.remove(block_type)
+                inventory.remove(item_type)
 
         # Produce outputs.
         for out in recipe.outputs:
-            block_type = self._to_block_type(out.item)
+            item_type = self._to_inventory_type(out.item)
             for _ in range(out.count):
-                inventory.add(block_type)
+                inventory.add(item_type)
 
         return True
 
@@ -113,23 +116,23 @@ class RecipeEngine:
         # Station requirements are currently represented as owning the station item.
         if recipe.station is not None:
             try:
-                station_block = self._to_block_type(recipe.station)
+                station_item = self._to_inventory_type(recipe.station)
             except ValueError:
                 return False
-            if inventory.count(station_block) <= 0:
+            if inventory.count(station_item) <= 0:
                 return False
 
         for req in recipe.inputs:
             try:
-                req_block = self._to_block_type(req.item)
+                req_item = self._to_inventory_type(req.item)
             except ValueError:
                 return False
-            if inventory.count(req_block) < req.count:
+            if inventory.count(req_item) < req.count:
                 return False
 
         for out in recipe.outputs:
             try:
-                self._to_block_type(out.item)
+                self._to_inventory_type(out.item)
             except ValueError:
                 return False
         return True

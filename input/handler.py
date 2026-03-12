@@ -12,8 +12,7 @@ class Action(Enum):
     MOVE_RIGHT = auto()
     STOP = auto()
     JUMP = auto()
-    MINE = auto()
-    PLACE = auto()
+    USE = auto()
     HOTBAR_1 = auto()
     HOTBAR_2 = auto()
     HOTBAR_3 = auto()
@@ -42,7 +41,6 @@ class InputHandler:
 
         ord('w'): Action.JUMP,
         ord('W'): Action.JUMP,
-        ord(' '): Action.JUMP,
         curses.KEY_UP: Action.JUMP,
 
         ord('s'): Action.STOP,
@@ -50,11 +48,7 @@ class InputHandler:
         curses.KEY_DOWN: Action.STOP,
 
         # Actions
-        ord('m'): Action.MINE,
-        ord('M'): Action.MINE,
-
-        ord('p'): Action.PLACE,
-        ord('P'): Action.PLACE,
+        ord(' '): Action.USE,
 
         # Hotbar
         ord('1'): Action.HOTBAR_1,

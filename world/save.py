@@ -116,7 +116,13 @@ class SaveManager:
 
     def _write_player(self, player: "Player") -> None:
         """Write player state as human-readable JSON."""
+        from entity.item import ItemType
         from world.block import BlockType
+
+        def _inv_key(item: BlockType | ItemType) -> str:
+            if isinstance(item, BlockType):
+                return f"block:{item.name}"
+            return f"item:{item.name}"
 
         state = {
             "x": player.x,
@@ -124,8 +130,8 @@ class SaveManager:
             "health": player.health,
             "facing_right": player.facing_right,
             "inventory": {
-                bt.name: count
-                for bt, count in player.inventory.items()
+                _inv_key(item): count
+                for item, count in player.inventory.items()
             },
         }
         with open(self.save_path / "player.json", "w") as f:
@@ -133,6 +139,7 @@ class SaveManager:
 
     def _read_player(self, player: "Player") -> None:
         """Restore player state from JSON."""
+        from entity.item import ItemType
         from world.block import BlockType
 
         with open(self.save_path / "player.json") as f:
@@ -148,7 +155,25 @@ class SaveManager:
 
         player.inventory._items.clear()
         _name_to_block = {b.name: b for b in BlockType}
-        for name, count in state.get("inventory", {}).items():
-            bt = _name_to_block.get(name)
-            if bt is not None and count > 0:
-                player.inventory._items[bt] = count
+        _name_to_item = {i.name: i for i in ItemType}
+
+        for raw_name, count in state.get("inventory", {}).items():
+            if count <= 0:
+                continue
+
+            if ":" in raw_name:
+                prefix, name = raw_name.split(":", 1)
+                if prefix == "block":
+                    block = _name_to_block.get(name)
+                    if block is not None:
+                        player.inventory._items[block] = count
+                elif prefix == "item":
+                    item = _name_to_item.get(name)
+                    if item is not None:
+                        player.inventory._items[item] = count
+                continue
+
+            # Backward compatibility with old save format (block names only)
+            block = _name_to_block.get(raw_name)
+            if block is not None:
+                player.inventory._items[block] = count

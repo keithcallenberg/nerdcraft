@@ -11,7 +11,8 @@
       "attack_interval": 0.0,
       "move_interval": 1.5,
       "drops": [
-        { "item": "LEATHER", "chance": 1.0, "count": 1 }
+        { "item": "RAW_MEAT", "chance": 1.0, "count": 1 },
+        { "item": "LEATHER", "chance": 0.4, "count": 1 }
       ],
       "spawn": {
         "surface": true,

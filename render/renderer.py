@@ -7,7 +7,8 @@ from render.camera import Camera
 from world.world import World
 from world.block import BlockType, get_properties, display_name
 from entity.player import Player
-from entity.inventory import Inventory
+from entity.inventory import Inventory, InventoryType
+from entity.item import ItemType, get_item_properties, item_display_name
 from game.config import PLAYER_CHAR
 from config import GameConfig
 
@@ -75,8 +76,7 @@ class Renderer:
                 pass  # Some color pairs may not be supported
 
     def render(self, world: World, player: Player,
-               pending_action: str | None = None,
-               hotbar: List[BlockType | None] | None = None,
+               hotbar: List[InventoryType | None] | None = None,
                hotbar_index: int = 0,
                mobs: list | None = None,
                save_flash: bool = False,
@@ -102,7 +102,7 @@ class Renderer:
         self._render_hud(player, hotbar or [], hotbar_index, time_icon=time_icon)
 
         # Render status bar (bottom row)
-        self._render_status(player, pending_action, save_flash=save_flash)
+        self._render_status(player, save_flash=save_flash)
 
         self.stdscr.refresh()
 
@@ -200,7 +200,7 @@ class Renderer:
             except curses.error:
                 pass
 
-    def _render_hud(self, player: Player, hotbar: List[BlockType | None],
+    def _render_hud(self, player: Player, hotbar: List[InventoryType | None],
                     hotbar_index: int, time_icon: str = "") -> None:
         """Render HUD row: health on the left, hotbar on the right."""
         row = self.HUD_ROW
@@ -243,11 +243,15 @@ class Renderer:
             slot_parts.append(('[', attr))
 
             if block_type is not None:
-                props = get_properties(block_type)
                 block_attr = attr
-                if curses.has_colors() and props.color_pair > 0:
-                    block_attr |= curses.color_pair(props.color_pair)
-                slot_parts.append((props.char, block_attr))
+                if isinstance(block_type, BlockType):
+                    props = get_properties(block_type)
+                    if curses.has_colors() and props.color_pair > 0:
+                        block_attr |= curses.color_pair(props.color_pair)
+                    slot_parts.append((props.char, block_attr))
+                else:
+                    props = get_item_properties(block_type)
+                    slot_parts.append((props.char, block_attr))
             else:
                 slot_parts.append((' ', attr))
 
@@ -270,17 +274,13 @@ class Renderer:
             col += len(text)
 
     def _render_status(self, player: Player,
-                       pending_action: str | None = None,
                        save_flash: bool = False) -> None:
         """Render status bar at bottom of screen."""
         if save_flash:
-            status = " \u2713 World saved!  |  A/D:Move  W:Jump  M:Mine  P:Place  1-5/E/R:Hotbar  I:Inv  C:Craft  Q:Quit"
-        elif pending_action is not None:
-            label = pending_action.upper()
-            status = f" {label} >> press direction (A/D/W/S)"
+            status = " \u2713 World saved!  |  A/D:Move  W:Jump  Space:Use  1-5/E/R:Hotbar  I:Inv  C:Craft  Q:Quit"
         else:
             status = f" Pos: ({player.x}, {player.y}) | "
-            status += "A/D:Move  W:Jump  M:Mine  P:Place  1-5/E/R:Hotbar  I:Inv  C:Craft  Q:Quit"
+            status += "A/D:Move  W:Jump  Space:Use  1-5/E/R:Hotbar  I:Inv  C:Craft  Q:Quit"
 
         # Truncate if too long
         status = status[:self.width - 1]
@@ -291,7 +291,7 @@ class Renderer:
             pass
 
     def render_inventory(self, inventory: Inventory,
-                         hotbar: List[BlockType | None] | None = None,
+                         hotbar: List[InventoryType | None] | None = None,
                          hotbar_index: int = 0,
                          cursor: int = 0) -> None:
         """Render the inventory overlay screen."""
@@ -339,11 +339,15 @@ class Renderer:
             self._safe_addstr(hb_row, hb_col, num, attr)
             self._safe_addstr(hb_row, hb_col + 1, '[', attr)
             if slot is not None:
-                props = get_properties(slot)
                 ch_attr = attr
-                if curses.has_colors() and props.color_pair > 0:
-                    ch_attr |= curses.color_pair(props.color_pair)
-                self._safe_addstr(hb_row, hb_col + 2, props.char, ch_attr)
+                if isinstance(slot, BlockType):
+                    props = get_properties(slot)
+                    if curses.has_colors() and props.color_pair > 0:
+                        ch_attr |= curses.color_pair(props.color_pair)
+                    self._safe_addstr(hb_row, hb_col + 2, props.char, ch_attr)
+                else:
+                    props = get_item_properties(slot)
+                    self._safe_addstr(hb_row, hb_col + 2, props.char, ch_attr)
             else:
                 self._safe_addstr(hb_row, hb_col + 2, ' ', attr)
             self._safe_addstr(hb_row, hb_col + 3, '] ', attr)
@@ -360,14 +364,22 @@ class Renderer:
             self._safe_addstr(start_row + box_h // 2, msg_col, msg, curses.A_DIM)
         else:
             max_items = box_h - 8  # room for title, hotbar, footer, borders
-            for i, (block_type, count) in enumerate(items):
+            for i, (item_type, count) in enumerate(items):
                 if i >= max_items:
                     break
                 row = items_start_row + i
                 col = start_col + 2
 
-                props = get_properties(block_type)
-                name = display_name(block_type)
+                if isinstance(item_type, BlockType):
+                    props = get_properties(item_type)
+                    name = display_name(item_type)
+                    color_pair = props.color_pair
+                    item_char = props.char
+                else:
+                    props = get_item_properties(item_type)
+                    name = item_display_name(item_type)
+                    color_pair = 0
+                    item_char = props.char
                 count_str = f'x {count}'
 
                 # Cursor marker
@@ -380,9 +392,9 @@ class Renderer:
 
                 # block_char in its color
                 char_attr = row_attr
-                if curses.has_colors() and props.color_pair > 0:
-                    char_attr |= curses.color_pair(props.color_pair)
-                self._safe_addstr(row, col + 2, props.char, char_attr | curses.A_BOLD)
+                if curses.has_colors() and color_pair > 0:
+                    char_attr |= curses.color_pair(color_pair)
+                self._safe_addstr(row, col + 2, item_char, char_attr | curses.A_BOLD)
 
                 # name + dots + count
                 avail = inner_w - 4  # space after "> X "
@@ -444,16 +456,25 @@ class Renderer:
         if not items:
             self._safe_addstr(inner_top, inner_left, 'Empty', curses.A_DIM)
         else:
-            for i, (block_type, count) in enumerate(items[:max_rows]):
-                props = get_properties(block_type)
-                name = display_name(block_type)
+            for i, (item_type, count) in enumerate(items[:max_rows]):
+                if isinstance(item_type, BlockType):
+                    props = get_properties(item_type)
+                    name = display_name(item_type)
+                    color_pair = props.color_pair
+                    item_char = props.char
+                else:
+                    props = get_item_properties(item_type)
+                    name = item_display_name(item_type)
+                    color_pair = 0
+                    item_char = props.char
+
                 count_str = f'x {count}'
                 dots_len = max(1, left_width - len(name) - len(count_str) - 4)
-                text = f' {props.char} {name} {"." * dots_len} {count_str}'
+                text = f' {item_char} {name} {"." * dots_len} {count_str}'
                 row = inner_top + i
                 attr = curses.A_NORMAL
-                if curses.has_colors() and props.color_pair > 0:
-                    attr |= curses.color_pair(props.color_pair)
+                if curses.has_colors() and color_pair > 0:
+                    attr |= curses.color_pair(color_pair)
                 self._safe_addstr(row, inner_left, text[:left_width], attr)
 
         # Right panel: available recipes list

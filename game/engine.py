@@ -16,6 +16,8 @@ from world.save import SaveManager
 from entity.player import Player
 from entity.physics import PhysicsEngine
 from entity.crafting import RecipeEngine
+from entity.inventory import InventoryType
+from entity.item import ItemType, get_item_properties
 from render.renderer import Renderer
 from input.handler import InputHandler, Action
 from config import GameConfig
@@ -92,11 +94,8 @@ class GameEngine:
         self.music = AmbientMusic()
 
         # Hotbar: 5 assignable slots, all start empty
-        self._hotbar: list[BlockType | None] = [None] * self.HOTBAR_SIZE
+        self._hotbar: list[InventoryType | None] = [None] * self.HOTBAR_SIZE
         self._hotbar_index = 0
-
-        # Pending action awaiting a direction key ('mine', 'place', or None)
-        self._pending_action: str | None = None
 
         # Inventory overlay state
         self._inventory_open = False
@@ -117,7 +116,7 @@ class GameEngine:
         self._night_spawn_cap = 18
 
     @property
-    def selected_block(self) -> BlockType | None:
+    def selected_item(self) -> InventoryType | None:
         return self._hotbar[self._hotbar_index]
 
     def run(self) -> None:
@@ -197,17 +196,6 @@ class GameEngine:
                 self.running = False
                 return
 
-            # If a mine/place is pending, the next direction key executes it
-            if self._pending_action is not None:
-                direction = self._DIRECTION_MAP.get(action)
-                if direction is not None:
-                    if self._pending_action == 'mine':
-                        self._mine_block(direction)
-                    else:
-                        self._place_block(direction)
-                    self._pending_action = None
-                    continue
-
             # Hotbar selection
             if action in self._HOTBAR_SELECT:
                 self._hotbar_index = self._HOTBAR_SELECT[action]
@@ -231,10 +219,8 @@ class GameEngine:
                 if self.player.on_ground:
                     self.player.jump_remaining = self.physics.jump_height
                     self.player.on_ground = False
-            elif action == Action.MINE:
-                self._pending_action = 'mine'
-            elif action == Action.PLACE:
-                self._pending_action = 'place'
+            elif action == Action.USE:
+                self._use_selected()
             elif action == Action.INVENTORY:
                 self._inventory_open = True
             elif action == Action.CRAFT:
@@ -310,7 +296,6 @@ class GameEngine:
         self.player.fall_distance = 0
         self.player.jump_remaining = 0
         self.player.on_ground = False
-        self._pending_action = None
         self._death_timer = None
 
     def _handle_inventory_input(self) -> None:
@@ -415,12 +400,36 @@ class GameEngine:
             )
         else:
             self.renderer.render(
-                self.world, self.player, self._pending_action,
+                self.world, self.player,
                 self._hotbar, self._hotbar_index, self.mobs,
                 save_flash=self._save_flash > 0,
                 is_night=self.clock.is_night,
                 time_icon=self.clock.hud_icon,
             )
+
+    def _facing_direction(self) -> str:
+        return 'right' if self.player.facing_right else 'left'
+
+    def _use_selected(self) -> None:
+        """Use selected hotbar item, or fallback to fist mining/attack."""
+        selected = self.selected_item
+        direction = self._facing_direction()
+
+        if selected is None:
+            self._mine_block(direction)
+            return
+
+        if isinstance(selected, ItemType):
+            props = get_item_properties(selected)
+            if props.consumable:
+                if self.player.inventory.remove(selected):
+                    self.player.health = min(100, self.player.health + props.heal_amount)
+                    if self.player.inventory.count(selected) <= 0:
+                        self._hotbar[self._hotbar_index] = None
+            return
+
+        # Blocks remain placeable for now.
+        self._place_block(direction, selected)
 
     def _mine_block(self, direction: str) -> None:
         """Mine the first breakable block or attack a mob in the given direction."""
@@ -445,16 +454,19 @@ class GameEngine:
                     # Add to inventory (leaves not collected, trunk gives wood)
                     if block == BlockType.TRUNK:
                         self.player.inventory.add(BlockType.WOOD)
-                    elif block != BlockType.LEAVES:
+                    elif block == BlockType.LEAVES:
+                        # Early non-block item drop support
+                        import random
+
+                        if random.random() < 0.12:
+                            self.player.inventory.add(ItemType.APPLE)
+                    else:
                         self.player.inventory.add(block)
                     self.sound.play(SoundEvent.MINING)
                     return  # Only mine one block per press
 
-    def _place_block(self, direction: str) -> None:
+    def _place_block(self, direction: str, block: BlockType) -> None:
         """Place a block in the given direction, consuming from inventory."""
-        block = self.selected_block
-        if block is None:
-            return
         if self.player.inventory.count(block) <= 0:
             return
 

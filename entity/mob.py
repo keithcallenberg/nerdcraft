@@ -5,6 +5,7 @@ from __future__ import annotations
 import random
 from typing import TYPE_CHECKING
 
+from entity.item import ItemType
 from entity.mob_registry import MobRegistry, MobDef
 from world.block import BlockType
 
@@ -75,16 +76,17 @@ class Mob:
         return self._defn.name
 
     @property
-    def drops(self) -> list[BlockType]:
+    def drops(self) -> list[BlockType | ItemType]:
         """Resolve drop list using per-drop chance rolls."""
-        result: list[BlockType] = []
+        result: list[BlockType | ItemType] = []
         _name_to_block = {b.name: b for b in BlockType}
+        _name_to_item = {i.name: i for i in ItemType}
         for drop in self._defn.drops:
             if self._rng.random() <= drop.chance:
-                bt = _name_to_block.get(drop.item)
-                if bt is not None:
+                inv_item = _name_to_item.get(drop.item) or _name_to_block.get(drop.item)
+                if inv_item is not None:
                     for _ in range(drop.count):
-                        result.append(bt)
+                        result.append(inv_item)
         return result
 
     # ------------------------------------------------------------------

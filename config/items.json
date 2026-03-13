@@ -12,6 +12,12 @@
       "item_class": "consumable",
       "heal_amount": 20
     },
+      "zombie_flesh": {
+      "char": "m",
+      "color": "red",
+      "item_class": "consumable",
+      "heal_amount": 5
+    },
     "wood_pickaxe": {
       "char": "T",
       "color": "yellow",

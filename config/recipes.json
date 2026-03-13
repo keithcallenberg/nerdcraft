@@ -127,5 +127,18 @@
       "station": "workbench",
       "description": "High-damage melee weapon."
     }
+    {
+      "id": "diamond_sword",
+      "name": "Diamond Sword",
+      "inputs": [
+        { "item": "diamond_ore", "count": 2 },
+        { "item": "wood", "count": 1 }
+      ],
+      "outputs": [
+        { "item": "diamond_sword", "count": 1 }
+      ],
+      "station": "workbench",
+      "description": "Highest tier melee weapon."
+    }
   ]
 }

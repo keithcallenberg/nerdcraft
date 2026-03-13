@@ -59,6 +59,12 @@ class GameEngine:
         self._need_tool_template = self._cfg.combat.need_tool_template
         self._leaf_apple_chance = self._cfg.leaf_apple_chance
 
+        self._frame_cap_seconds = self._cfg.engine.frame_cap_seconds
+        self._sleep_seconds = self._cfg.engine.sleep_seconds
+        self._save_flash_duration = self._cfg.engine.save_flash_duration
+        self._death_duration = self._cfg.engine.death_screen_duration
+        self._status_flash_default_duration = self._cfg.engine.status_flash_duration
+
         self._mining_tier_required: dict[BlockType, int] = {}
         for block_name, tier in self._cfg.mining_required_tiers.items():
             bt = BlockType.__members__.get(block_name.upper())
@@ -73,7 +79,6 @@ class GameEngine:
         self._auto_save_ticks = self._cfg.save.auto_save_ticks
         self._ticks_since_save = 0
         self._save_flash: float = 0.0   # seconds remaining for "Saved!" flash
-        self._save_flash_duration = 2.0
 
         # Initialize world and player
         self.world = World()
@@ -120,16 +125,16 @@ class GameEngine:
 
         # Death screen timer (None = alive, >0 = showing death screen)
         self._death_timer: float | None = None
-        self._death_duration = 2.0  # seconds to show death screen
 
         # Short status feedback for failed actions, etc.
         self._status_flash: str | None = None
         self._status_flash_timer: float = 0.0
 
         # Night spawn pacing for hostile, night_only surface mobs
-        self._night_spawn_interval_ticks = 900
+        self._night_spawn_interval_ticks = self._cfg.engine.night_spawn_interval_ticks
         self._ticks_since_night_spawn = 0
-        self._night_spawn_cap = 18
+        self._night_spawn_cap = self._cfg.engine.night_spawn_cap
+        self._night_spawn_min_player_distance = self._cfg.engine.night_spawn_min_player_distance
 
     @property
     def selected_item(self) -> InventoryType | None:
@@ -149,8 +154,8 @@ class GameEngine:
                 previous_time = current_time
 
                 # Cap frame time to avoid spiral of death
-                if frame_time > 0.25:
-                    frame_time = 0.25
+                if frame_time > self._frame_cap_seconds:
+                    frame_time = self._frame_cap_seconds
 
                 accumulator += frame_time
 
@@ -189,7 +194,7 @@ class GameEngine:
                     self._render()
 
                 # Small sleep to prevent CPU spinning
-                time.sleep(0.001)
+                time.sleep(self._sleep_seconds)
         finally:
             self.music.stop()
             # Save on clean exit
@@ -293,7 +298,10 @@ class GameEngine:
                 occupied = {(self.player.x, self.player.y)}
                 occupied.update((mob.x, mob.y) for mob in self.mobs if mob.is_alive)
                 spawned = self.generator.spawn_night_hostile(self.world, occupied)
-                if spawned is not None and abs(spawned.x - self.player.x) >= 12:
+                if (
+                    spawned is not None
+                    and abs(spawned.x - self.player.x) >= self._night_spawn_min_player_distance
+                ):
                     self.mobs.append(spawned)
         else:
             self._ticks_since_night_spawn = 0
@@ -429,9 +437,11 @@ class GameEngine:
                 status_message=self._status_flash,
             )
 
-    def _set_status_flash(self, message: str, duration: float = 1.2) -> None:
+    def _set_status_flash(self, message: str, duration: float | None = None) -> None:
         self._status_flash = message
-        self._status_flash_timer = duration
+        self._status_flash_timer = (
+            self._status_flash_default_duration if duration is None else duration
+        )
 
     def _facing_direction(self) -> str:
         return 'right' if self.player.facing_right else 'left'

@@ -278,13 +278,20 @@ class Renderer:
                        save_flash: bool = False,
                        status_message: str | None = None) -> None:
         """Render status bar at bottom of screen."""
+        controls = self.cfg.get_ui_text('status', 'controls_message', '')
+        saved = self.cfg.get_ui_text('status', 'saved_message', 'Saved')
+        pos_tpl = self.cfg.get_ui_text('status', 'position_template', 'Pos: ({x}, {y})')
+
         if status_message:
             status = f" {status_message}"
         elif save_flash:
-            status = " \u2713 World saved!  |  A/D:Move  W:Jump  Space:Use  1-5/E/R:Hotbar  I:Inv  C:Craft  Q:Quit"
+            status = f" {saved}"
+            if controls:
+                status += f"  |  {controls}"
         else:
-            status = f" Pos: ({player.x}, {player.y}) | "
-            status += "A/D:Move  W:Jump  Space:Use  1-5/E/R:Hotbar  I:Inv  C:Craft  Q:Quit"
+            status = f" {pos_tpl.format(x=player.x, y=player.y)}"
+            if controls:
+                status += f" | {controls}"
 
         # Truncate if too long
         status = status[:self.width - 1]
@@ -304,8 +311,8 @@ class Renderer:
         hotbar = hotbar or [None] * 5
 
         # Box dimensions
-        box_w = min(42, self.width - 2)
-        box_h = min(22, self.height - 2)
+        box_w = min(self.cfg.get_ui_int('inventory', 'box_width', 42), self.width - 2)
+        box_h = min(self.cfg.get_ui_int('inventory', 'box_height', 22), self.height - 2)
         start_col = (self.width - box_w) // 2
         start_row = (self.height - box_h) // 2
 
@@ -324,12 +331,12 @@ class Renderer:
             self._safe_addstr(start_row + r, start_col, line, border_attr)
 
         # Title
-        title = 'INVENTORY'
+        title = self.cfg.get_ui_text('inventory', 'title', 'INVENTORY')
         title_col = start_col + (box_w - len(title)) // 2
         self._safe_addstr(start_row + 1, title_col, title, curses.A_BOLD)
 
         # --- Hotbar display ---
-        hotbar_label = '  Hotbar: '
+        hotbar_label = self.cfg.get_ui_text('inventory', 'hotbar_label', '  Hotbar: ')
         hb_row = start_row + 3
         hb_col = start_col + 2
         self._safe_addstr(hb_row, hb_col, hotbar_label, curses.A_BOLD)
@@ -363,7 +370,7 @@ class Renderer:
         items_start_row = start_row + 5
 
         if not items:
-            msg = 'Empty'
+            msg = self.cfg.get_ui_text('inventory', 'empty_label', 'Empty')
             msg_col = start_col + (box_w - len(msg)) // 2
             self._safe_addstr(start_row + box_h // 2, msg_col, msg, curses.A_DIM)
         else:
@@ -416,7 +423,7 @@ class Renderer:
                 self._safe_addstr(row, col + 3, text, row_attr)
 
         # Footer
-        footer = '[W/S] Scroll  [1-5] Hotbar  [I] Close'
+        footer = self.cfg.get_ui_text('inventory', 'footer', '[W/S] Scroll  [1-5] Hotbar  [I] Close')
         footer_col = start_col + (box_w - len(footer)) // 2
         self._safe_addstr(start_row + box_h - 2, footer_col, footer, curses.A_DIM)
 
@@ -429,8 +436,8 @@ class Renderer:
         """Render crafting panel with inventory (left) and recipes (right)."""
         self.stdscr.erase()
 
-        box_w = min(76, self.width - 2)
-        box_h = min(24, self.height - 2)
+        box_w = min(self.cfg.get_ui_int('crafting', 'box_width', 76), self.width - 2)
+        box_h = min(self.cfg.get_ui_int('crafting', 'box_height', 24), self.height - 2)
         start_col = (self.width - box_w) // 2
         start_row = (self.height - box_h) // 2
 
@@ -442,7 +449,7 @@ class Renderer:
             line = '|' + ' ' * (box_w - 2) + '|'
             self._safe_addstr(start_row + r, start_col, line, border_attr)
 
-        title = 'CRAFTING'
+        title = self.cfg.get_ui_text('crafting', 'title', 'CRAFTING')
         title_col = start_col + (box_w - len(title)) // 2
         self._safe_addstr(start_row + 1, title_col, title, curses.A_BOLD)
 
@@ -455,8 +462,18 @@ class Renderer:
         for row in range(inner_top, inner_bottom + 1):
             self._safe_addstr(row, mid_col, '|', curses.A_DIM)
 
-        self._safe_addstr(inner_top - 1, inner_left, 'Inventory', curses.A_BOLD)
-        self._safe_addstr(inner_top - 1, mid_col + 2, 'Available Recipes', curses.A_BOLD)
+        self._safe_addstr(
+            inner_top - 1,
+            inner_left,
+            self.cfg.get_ui_text('crafting', 'left_title', 'Inventory'),
+            curses.A_BOLD,
+        )
+        self._safe_addstr(
+            inner_top - 1,
+            mid_col + 2,
+            self.cfg.get_ui_text('crafting', 'right_title', 'Available Recipes'),
+            curses.A_BOLD,
+        )
 
         # Left panel: inventory list
         items = inventory.items()
@@ -492,7 +509,12 @@ class Renderer:
         right_width = inner_right - right_col + 1
 
         if not recipes:
-            self._safe_addstr(inner_top, right_col, 'No craftable recipes', curses.A_DIM)
+            self._safe_addstr(
+                inner_top,
+                right_col,
+                self.cfg.get_ui_text('crafting', 'empty_recipes_label', 'No craftable recipes'),
+                curses.A_DIM,
+            )
         else:
             clamped_cursor = max(0, min(recipe_cursor, len(recipes) - 1))
             for i, recipe in enumerate(recipes[:max_rows]):
@@ -512,7 +534,11 @@ class Renderer:
                 line = f'{marker} {recipe_name}{output_preview}'
                 self._safe_addstr(row, right_col, line[:right_width], attr)
 
-        footer = '[W/S] Select Recipe  [Enter/Space] Craft  [C] Close'
+        footer = self.cfg.get_ui_text(
+            'crafting',
+            'footer',
+            '[W/S] Select Recipe  [Enter/Space] Craft  [C] Close',
+        )
         footer_col = start_col + (box_w - len(footer)) // 2
         self._safe_addstr(start_row + box_h - 2, footer_col, footer, curses.A_DIM)
 
@@ -529,7 +555,7 @@ class Renderer:
         """Render a full-screen death message."""
         self.stdscr.erase()
 
-        msg = "YOU DIED"
+        msg = self.cfg.get_ui_text('death', 'message', 'YOU DIED')
         mid_row = self.height // 2
         mid_col = (self.width - len(msg)) // 2
 

@@ -1,0 +1,16 @@
+{
+  "loop": {
+    "frame_cap_seconds": 0.25,
+    "sleep_seconds": 0.001
+  },
+  "timers": {
+    "save_flash_duration": 2.0,
+    "death_screen_duration": 2.0,
+    "status_flash_duration": 1.2
+  },
+  "night_spawns": {
+    "interval_ticks": 900,
+    "mob_cap": 18,
+    "min_player_distance": 12
+  }
+}

@@ -69,6 +69,18 @@ class CombatConfig:
     need_tool_template: str = "Need {tool} for {block}"
 
 
+@dataclass
+class EngineConfig:
+    frame_cap_seconds: float = 0.25
+    sleep_seconds: float = 0.001
+    save_flash_duration: float = 2.0
+    death_screen_duration: float = 2.0
+    status_flash_duration: float = 1.2
+    night_spawn_interval_ticks: int = 900
+    night_spawn_cap: int = 18
+    night_spawn_min_player_distance: int = 12
+
+
 class GameConfig:
     """Centralized game configuration loaded from JSON files."""
 
@@ -83,6 +95,8 @@ class GameConfig:
         self._load_input_config()
         self._load_combat_config()
         self._load_mining_config()
+        self._load_ui_config()
+        self._load_engine_config()
 
     @classmethod
     def get(cls) -> GameConfig:
@@ -236,6 +250,40 @@ class GameConfig:
         drops = data.get('drops', {})
         leaves = drops.get('leaves', {}) if isinstance(drops, Mapping) else {}
         self.leaf_apple_chance = float(leaves.get('apple_chance', 0.12))
+
+    def _load_ui_config(self) -> None:
+        """Load ui.json configuration."""
+        data = _load_json('ui.json')
+        self.ui: Dict[str, Any] = data
+
+    def _load_engine_config(self) -> None:
+        """Load engine.json configuration."""
+        data = _load_json('engine.json')
+        loop = data.get('loop', {})
+        timers = data.get('timers', {})
+        night = data.get('night_spawns', {})
+        self.engine = EngineConfig(
+            frame_cap_seconds=float(loop.get('frame_cap_seconds', 0.25)),
+            sleep_seconds=float(loop.get('sleep_seconds', 0.001)),
+            save_flash_duration=float(timers.get('save_flash_duration', 2.0)),
+            death_screen_duration=float(timers.get('death_screen_duration', 2.0)),
+            status_flash_duration=float(timers.get('status_flash_duration', 1.2)),
+            night_spawn_interval_ticks=int(night.get('interval_ticks', 900)),
+            night_spawn_cap=int(night.get('mob_cap', 18)),
+            night_spawn_min_player_distance=int(night.get('min_player_distance', 12)),
+        )
+
+    def get_ui_text(self, section: str, key: str, default: str = "") -> str:
+        section_obj = self.ui.get(section, {}) if isinstance(self.ui, dict) else {}
+        if isinstance(section_obj, dict):
+            return str(section_obj.get(key, default))
+        return default
+
+    def get_ui_int(self, section: str, key: str, default: int) -> int:
+        section_obj = self.ui.get(section, {}) if isinstance(self.ui, dict) else {}
+        if isinstance(section_obj, dict):
+            return int(section_obj.get(key, default))
+        return default
 
     def get_block_color_pair(self, block_name: str) -> int:
         """Get the curses color pair ID for a block."""

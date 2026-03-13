@@ -1,46 +1,55 @@
-# Config Audit (Pass 1)
+# Config Audit (Pass 2)
 
 Goal: eliminate gameplay hardcoding and move behavior into JSON configs.
 
-## ✅ Completed in this pass
+## ✅ Completed in Pass 1
 
 - Input bindings moved to `config/input.json`
-  - `input/handler.py` now builds keymap from config instead of hardcoded `ord(...)` table.
+  - `input/handler.py` builds keymap from config.
 - Combat core values moved to `config/combat.json`
   - max health
   - fist damage
   - tool damage
-  - "need tool" status template
+  - tool requirement status template
 - Mining progression values moved to `config/mining.json`
   - required mining tier per block
   - tier display names
   - leaf apple drop chance
 
-## 🚧 Remaining hardcoded areas (next passes)
+## ✅ Completed in Pass 2
 
-1. UI text/layout constants
-   - Status/help text strings in `render/renderer.py`
-   - Overlay box widths/heights/padding in `render/renderer.py`
+- UI text + layout moved to `config/ui.json`
+  - status bar text templates
+  - inventory/crafting titles and footer strings
+  - empty labels
+  - death message
+  - inventory/crafting box dimensions
+- Engine pacing/timers moved to `config/engine.json`
+  - frame cap
+  - loop sleep duration
+  - save/status/death timers
+  - night spawn interval/cap/min distance
 
-2. Engine loop/system constants
-   - sleep cap and frame cap values in `game/engine.py`
-   - death screen duration and status flash duration
-   - night spawn pacing/cap values
+## 🚧 Remaining hardcoded areas
 
-3. Crafting UI interaction keys
-   - Enter/Space handling in crafting panel currently in `game/engine.py`
-   - Could be migrated into input config aliases or UI config.
+1. Crafting interaction keys in gameplay loop
+   - Enter/Space craft trigger still in `game/engine.py`
+   - Can be routed via action alias config to remove direct keycode checks.
 
-4. World interaction rules
-   - some direct behavior branches (e.g., trunk => wood) still code-defined
-   - can be moved to a `drops.json` / block behavior config.
+2. World interaction behavior mapping
+   - Direct behavior branches still code-defined:
+     - trunk -> wood
+     - leaves -> apple chance branch
+   - Recommend `config/block_behaviors.json` / `config/drops.json` next.
 
-5. Action routing semantics
-   - logic for what `use` does by item class is in code (expected),
-     but can still be parameterized further via config if desired.
+3. Some structural constants
+   - hotbar size (`HOTBAR_SIZE=5`) and slot labels are still code-level constants.
+
+4. Semantic action routing
+   - `use` behavior by item class is still logic code (expected), but can be partly config-parameterized.
 
 ## Suggested next files
 
-- `config/ui.json`
-- `config/engine.json`
 - `config/block_behaviors.json` (or `config/drops.json`)
+- optional `config/hotbar.json`
+- optional crafting input action config for Enter/Space aliases

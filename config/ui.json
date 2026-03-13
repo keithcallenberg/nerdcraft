@@ -1,0 +1,27 @@
+{
+  "status": {
+    "saved_message": "✓ World saved!",
+    "controls_message": "A/D:Move  W:Jump  Space:Use  1-5/E/R:Hotbar  I:Inv  C:Craft  Q:Quit",
+    "position_template": "Pos: ({x}, {y})"
+  },
+  "inventory": {
+    "title": "INVENTORY",
+    "hotbar_label": "  Hotbar: ",
+    "empty_label": "Empty",
+    "footer": "[W/S] Scroll  [1-5] Hotbar  [I] Close",
+    "box_width": 42,
+    "box_height": 22
+  },
+  "crafting": {
+    "title": "CRAFTING",
+    "left_title": "Inventory",
+    "right_title": "Available Recipes",
+    "empty_recipes_label": "No craftable recipes",
+    "footer": "[W/S] Select Recipe  [Enter/Space] Craft  [C] Close",
+    "box_width": 76,
+    "box_height": 24
+  },
+  "death": {
+    "message": "YOU DIED"
+  }
+}

@@ -57,7 +57,8 @@
       "char": "X",
       "solid": true,
       "breakable": false,
-      "color": "white"
+      "color": "white",
+      "required_mining_tier": 10
     },
     "trunk": {
       "char": "|",
@@ -75,7 +76,8 @@
       "char": "█",
       "solid": true,
       "breakable": true,
-      "color": "default"},
+      "color": "default",
+      "required_mining_tier": 1},
 
     "water": {
       "char": "W",

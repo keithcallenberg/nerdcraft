@@ -21,6 +21,7 @@ class ItemType(Enum):
     WOOD_SWORD = auto()
     STONE_SWORD = auto()
     IRON_SWORD = auto()
+    DIAMOND_SWORD = auto()
 
 
 class ItemClass(Enum):

@@ -50,7 +50,7 @@
     },
     "diamond_sword": {
       "char": "/",
-      "color": "cyan-bright",
+      "color": "cyan_bright",
       "item_class": "weapon",
       "attack_damage": 24
     }

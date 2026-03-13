@@ -1,0 +1,19 @@
+{
+  "required_tiers": {
+    "stone": 1,
+    "coal_ore": 1,
+    "iron_ore": 2,
+    "gold_ore": 3,
+    "diamond_ore": 3
+  },
+  "tier_names": {
+    "1": "wood pickaxe",
+    "2": "stone pickaxe",
+    "3": "iron pickaxe"
+  },
+  "drops": {
+    "leaves": {
+      "apple_chance": 0.12
+    }
+  }
+}

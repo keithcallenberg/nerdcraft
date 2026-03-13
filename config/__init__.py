@@ -60,6 +60,15 @@ class SoundEventConfig:
     beep_count: int = 1
 
 
+@dataclass
+class CombatConfig:
+    max_health: int = 100
+    fist_attack_damage: int = 5
+    tool_attack_damage: int = 5
+    consumable_use_clamps_to_max_health: bool = True
+    need_tool_template: str = "Need {tool} for {block}"
+
+
 class GameConfig:
     """Centralized game configuration loaded from JSON files."""
 
@@ -71,6 +80,9 @@ class GameConfig:
         self._load_blocks_config()
         self._load_colors_config()
         self._load_sounds_config()
+        self._load_input_config()
+        self._load_combat_config()
+        self._load_mining_config()
 
     @classmethod
     def get(cls) -> GameConfig:
@@ -183,6 +195,47 @@ class GameConfig:
     def get_color(self, name: str) -> ColorConfig:
         """Get color configuration by name."""
         return self.colors.get(name, self.colors.get('default'))
+
+    def _load_input_config(self) -> None:
+        """Load input.json configuration."""
+        data = _load_json('input.json')
+        self.input_bindings: Dict[str, list[str]] = {
+            name: [str(k) for k in keys]
+            for name, keys in data.get('bindings', {}).items()
+            if isinstance(keys, list)
+        }
+
+    def _load_combat_config(self) -> None:
+        """Load combat.json configuration."""
+        data = _load_json('combat.json')
+        player = data.get('player', {})
+        status = data.get('status_messages', {})
+        self.combat = CombatConfig(
+            max_health=int(player.get('max_health', 100)),
+            fist_attack_damage=int(player.get('fist_attack_damage', 5)),
+            tool_attack_damage=int(player.get('tool_attack_damage', 5)),
+            consumable_use_clamps_to_max_health=bool(
+                player.get('consumable_use_clamps_to_max_health', True)
+            ),
+            need_tool_template=str(
+                status.get('need_tool_template', 'Need {tool} for {block}')
+            ),
+        )
+
+    def _load_mining_config(self) -> None:
+        """Load mining.json configuration."""
+        data = _load_json('mining.json')
+        self.mining_required_tiers: Dict[str, int] = {
+            str(name): int(tier)
+            for name, tier in data.get('required_tiers', {}).items()
+        }
+        self.mining_tier_names: Dict[int, str] = {
+            int(tier): str(name)
+            for tier, name in data.get('tier_names', {}).items()
+        }
+        drops = data.get('drops', {})
+        leaves = drops.get('leaves', {}) if isinstance(drops, Mapping) else {}
+        self.leaf_apple_chance = float(leaves.get('apple_chance', 0.12))
 
     def get_block_color_pair(self, block_name: str) -> int:
         """Get the curses color pair ID for a block."""

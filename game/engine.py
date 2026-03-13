@@ -31,16 +31,6 @@ class GameEngine:
 
     HOTBAR_SIZE = 5
 
-    # Mining tier requirements by block type.
-    # 0=fist/basic, 1=wood pick, 2=stone pick, 3=iron pick
-    _MINING_TIER_REQUIRED = {
-        BlockType.STONE: 1,
-        BlockType.COAL_ORE: 1,
-        BlockType.IRON_ORE: 2,
-        BlockType.GOLD_ORE: 3,
-        BlockType.DIAMOND_ORE: 3,
-    }
-
     _HOTBAR_SELECT = {
         Action.HOTBAR_1: 0,
         Action.HOTBAR_2: 1,
@@ -62,6 +52,18 @@ class GameEngine:
         self.stdscr = stdscr
         self.running = False
         self._cfg = GameConfig.get()
+
+        self._max_health = self._cfg.combat.max_health
+        self._fist_attack_damage = self._cfg.combat.fist_attack_damage
+        self._tool_attack_damage = self._cfg.combat.tool_attack_damage
+        self._need_tool_template = self._cfg.combat.need_tool_template
+        self._leaf_apple_chance = self._cfg.leaf_apple_chance
+
+        self._mining_tier_required: dict[BlockType, int] = {}
+        for block_name, tier in self._cfg.mining_required_tiers.items():
+            bt = BlockType.__members__.get(block_name.upper())
+            if bt is not None:
+                self._mining_tier_required[bt] = tier
 
         # Save/load setup
         self._save_manager = SaveManager(
@@ -311,7 +313,7 @@ class GameEngine:
         spawn_x, spawn_y = self.generator.get_spawn_position()
         self.player.x = spawn_x
         self.player.y = spawn_y
-        self.player.health = 100
+        self.player.health = self._max_health
         self.player.fall_distance = 0
         self.player.jump_remaining = 0
         self.player.on_ground = False
@@ -440,14 +442,14 @@ class GameEngine:
         direction = self._facing_direction()
 
         if selected is None:
-            self._mine_block(direction, attack_damage=5, mining_tier=0)
+            self._mine_block(direction, attack_damage=self._fist_attack_damage, mining_tier=0)
             return
 
         if isinstance(selected, ItemType):
             props = get_item_properties(selected)
             if props.item_class == ItemClass.CONSUMABLE:
                 if self.player.inventory.remove(selected):
-                    self.player.health = min(100, self.player.health + props.heal_amount)
+                    self.player.health = min(self._max_health, self.player.health + props.heal_amount)
                     if self.player.inventory.count(selected) <= 0:
                         self._hotbar[self._hotbar_index] = None
                 return
@@ -464,7 +466,7 @@ class GameEngine:
             if props.item_class == ItemClass.TOOL:
                 self._mine_block(
                     direction,
-                    attack_damage=5,
+                    attack_damage=self._tool_attack_damage,
                     mining_tier=props.mining_tier,
                 )
                 return
@@ -502,15 +504,14 @@ class GameEngine:
 
                 props = get_properties(block)
                 if props.breakable:
-                    required_tier = self._MINING_TIER_REQUIRED.get(block, 0)
+                    required_tier = self._mining_tier_required.get(block, 0)
                     if mining_tier < required_tier:
-                        if required_tier == 1:
-                            needed = "wood pickaxe"
-                        elif required_tier == 2:
-                            needed = "stone pickaxe"
-                        else:
-                            needed = "iron pickaxe"
-                        self._set_status_flash(f"Need {needed} for {block.name.lower()}")
+                        needed = self._cfg.mining_tier_names.get(required_tier, f"tier {required_tier} tool")
+                        msg = self._need_tool_template.format(
+                            tool=needed,
+                            block=block.name.lower(),
+                        )
+                        self._set_status_flash(msg)
                         return
 
                     self.world.set_block(block_x, block_y, BlockType.AIR)
@@ -521,7 +522,7 @@ class GameEngine:
                         # Early non-block item drop support
                         import random
 
-                        if random.random() < 0.12:
+                        if random.random() < self._leaf_apple_chance:
                             self.player.inventory.add(ItemType.APPLE)
                     else:
                         self.player.inventory.add(block)

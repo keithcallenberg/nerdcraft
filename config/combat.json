@@ -1,0 +1,11 @@
+{
+  "player": {
+    "max_health": 100,
+    "fist_attack_damage": 5,
+    "tool_attack_damage": 5,
+    "consumable_use_clamps_to_max_health": true
+  },
+  "status_messages": {
+    "need_tool_template": "Need {tool} for {block}"
+  }
+}

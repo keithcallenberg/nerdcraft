@@ -32,7 +32,7 @@
       "attack_interval": 1.5,
       "move_interval": 0.8,
       "drops": [
-        { "item": "DIRT", "chance": 0.5, "count": 1 }
+        { "item": "ZOMBIE_FLESH", "chance": 0.5, "count": 1 }
       ],
       "spawn": {
         "surface": true,

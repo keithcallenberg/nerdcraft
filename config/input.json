@@ -14,6 +14,7 @@
     "hotbar_prev": ["r", "R"],
     "inventory": ["i", "I", "TAB"],
     "craft": ["c", "C"],
+    "craft_confirm": ["KEY_ENTER"],
     "quit": ["q", "Q", "ESC"]
   }
 }

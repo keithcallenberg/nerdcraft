@@ -1,0 +1,16 @@
+{
+  "on_mine": {
+    "trunk": {
+      "drop_mode": "replace",
+      "drops": [
+        { "item": "wood", "count": 1, "chance": 1.0 }
+      ]
+    },
+    "leaves": {
+      "drop_mode": "custom",
+      "drops": [
+        { "item": "apple", "count": 1, "chance": 0.12 }
+      ]
+    }
+  }
+}

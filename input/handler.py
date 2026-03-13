@@ -24,6 +24,7 @@ class Action(Enum):
     HOTBAR_PREV = auto()
     INVENTORY = auto()
     CRAFT = auto()
+    CRAFT_CONFIRM = auto()
     QUIT = auto()
 
 
@@ -45,6 +46,7 @@ class InputHandler:
         'hotbar_prev': Action.HOTBAR_PREV,
         'inventory': Action.INVENTORY,
         'craft': Action.CRAFT,
+        'craft_confirm': Action.CRAFT_CONFIRM,
         'quit': Action.QUIT,
     }
 

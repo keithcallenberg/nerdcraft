@@ -1,7 +1,7 @@
 """Main game engine with fixed-timestep game loop."""
 
 from __future__ import annotations
-import curses
+import random
 import time
 from pathlib import Path
 
@@ -392,8 +392,8 @@ class GameEngine:
                 # S / Down = cursor down
                 if self._crafting_cursor < len(recipes) - 1:
                     self._crafting_cursor += 1
-            elif key in (10, 13, curses.KEY_ENTER, ord(' ')):
-                # Enter / Space = craft selected recipe
+            elif action == Action.CRAFT_CONFIRM:
+                # Configurable craft confirm key(s)
                 if recipes and 0 <= self._crafting_cursor < len(recipes):
                     recipe = recipes[self._crafting_cursor]
                     self._recipe_engine.craft(self.player.inventory, recipe.recipe_id)
@@ -445,6 +445,14 @@ class GameEngine:
 
     def _facing_direction(self) -> str:
         return 'right' if self.player.facing_right else 'left'
+
+    def _resolve_inventory_item(self, item_name: str) -> InventoryType | None:
+        upper = item_name.upper()
+        if upper in BlockType.__members__:
+            return BlockType[upper]
+        if upper in ItemType.__members__:
+            return ItemType[upper]
+        return None
 
     def _use_selected(self) -> None:
         """Use selected hotbar item, or fallback to fist mining/attack."""
@@ -525,17 +533,37 @@ class GameEngine:
                         return
 
                     self.world.set_block(block_x, block_y, BlockType.AIR)
-                    # Add to inventory (leaves not collected, trunk gives wood)
-                    if block == BlockType.TRUNK:
-                        self.player.inventory.add(BlockType.WOOD)
-                    elif block == BlockType.LEAVES:
-                        # Early non-block item drop support
-                        import random
 
-                        if random.random() < self._leaf_apple_chance:
-                            self.player.inventory.add(ItemType.APPLE)
+                    behavior = self._cfg.get_mine_behavior(block.name.lower())
+                    drop_mode = str(behavior.get('drop_mode', 'default'))
+                    drops = behavior.get('drops', []) if isinstance(behavior.get('drops', []), list) else []
+
+                    for drop in drops:
+                        if not isinstance(drop, dict):
+                            continue
+                        inv_item = self._resolve_inventory_item(str(drop.get('item', '')))
+                        if inv_item is None:
+                            continue
+                        chance = float(drop.get('chance', 1.0))
+                        count = int(drop.get('count', 1))
+                        if random.random() <= chance:
+                            for _ in range(max(0, count)):
+                                self.player.inventory.add(inv_item)
+
+                    # Default fallback drop behavior
+                    if drop_mode == 'replace':
+                        # Do not drop original block
+                        pass
+                    elif drop_mode == 'custom':
+                        # Keep only explicit configured drops
+                        pass
                     else:
                         self.player.inventory.add(block)
+
+                    # Legacy compatibility fallback for leaves if not configured
+                    if block == BlockType.LEAVES and not drops and random.random() < self._leaf_apple_chance:
+                        self.player.inventory.add(ItemType.APPLE)
+
                     self.sound.play(SoundEvent.MINING)
                     return  # Only mine one block per press
 

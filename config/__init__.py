@@ -98,6 +98,7 @@ class GameConfig:
         self._load_mining_config()
         self._load_ui_config()
         self._load_engine_config()
+        self._load_block_behaviors_config()
 
     @classmethod
     def get(cls) -> GameConfig:
@@ -271,6 +272,11 @@ class GameConfig:
             night_spawn_min_player_distance=int(night.get('min_player_distance', 12)),
         )
 
+    def _load_block_behaviors_config(self) -> None:
+        """Load block_behaviors.json configuration."""
+        data = _load_json('block_behaviors.json')
+        self.block_behaviors: Dict[str, Any] = data
+
     def get_ui_text(self, section: str, key: str, default: str = "") -> str:
         section_obj = self.ui.get(section, {}) if isinstance(self.ui, dict) else {}
         if isinstance(section_obj, dict):
@@ -282,6 +288,14 @@ class GameConfig:
         if isinstance(section_obj, dict):
             return int(section_obj.get(key, default))
         return default
+
+    def get_mine_behavior(self, block_name: str) -> Dict[str, Any]:
+        on_mine = self.block_behaviors.get('on_mine', {})
+        if isinstance(on_mine, dict):
+            behavior = on_mine.get(block_name, {})
+            if isinstance(behavior, dict):
+                return behavior
+        return {}
 
     def get_block_color_pair(self, block_name: str) -> int:
         """Get the curses color pair ID for a block."""

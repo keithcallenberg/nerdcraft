@@ -17,7 +17,7 @@
     "left_title": "Inventory",
     "right_title": "Available Recipes",
     "empty_recipes_label": "No craftable recipes",
-    "footer": "[W/S] Select Recipe  [Enter/Space] Craft  [C] Close",
+    "footer": "[W/S] Select Recipe  [Enter] Craft  [C] Close",
     "box_width": 76,
     "box_height": 24
   },

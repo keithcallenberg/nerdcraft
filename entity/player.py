@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from config import GameConfig
 from entity.inventory import Inventory
 
 
@@ -15,7 +16,7 @@ class Player:
         self.on_ground = False
         self.facing_right = True
         self.jump_remaining = 0  # blocks left to rise
-        self.health = 100
+        self.health = GameConfig.get().combat.max_health
         self.fall_distance = 0  # blocks fallen continuously
         self.inventory = Inventory()
 

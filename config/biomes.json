@@ -16,6 +16,18 @@
         { "mob": "spider", "weight": 3 }
       ]
     },
+    "ocean": {
+      "name": "ocean",
+      "surface_block": "water",
+      "subsurface_block": "water",
+      "tree_density": 0,
+      "ore_multipliers": {
+        "coal_ore": 2,
+        "iron_ore": 1.2,
+        "diamond_ore": 1.2
+      },
+      "mob_spawn_table": []
+    },
     "desert": {
       "name": "Desert",
       "surface_block": "sand",

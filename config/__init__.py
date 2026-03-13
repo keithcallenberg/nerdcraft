@@ -33,6 +33,7 @@ class BlockConfig:
     breakable: bool
     color: str
     light_radius: int = 0
+    required_mining_tier: int = 0
 
 
 @dataclass
@@ -172,6 +173,7 @@ class GameConfig:
                 breakable=props.get('breakable', True),
                 color=props.get('color', 'default'),
                 light_radius=props.get('light_radius', 0),
+                required_mining_tier=int(props.get('required_mining_tier', 0)),
             )
 
     def _load_colors_config(self) -> None:
@@ -239,10 +241,6 @@ class GameConfig:
     def _load_mining_config(self) -> None:
         """Load mining.json configuration."""
         data = _load_json('mining.json')
-        self.mining_required_tiers: Dict[str, int] = {
-            str(name): int(tier)
-            for name, tier in data.get('required_tiers', {}).items()
-        }
         self.mining_tier_names: Dict[int, str] = {
             int(tier): str(name)
             for tier, name in data.get('tier_names', {}).items()

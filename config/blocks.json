@@ -22,31 +22,36 @@
       "char": "#",
       "solid": true,
       "breakable": true,
-      "color": "white"
+      "color": "white",
+      "required_mining_tier": 1
     },
     "coal_ore": {
       "char": "%",
       "solid": true,
       "breakable": true,
-      "color": "blue"
+      "color": "blue",
+      "required_mining_tier": 1
     },
     "iron_ore": {
       "char": "%",
       "solid": true,
       "breakable": true,
-      "color": "red"
+      "color": "red",
+      "required_mining_tier": 2
     },
     "gold_ore": {
       "char": "%",
       "solid": true,
       "breakable": true,
-      "color": "yellow"
+      "color": "yellow",
+      "required_mining_tier": 3
     },
     "diamond_ore": {
       "char": "%",
       "solid": true,
       "breakable": true,
-      "color": "cyan_bright"
+      "color": "cyan_bright",
+      "required_mining_tier": 3
     },
     "bedrock": {
       "char": "X",

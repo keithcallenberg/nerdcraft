@@ -66,10 +66,10 @@ class GameEngine:
         self._status_flash_default_duration = self._cfg.engine.status_flash_duration
 
         self._mining_tier_required: dict[BlockType, int] = {}
-        for block_name, tier in self._cfg.mining_required_tiers.items():
+        for block_name, block_cfg in self._cfg.blocks.items():
             bt = BlockType.__members__.get(block_name.upper())
             if bt is not None:
-                self._mining_tier_required[bt] = tier
+                self._mining_tier_required[bt] = int(block_cfg.required_mining_tier)
 
         # Save/load setup
         self._save_manager = SaveManager(

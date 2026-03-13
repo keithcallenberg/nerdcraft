@@ -11,10 +11,9 @@ Goal: eliminate gameplay hardcoding and move behavior into JSON configs.
   - fist damage
   - tool damage
   - tool requirement status template
-- Mining progression values moved to `config/mining.json`
-  - required mining tier per block
-  - tier display names
-  - leaf apple drop chance
+- Mining progression values moved to config
+  - required mining tier is now per-block in `config/blocks.json`
+  - tier display names and leaf apple drop chance remain in `config/mining.json`
 
 ## ✅ Completed in Pass 2
 

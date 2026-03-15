@@ -2,7 +2,8 @@
   "status": {
     "saved_message": "✓ World saved!",
     "controls_message": "A/D:Move  W:Jump  Space:Use  1-5/E/R:Hotbar  I:Inv  C:Craft  Q:Quit",
-    "position_template": "Pos: ({x}, {y})"
+    "position_template": "Pos: ({x}, {y})",
+    "pending_use_direction_message": "USE >> press direction (A/D/W/S)"
   },
   "inventory": {
     "title": "INVENTORY",

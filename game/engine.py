@@ -118,6 +118,9 @@ class GameEngine:
         self._inventory_open = False
         self._inventory_cursor = 0
 
+        # Pending use waits for next direction key (for non-consumables)
+        self._pending_use: bool = False
+
         # Crafting overlay state
         self._recipe_engine = RecipeEngine()
         self._crafting_open = False
@@ -222,6 +225,14 @@ class GameEngine:
                 self.running = False
                 return
 
+            # If a directional use is pending, next direction key executes use
+            if self._pending_use:
+                direction = self._DIRECTION_MAP.get(action)
+                if direction is not None:
+                    self._use_selected(direction)
+                    self._pending_use = False
+                    continue
+
             # Hotbar selection
             if action in self._HOTBAR_SELECT:
                 self._hotbar_index = self._HOTBAR_SELECT[action]
@@ -246,10 +257,21 @@ class GameEngine:
                     self.player.jump_remaining = self.physics.jump_height
                     self.player.on_ground = False
             elif action == Action.USE:
-                self._use_selected()
+                selected = self.selected_item
+                # Consumables use immediately; everything else waits for direction key.
+                if isinstance(selected, ItemType):
+                    props = get_item_properties(selected)
+                    if props.item_class == ItemClass.CONSUMABLE:
+                        self._use_selected(self._facing_direction())
+                    else:
+                        self._pending_use = True
+                else:
+                    self._pending_use = True
             elif action == Action.INVENTORY:
+                self._pending_use = False
                 self._inventory_open = True
             elif action == Action.CRAFT:
+                self._pending_use = False
                 self._crafting_open = True
 
     def _update(self, dt: float) -> None:
@@ -325,6 +347,7 @@ class GameEngine:
         self.player.fall_distance = 0
         self.player.jump_remaining = 0
         self.player.on_ground = False
+        self._pending_use = False
         self._death_timer = None
 
     def _handle_inventory_input(self) -> None:
@@ -428,13 +451,20 @@ class GameEngine:
                 self._crafting_cursor,
             )
         else:
+            status_message = self._status_flash
+            if self._pending_use:
+                status_message = self._cfg.get_ui_text(
+                    'status',
+                    'pending_use_direction_message',
+                    'USE >> press direction (A/D/W/S)',
+                )
             self.renderer.render(
                 self.world, self.player,
                 self._hotbar, self._hotbar_index, self.mobs,
                 save_flash=self._save_flash > 0,
                 is_night=self.clock.is_night,
                 time_icon=self.clock.hud_icon,
-                status_message=self._status_flash,
+                status_message=status_message,
             )
 
     def _set_status_flash(self, message: str, duration: float | None = None) -> None:
@@ -454,10 +484,9 @@ class GameEngine:
             return ItemType[upper]
         return None
 
-    def _use_selected(self) -> None:
-        """Use selected hotbar item, or fallback to fist mining/attack."""
+    def _use_selected(self, direction: str) -> None:
+        """Use selected hotbar item in a specified direction."""
         selected = self.selected_item
-        direction = self._facing_direction()
 
         if selected is None:
             self._mine_block(direction, attack_damage=self._fist_attack_damage, mining_tier=0)

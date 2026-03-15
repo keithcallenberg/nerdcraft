@@ -41,7 +41,8 @@ class WorldGenerator:
         self._perm = self._perm + self._perm  # Double for overflow
 
         # Biome map (second noise pass): sorted by config key for stable ordering
-        self._biome_ids, self._biome_rules = self._load_biome_rules()
+        self._biome_ids, self._biome_rules, self._biome_blend_fraction = self._load_biome_rules()
+        self._rebuild_biome_ranges()
 
     def _noise1d(self, x: float) -> float:
         """Simple 1D value noise for terrain height."""
@@ -98,7 +99,7 @@ class WorldGenerator:
         except KeyError:
             return fallback
 
-    def _load_biome_rules(self) -> tuple[list[str], dict[str, BiomeRules]]:
+    def _load_biome_rules(self) -> tuple[list[str], dict[str, BiomeRules], float]:
         """Load biome ids + generation rules from config/biomes.json."""
         config_path = Path(__file__).resolve().parent.parent / "config" / "biomes.json"
         try:
@@ -108,6 +109,7 @@ class WorldGenerator:
             data = {}
 
         biomes = data.get("biomes", {})
+        biome_blend_fraction = max(0.0, min(0.45, float(data.get("blend_fraction", 0.18))))
         biome_ids = sorted(biomes.keys())
         rules: dict[str, BiomeRules] = {}
 
@@ -168,34 +170,71 @@ class WorldGenerator:
                 )
             }
 
-        return biome_ids, rules
+        return biome_ids, rules, biome_blend_fraction
 
-    def get_biome_id(self, world_x: int) -> str:
-        """Get biome id for an X coordinate via a second coarse noise pass.
+    def _rebuild_biome_ranges(self) -> None:
+        """Build cumulative weighted biome ranges for deterministic lookup/blending."""
+        self._biome_ranges: list[tuple[str, float, float]] = []
+        start = 0.0
+        for biome_id in self._biome_ids:
+            w = max(0.01, self._biome_rules[biome_id].biome_size_weight)
+            end = start + w
+            self._biome_ranges.append((biome_id, start, end))
+            start = end
+        self._biome_total_weight = max(0.01, start)
 
-        Biomes are selected by weighted ranges so config can control average biome size
-        using `biome_size_weight` per biome.
-        """
-        if not self._biome_ids:
-            return "forest"
-
-        # Lower frequency than terrain height noise to produce broad regions.
+    def _biome_target(self, world_x: int) -> float:
+        """Map world x into weighted biome axis position."""
         biome_noise = self._fbm1d(world_x * 0.004 + 1337.0, octaves=3, persistence=0.55)
         normalized = (biome_noise + 1.0) / 2.0
         normalized = max(0.0, min(0.999999, normalized))
+        return normalized * self._biome_total_weight
 
-        total_weight = 0.0
-        for biome_id in self._biome_ids:
-            total_weight += self._biome_rules[biome_id].biome_size_weight
+    def _primary_biome_index(self, target: float) -> int:
+        for i, (_, start, end) in enumerate(self._biome_ranges):
+            if start <= target < end:
+                return i
+        return max(0, len(self._biome_ranges) - 1)
 
-        target = normalized * total_weight
-        cumulative = 0.0
-        for biome_id in self._biome_ids:
-            cumulative += self._biome_rules[biome_id].biome_size_weight
-            if target <= cumulative:
-                return biome_id
+    def _biome_blend(self, world_x: int) -> list[tuple[BiomeRules, float]]:
+        """Return one or two biome rules with weights for smooth transitions."""
+        if not self._biome_ranges:
+            fallback = self._biome_rules[self._biome_ids[0]]
+            return [(fallback, 1.0)]
 
-        return self._biome_ids[-1]
+        target = self._biome_target(world_x)
+        idx = self._primary_biome_index(target)
+        biome_id, start, end = self._biome_ranges[idx]
+        width = max(0.0001, end - start)
+        t = (target - start) / width
+
+        blend = self._biome_blend_fraction
+        primary = self._biome_rules[biome_id]
+
+        # Blend near left edge with previous biome.
+        if t < blend and len(self._biome_ranges) > 1:
+            prev_id = self._biome_ranges[(idx - 1) % len(self._biome_ranges)][0]
+            w_prev = (blend - t) / blend
+            w_primary = 1.0 - w_prev
+            return [(primary, w_primary), (self._biome_rules[prev_id], w_prev)]
+
+        # Blend near right edge with next biome.
+        if t > (1.0 - blend) and len(self._biome_ranges) > 1:
+            next_id = self._biome_ranges[(idx + 1) % len(self._biome_ranges)][0]
+            w_next = (t - (1.0 - blend)) / blend
+            w_primary = 1.0 - w_next
+            return [(primary, w_primary), (self._biome_rules[next_id], w_next)]
+
+        return [(primary, 1.0)]
+
+    def get_biome_id(self, world_x: int) -> str:
+        """Get primary biome id for an X coordinate."""
+        if not self._biome_ids:
+            return "forest"
+
+        target = self._biome_target(world_x)
+        idx = self._primary_biome_index(target)
+        return self._biome_ranges[idx][0]
 
     def _get_biome_rules(self, world_x: int) -> BiomeRules:
         """Return generation rules for the biome at this x coordinate."""
@@ -204,15 +243,18 @@ class WorldGenerator:
 
     def get_surface_height(self, world_x: int) -> int:
         """Get terrain surface height at given X coordinate."""
-        biome = self._get_biome_rules(world_x)
-
         # Use multiple octaves for varied terrain
         noise = self._fbm1d(world_x * 0.02, octaves=4)
+
+        # Blend roughness near biome boundaries for smoother transitions.
+        roughness = 0.0
+        for rules, weight in self._biome_blend(world_x):
+            roughness += rules.surface_roughness * weight
 
         # `surface_roughness` controls how level a biome is.
         # 1.0 = current default variation, lower = flatter terrain.
         base_amplitude = 15
-        height_variation = int(noise * base_amplitude * biome.surface_roughness)
+        height_variation = int(noise * base_amplitude * roughness)
         return SEA_LEVEL + height_variation
 
     def _get_tree_for_cell(self, cell_index: int) -> tuple | None:

@@ -49,6 +49,8 @@
       "surface_block": "snow",
       "subsurface_block": "dirt",
       "tree_density": 0.15,
+      "surface_roughness": 0.8,
+      "biome_size_weight": 1.0,
       "ore_multipliers": {
         "coal_ore": 1.1,
         "iron_ore": 1.2,
@@ -62,3 +64,4 @@
     }
   }
 }
+

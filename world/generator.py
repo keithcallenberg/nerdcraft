@@ -24,6 +24,8 @@ class BiomeRules:
     tree_density: float
     ore_multipliers: dict[BlockType, float]
     mob_spawn_table: list[tuple[str, int]]
+    surface_roughness: float
+    biome_size_weight: float
 
 
 class WorldGenerator:
@@ -134,12 +136,17 @@ class WorldGenerator:
                 if mob_id and weight > 0:
                     spawn_table.append((mob_id, weight))
 
+            surface_roughness = max(0.0, float(cfg.get("surface_roughness", 1.0)))
+            biome_size_weight = max(0.01, float(cfg.get("biome_size_weight", 1.0)))
+
             rules[biome_id] = BiomeRules(
                 surface_block=surface,
                 subsurface_block=subsurface,
                 tree_density=tree_density,
                 ore_multipliers=multipliers,
                 mob_spawn_table=spawn_table,
+                surface_roughness=surface_roughness,
+                biome_size_weight=biome_size_weight,
             )
 
         if not biome_ids:
@@ -156,13 +163,19 @@ class WorldGenerator:
                         BlockType.DIAMOND_ORE: 1.0,
                     },
                     mob_spawn_table=[],
+                    surface_roughness=1.0,
+                    biome_size_weight=1.0,
                 )
             }
 
         return biome_ids, rules
 
     def get_biome_id(self, world_x: int) -> str:
-        """Get biome id for an X coordinate via a second coarse noise pass."""
+        """Get biome id for an X coordinate via a second coarse noise pass.
+
+        Biomes are selected by weighted ranges so config can control average biome size
+        using `biome_size_weight` per biome.
+        """
         if not self._biome_ids:
             return "forest"
 
@@ -170,8 +183,19 @@ class WorldGenerator:
         biome_noise = self._fbm1d(world_x * 0.004 + 1337.0, octaves=3, persistence=0.55)
         normalized = (biome_noise + 1.0) / 2.0
         normalized = max(0.0, min(0.999999, normalized))
-        idx = int(normalized * len(self._biome_ids))
-        return self._biome_ids[idx]
+
+        total_weight = 0.0
+        for biome_id in self._biome_ids:
+            total_weight += self._biome_rules[biome_id].biome_size_weight
+
+        target = normalized * total_weight
+        cumulative = 0.0
+        for biome_id in self._biome_ids:
+            cumulative += self._biome_rules[biome_id].biome_size_weight
+            if target <= cumulative:
+                return biome_id
+
+        return self._biome_ids[-1]
 
     def _get_biome_rules(self, world_x: int) -> BiomeRules:
         """Return generation rules for the biome at this x coordinate."""
@@ -180,10 +204,15 @@ class WorldGenerator:
 
     def get_surface_height(self, world_x: int) -> int:
         """Get terrain surface height at given X coordinate."""
+        biome = self._get_biome_rules(world_x)
+
         # Use multiple octaves for varied terrain
         noise = self._fbm1d(world_x * 0.02, octaves=4)
-        # Map noise to height variation around sea level
-        height_variation = int(noise * 15)
+
+        # `surface_roughness` controls how level a biome is.
+        # 1.0 = current default variation, lower = flatter terrain.
+        base_amplitude = 15
+        height_variation = int(noise * base_amplitude * biome.surface_roughness)
         return SEA_LEVEL + height_variation
 
     def _get_tree_for_cell(self, cell_index: int) -> tuple | None:

@@ -21,6 +21,7 @@
       "surface_block": "water",
       "subsurface_block": "water",
       "tree_density": 0,
+      "surface_roughness": 0,
       "ore_multipliers": {
         "coal_ore": 2,
         "iron_ore": 1.2,

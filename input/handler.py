@@ -56,6 +56,8 @@ class InputHandler:
         'KEY_UP': curses.KEY_UP,
         'KEY_DOWN': curses.KEY_DOWN,
         'KEY_ENTER': curses.KEY_ENTER,
+        'ENTER': 10,
+        'RETURN': 13,
         'TAB': ord('\t'),
         'SPACE': ord(' '),
         'ESC': 27,

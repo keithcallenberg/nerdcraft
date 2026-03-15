@@ -392,8 +392,8 @@ class GameEngine:
                 # S / Down = cursor down
                 if self._crafting_cursor < len(recipes) - 1:
                     self._crafting_cursor += 1
-            elif action == Action.CRAFT_CONFIRM:
-                # Configurable craft confirm key(s)
+            elif action in (Action.CRAFT_CONFIRM, Action.USE):
+                # Configurable craft confirm key(s); allow USE (space) in crafting screen.
                 if recipes and 0 <= self._crafting_cursor < len(recipes):
                     recipe = recipes[self._crafting_cursor]
                     self._recipe_engine.craft(self.player.inventory, recipe.recipe_id)

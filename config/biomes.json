@@ -4,7 +4,25 @@
       "name": "Forest",
       "surface_block": "grass",
       "subsurface_block": "dirt",
-      "tree_density": 0.45,
+      "tree_density": 0.7,
+      "surface_roughness": 0.5,
+      "ore_multipliers": {
+        "coal_ore": 1.0,
+        "iron_ore": 1.0,
+        "diamond_ore": 0.9
+      },
+      "mob_spawn_table": [
+        { "mob": "cow", "weight": 5 },
+        { "mob": "zombie", "weight": 4 },
+        { "mob": "spider", "weight": 5 }
+      ]
+    },
+    "fields": {
+      "name": "Fields",
+      "surface_block": "grass",
+      "subsurface_block": "dirt",
+      "tree_density": 0.2,
+      "surface_roughness": 0.2,
       "ore_multipliers": {
         "coal_ore": 1.0,
         "iron_ore": 1.0,
@@ -12,8 +30,8 @@
       },
       "mob_spawn_table": [
         { "mob": "cow", "weight": 12 },
-        { "mob": "zombie", "weight": 4 },
-        { "mob": "spider", "weight": 3 }
+        { "mob": "zombie", "weight": 2 },
+        { "mob": "spider", "weight": 1 }
       ]
     },
     "ocean": {

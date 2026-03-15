@@ -227,6 +227,32 @@ class WorldGenerator:
 
         return [(primary, 1.0)]
 
+    def _choose_blended_block(
+        self,
+        world_x: int,
+        world_y: int,
+        options: list[tuple[BlockType, float]],
+    ) -> BlockType:
+        """Deterministically choose a block from weighted biome options."""
+        cleaned = [(b, max(0.0, w)) for b, w in options if w > 0]
+        if not cleaned:
+            return BlockType.DIRT
+
+        total = sum(w for _, w in cleaned)
+        if total <= 0:
+            return cleaned[0][0]
+
+        pick_noise = self._noise2d(world_x * 0.17 + 911.0, world_y * 0.19 + 577.0)
+        target = pick_noise * total
+
+        cumulative = 0.0
+        for block, weight in cleaned:
+            cumulative += weight
+            if target <= cumulative:
+                return block
+
+        return cleaned[-1][0]
+
     def get_biome_id(self, world_x: int) -> str:
         """Get primary biome id for an X coordinate."""
         if not self._biome_ids:
@@ -336,6 +362,7 @@ class WorldGenerator:
     def _get_block_at(self, world_x: int, world_y: int, surface_height: int) -> BlockType:
         """Determine block type at given world coordinates."""
         biome = self._get_biome_rules(world_x)
+        biome_mix = self._biome_blend(world_x)
 
         # Trees (only above the local surface so they don't poke into terrain)
         if world_y > surface_height:
@@ -362,13 +389,21 @@ class WorldGenerator:
         # Depth below surface
         depth = surface_height - world_y
 
-        # Biome surface block
+        # Biome surface block (blend materials near biome borders)
         if depth == 0:
-            return biome.surface_block
+            return self._choose_blended_block(
+                world_x,
+                world_y,
+                [(rules.surface_block, weight) for rules, weight in biome_mix],
+            )
 
-        # Biome subsurface layer
+        # Biome subsurface layer (blend materials near biome borders)
         if depth < DIRT_DEPTH:
-            return biome.subsurface_block
+            return self._choose_blended_block(
+                world_x,
+                world_y,
+                [(rules.subsurface_block, weight) for rules, weight in biome_mix],
+            )
 
         # Check for caves
         cave_noise = self._noise2d(world_x * 0.1, world_y * 0.1)

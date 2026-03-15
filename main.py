@@ -11,11 +11,26 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.resolve()))
 
 from game.engine import GameEngine
+from game.menu import MainMenu
 
 
 def main(stdscr, args: argparse.Namespace) -> None:
     """Main function wrapped by curses."""
-    engine = GameEngine(stdscr, seed=args.seed, save_name=args.save, force_new=args.new)
+    seed = args.seed
+    save_name = args.save
+    force_new = args.new
+
+    # Show menu by default unless explicit CLI world args are provided.
+    explicit_cli_world = (args.seed is not None) or args.new or (args.save != "default")
+    if not explicit_cli_world:
+        menu_result = MainMenu(stdscr).run()
+        if not menu_result.start_game:
+            return
+        seed = menu_result.seed
+        save_name = menu_result.save_name
+        force_new = menu_result.force_new
+
+    engine = GameEngine(stdscr, seed=seed, save_name=save_name, force_new=force_new)
     engine.run()
 
 

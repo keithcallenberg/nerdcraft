@@ -6,6 +6,7 @@
       "subsurface_block": "dirt",
       "tree_density": 0.7,
       "surface_roughness": 0.5,
+      "biome_size_weight": 1.5,
       "ore_multipliers": {
         "coal_ore": 1.0,
         "iron_ore": 1.0,
@@ -23,6 +24,7 @@
       "subsurface_block": "dirt",
       "tree_density": 0.2,
       "surface_roughness": 0.2,
+      "biome_size_weight": 2,
       "ore_multipliers": {
         "coal_ore": 1.0,
         "iron_ore": 1.0,
@@ -40,6 +42,7 @@
       "subsurface_block": "water",
       "tree_density": 0,
       "surface_roughness": 0,
+      "biome_size_weight": 4,
       "ore_multipliers": {
         "coal_ore": 2,
         "iron_ore": 1.2,
@@ -52,6 +55,7 @@
       "surface_block": "sand",
       "subsurface_block": "sand",
       "tree_density": 0.02,
+      "biome_size_weight": 3,
       "ore_multipliers": {
         "coal_ore": 0.8,
         "iron_ore": 0.9,

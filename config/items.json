@@ -10,13 +10,19 @@
       "char": "m",
       "color": "magenta",
       "item_class": "consumable",
-      "heal_amount": 20
+      "heal_amount": 15
+    },
+    "cooked_meat": {
+      "char": "m",
+      "color": "yellow",
+      "item_class": "consumable",
+      "heal_amount": 25
     },
       "zombie_flesh": {
       "char": "m",
       "color": "red",
       "item_class": "consumable",
-      "heal_amount": 5
+      "heal_amount": 7
     },
     "wood_pickaxe": {
       "char": "T",

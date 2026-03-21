@@ -9,8 +9,8 @@
     "╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝╚═════╝  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝        ╚═╝   "
   ],
   "menu": {
-    "new_world_label": "Generate New World",
-    "load_world_label": "Load Saved World",
-    "quit_label": "Quit"
+    "new_world_label": "Create World",
+    "load_world_label": "Load World",
+    "quit_label": "Quit Game"
   }
 }

@@ -38,6 +38,18 @@
       "description": "Craft torches for portable light."
     },
     {
+      "id": "cook meat",
+      "name": "Cook Meat",
+      "inputs": [
+        { "item": "raw_meat", "count": 1 }
+      ],
+      "outputs": [
+        { "item": "cooked_meat", "count": 1 }
+      ],
+      "station": null,
+      "description": "Cook meat for higher satisfaction."
+    },
+    {
       "id": "stone_to_bricks",
       "name": "Stone Bricks",
       "inputs": [

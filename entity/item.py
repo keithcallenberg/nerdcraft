@@ -13,6 +13,7 @@ class ItemType(Enum):
 
     APPLE = auto()
     RAW_MEAT = auto()
+    COOKED_MEAT = auto()
     ZOMBIE_FLESH = auto()
 
     WOOD_PICKAXE = auto()

@@ -18,12 +18,18 @@
       "item_class": "consumable",
       "heal_amount": 25
     },
-      "zombie_flesh": {
+    "zombie_flesh": {
       "char": "m",
       "color": "red",
       "item_class": "consumable",
       "heal_amount": 7
     },
+    "leather": {
+      "char": "l",
+      "color": "yellow",
+      "item_class": "material"
+    },
+
     "wood_pickaxe": {
       "char": "T",
       "color": "yellow",
@@ -42,6 +48,7 @@
       "item_class": "tool",
       "mining_tier": 3
     },
+
     "wood_sword": {
       "char": "/",
       "color": "yellow",
@@ -65,6 +72,70 @@
       "color": "cyan_bright",
       "item_class": "weapon",
       "attack_damage": 24
+    },
+
+    "leather_helmet": {
+      "char": "h",
+      "color": "yellow",
+      "item_class": "armor",
+      "armor_slot": "helmet",
+      "armor_defense": 1
+    },
+    "leather_chestpiece": {
+      "char": "c",
+      "color": "yellow",
+      "item_class": "armor",
+      "armor_slot": "chestpiece",
+      "armor_defense": 2
+    },
+    "leather_pants": {
+      "char": "p",
+      "color": "yellow",
+      "item_class": "armor",
+      "armor_slot": "pants",
+      "armor_defense": 1
+    },
+    "iron_helmet": {
+      "char": "h",
+      "color": "white",
+      "item_class": "armor",
+      "armor_slot": "helmet",
+      "armor_defense": 3
+    },
+    "iron_chestpiece": {
+      "char": "c",
+      "color": "white",
+      "item_class": "armor",
+      "armor_slot": "chestpiece",
+      "armor_defense": 4
+    },
+    "iron_pants": {
+      "char": "p",
+      "color": "white",
+      "item_class": "armor",
+      "armor_slot": "pants",
+      "armor_defense": 3
+    },
+    "diamond_helmet": {
+      "char": "h",
+      "color": "cyan_bright",
+      "item_class": "armor",
+      "armor_slot": "helmet",
+      "armor_defense": 5
+    },
+    "diamond_chestpiece": {
+      "char": "c",
+      "color": "cyan_bright",
+      "item_class": "armor",
+      "armor_slot": "chestpiece",
+      "armor_defense": 6
+    },
+    "diamond_pants": {
+      "char": "p",
+      "color": "cyan_bright",
+      "item_class": "armor",
+      "armor_slot": "pants",
+      "armor_defense": 5
     }
   }
 }

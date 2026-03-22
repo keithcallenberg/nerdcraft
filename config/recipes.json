@@ -151,6 +151,114 @@
       ],
       "station": "workbench",
       "description": "Highest tier melee weapon."
+    },
+    {
+      "id": "leather_helmet",
+      "name": "Leather Helmet",
+      "inputs": [
+        { "item": "leather", "count": 6 }
+      ],
+      "outputs": [
+        { "item": "leather_helmet", "count": 1 }
+      ],
+      "station": "workbench",
+      "description": "Basic helmet armor."
+    },
+    {
+      "id": "leather_chestpiece",
+      "name": "Leather Chestpiece",
+      "inputs": [
+        { "item": "leather", "count": 9 }
+      ],
+      "outputs": [
+        { "item": "leather_chestpiece", "count": 1 }
+      ],
+      "station": "workbench",
+      "description": "Basic chest armor."
+    },
+    {
+      "id": "leather_pants",
+      "name": "Leather Pants",
+      "inputs": [
+        { "item": "leather", "count": 8 }
+      ],
+      "outputs": [
+        { "item": "leather_pants", "count": 1 }
+      ],
+      "station": "workbench",
+      "description": "Basic leg armor."
+    },
+    {
+      "id": "iron_helmet",
+      "name": "Iron Helmet",
+      "inputs": [
+        { "item": "iron_ore", "count": 6 }
+      ],
+      "outputs": [
+        { "item": "iron_helmet", "count": 1 }
+      ],
+      "station": "workbench",
+      "description": "Iron tier helmet."
+    },
+    {
+      "id": "iron_chestpiece",
+      "name": "Iron Chestpiece",
+      "inputs": [
+        { "item": "iron_ore", "count": 9 }
+      ],
+      "outputs": [
+        { "item": "iron_chestpiece", "count": 1 }
+      ],
+      "station": "workbench",
+      "description": "Iron tier chest armor."
+    },
+    {
+      "id": "iron_pants",
+      "name": "Iron Pants",
+      "inputs": [
+        { "item": "iron_ore", "count": 8 }
+      ],
+      "outputs": [
+        { "item": "iron_pants", "count": 1 }
+      ],
+      "station": "workbench",
+      "description": "Iron tier leg armor."
+    },
+    {
+      "id": "diamond_helmet",
+      "name": "Diamond Helmet",
+      "inputs": [
+        { "item": "diamond_ore", "count": 6 }
+      ],
+      "outputs": [
+        { "item": "diamond_helmet", "count": 1 }
+      ],
+      "station": "workbench",
+      "description": "Diamond tier helmet."
+    },
+    {
+      "id": "diamond_chestpiece",
+      "name": "Diamond Chestpiece",
+      "inputs": [
+        { "item": "diamond_ore", "count": 9 }
+      ],
+      "outputs": [
+        { "item": "diamond_chestpiece", "count": 1 }
+      ],
+      "station": "workbench",
+      "description": "Diamond tier chest armor."
+    },
+    {
+      "id": "diamond_pants",
+      "name": "Diamond Pants",
+      "inputs": [
+        { "item": "diamond_ore", "count": 8 }
+      ],
+      "outputs": [
+        { "item": "diamond_pants", "count": 1 }
+      ],
+      "station": "workbench",
+      "description": "Diamond tier leg armor."
     }
   ]
 }

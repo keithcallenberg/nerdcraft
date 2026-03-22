@@ -262,7 +262,7 @@ class GameEngine:
                 # Consumables use immediately; everything else waits for direction key.
                 if isinstance(selected, ItemType):
                     props = get_item_properties(selected)
-                    if props.item_class == ItemClass.CONSUMABLE:
+                    if props.item_class in (ItemClass.CONSUMABLE, ItemClass.ARMOR):
                         self._use_selected(self._facing_direction())
                     else:
                         self._pending_use = True
@@ -301,8 +301,9 @@ class GameEngine:
                 dist_x = abs(mob.x - self.player.x)
                 dist_y = abs(mob.y - self.player.y)
                 if dist_x <= 1 and dist_y <= 1 and mob.can_attack_now():
-                    damage = mob.get_attack_damage()
-                    self.player.health = max(0, self.player.health - damage)
+                    base_damage = mob.get_attack_damage()
+                    mitigated = max(1, base_damage - self.player.total_armor_defense())
+                    self.player.health = max(0, self.player.health - mitigated)
                     self.sound.play(SoundEvent.HIT)
                     mob.reset_attack_timer()
 
@@ -509,6 +510,16 @@ class GameEngine:
                     mining_tier=0,
                     allow_block_break=False,
                 )
+                return
+
+            if props.item_class == ItemClass.ARMOR:
+                if self.player.equip_armor(selected):
+                    if self.player.inventory.count(selected) <= 0 and self.selected_item == selected:
+                        self._hotbar[self._hotbar_index] = None
+                    self._set_status_flash(
+                        f"Equipped {selected.name.replace('_', ' ').title()} "
+                        f"(DEF {self.player.total_armor_defense()})"
+                    )
                 return
 
             if props.item_class == ItemClass.TOOL:

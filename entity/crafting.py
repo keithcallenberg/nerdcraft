@@ -67,10 +67,10 @@ class RecipeEngine:
 
     def _to_inventory_type(self, item_name: str) -> InventoryType:
         upper = item_name.upper()
-        if upper in BlockType.__members__:
-            return BlockType[upper]
         if upper in ItemType.__members__:
             return ItemType[upper]
+        if upper in BlockType.__members__:
+            return BlockType[upper]
         raise ValueError(f"Unknown recipe item type: {item_name}")
 
     def get_recipe(self, recipe_id: str) -> Optional[Recipe]:

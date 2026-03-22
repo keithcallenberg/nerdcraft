@@ -15,6 +15,7 @@ class ItemType(Enum):
     RAW_MEAT = auto()
     COOKED_MEAT = auto()
     ZOMBIE_FLESH = auto()
+    LEATHER = auto()
 
     WOOD_PICKAXE = auto()
     STONE_PICKAXE = auto()
@@ -25,6 +26,16 @@ class ItemType(Enum):
     IRON_SWORD = auto()
     DIAMOND_SWORD = auto()
 
+    LEATHER_HELMET = auto()
+    LEATHER_CHESTPIECE = auto()
+    LEATHER_PANTS = auto()
+    IRON_HELMET = auto()
+    IRON_CHESTPIECE = auto()
+    IRON_PANTS = auto()
+    DIAMOND_HELMET = auto()
+    DIAMOND_CHESTPIECE = auto()
+    DIAMOND_PANTS = auto()
+
 
 class ItemClass(Enum):
     """High-level class used by gameplay logic."""
@@ -33,6 +44,7 @@ class ItemClass(Enum):
     CONSUMABLE = auto()
     TOOL = auto()
     WEAPON = auto()
+    ARMOR = auto()
 
 
 @dataclass(frozen=True)
@@ -45,6 +57,8 @@ class ItemProperties:
     heal_amount: int = 0
     mining_tier: int = 0
     attack_damage: int = 0
+    armor_slot: str = ""
+    armor_defense: int = 0
 
 
 _ITEM_PROPERTIES: dict[ItemType, ItemProperties] = {}
@@ -65,6 +79,8 @@ def _parse_item_class(raw: str | None) -> ItemClass:
         return ItemClass.TOOL
     if text == "weapon":
         return ItemClass.WEAPON
+    if text == "armor":
+        return ItemClass.ARMOR
     return ItemClass.MATERIAL
 
 
@@ -93,6 +109,8 @@ def _init_from_config() -> None:
             heal_amount=int(item_cfg.get("heal_amount", 0)),
             mining_tier=int(item_cfg.get("mining_tier", 0)),
             attack_damage=int(item_cfg.get("attack_damage", 0)),
+            armor_slot=str(item_cfg.get("armor_slot", "")),
+            armor_defense=int(item_cfg.get("armor_defense", 0)),
         )
 
     _INITIALIZED = True

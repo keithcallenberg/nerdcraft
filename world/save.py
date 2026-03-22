@@ -133,6 +133,10 @@ class SaveManager:
                 _inv_key(item): count
                 for item, count in player.inventory.items()
             },
+            "armor": {
+                slot: (item.name if item is not None else None)
+                for slot, item in player.armor.items()
+            },
         }
         with open(self.save_path / "player.json", "w") as f:
             json.dump(state, f, indent=2)
@@ -164,6 +168,12 @@ class SaveManager:
             if ":" in raw_name:
                 prefix, name = raw_name.split(":", 1)
                 if prefix == "block":
+                    # Leather migrated from block -> item
+                    if name == "LEATHER":
+                        item = _name_to_item.get("LEATHER")
+                        if item is not None:
+                            player.inventory._items[item] = count
+                            continue
                     block = _name_to_block.get(name)
                     if block is not None:
                         player.inventory._items[block] = count
@@ -173,7 +183,25 @@ class SaveManager:
                         player.inventory._items[item] = count
                 continue
 
-            # Backward compatibility with old save format (block names only)
+            # Backward compatibility with old save format
+            item = _name_to_item.get(raw_name)
+            if item is not None:
+                player.inventory._items[item] = count
+                continue
+
             block = _name_to_block.get(raw_name)
             if block is not None:
-                player.inventory._items[block] = count
+                if raw_name == "LEATHER":
+                    item = _name_to_item.get("LEATHER")
+                    if item is not None:
+                        player.inventory._items[item] = count
+                else:
+                    player.inventory._items[block] = count
+
+        player.armor = {'helmet': None, 'chestpiece': None, 'pants': None}
+        for slot, raw_item in state.get("armor", {}).items():
+            if slot not in player.armor or not raw_item:
+                continue
+            item = _name_to_item.get(str(raw_item))
+            if item is not None:
+                player.armor[slot] = item

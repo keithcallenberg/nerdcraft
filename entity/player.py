@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from config import GameConfig
 from entity.inventory import Inventory
+from entity.item import ItemType, get_item_properties
 
 
 class Player:
@@ -19,6 +20,11 @@ class Player:
         self.health = GameConfig.get().combat.max_health
         self.fall_distance = 0  # blocks fallen continuously
         self.inventory = Inventory()
+        self.armor: dict[str, ItemType | None] = {
+            'helmet': None,
+            'chestpiece': None,
+            'pants': None,
+        }
 
     def get_block_in_direction(self, direction: str) -> tuple[int, int]:
         """Get the adjacent block position for a direction."""
@@ -41,3 +47,26 @@ class Player:
             return [(self.x, self.y + 1)]
         else:  # down
             return [(self.x, self.y - 1)]
+
+    def equip_armor(self, item_type: ItemType) -> bool:
+        """Equip an armor item from inventory. Returns True if equipped."""
+        props = get_item_properties(item_type)
+        slot = props.armor_slot.strip().lower()
+        if slot not in self.armor:
+            return False
+        if not self.inventory.remove(item_type):
+            return False
+
+        current = self.armor.get(slot)
+        if current is not None:
+            self.inventory.add(current)
+        self.armor[slot] = item_type
+        return True
+
+    def total_armor_defense(self) -> int:
+        total = 0
+        for item in self.armor.values():
+            if item is None:
+                continue
+            total += max(0, get_item_properties(item).armor_defense)
+        return total

@@ -36,6 +36,7 @@ class MobDef:
     attack_interval: float # seconds between attacks
     move_interval: float   # seconds between movement steps (chase/active)
     idle_move_interval: float  # seconds between passive wander steps
+    move_speed: int  # blocks moved per movement action
     drops: list[DropDef]
     spawn: SpawnDef
 
@@ -96,6 +97,7 @@ class MobRegistry:
                     "idle_move_interval",
                     float(props.get("move_interval", 1.5)) * 1.8,
                 ),
+                move_speed=max(1, int(props.get("move_speed", 1))),
                 drops=drops,
                 spawn=spawn,
             )

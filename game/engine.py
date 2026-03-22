@@ -294,7 +294,10 @@ class GameEngine:
                 player_y=self.player.y,
             )
             if dx != 0:
-                self.physics.try_move(mob, dx, 0)
+                step = 1 if dx > 0 else -1
+                for _ in range(mob.get_move_speed()):
+                    if not self.physics.try_move(mob, step, 0):
+                        break
 
             # Hostile mob attacks player when adjacent
             if mob.hostile and self.player.health > 0:

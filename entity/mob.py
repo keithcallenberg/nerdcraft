@@ -163,6 +163,10 @@ class Mob:
         """Return damage this mob deals when attacking."""
         return self._defn.attack_damage
 
+    def get_move_speed(self) -> int:
+        """Return blocks moved per movement action."""
+        return max(1, self._defn.move_speed)
+
     def can_attack_now(self) -> bool:
         """True when the attack cooldown has expired."""
         return self._attack_timer <= 0

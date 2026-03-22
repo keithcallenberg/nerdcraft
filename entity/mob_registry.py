@@ -34,7 +34,8 @@ class MobDef:
     detection_range: int   # blocks — hostile mobs chase within this range
     attack_damage: int
     attack_interval: float # seconds between attacks
-    move_interval: float   # seconds between movement steps
+    move_interval: float   # seconds between movement steps (chase/active)
+    idle_move_interval: float  # seconds between passive wander steps
     drops: list[DropDef]
     spawn: SpawnDef
 
@@ -91,6 +92,10 @@ class MobRegistry:
                 attack_damage=props.get("attack_damage", 0),
                 attack_interval=props.get("attack_interval", 1.0),
                 move_interval=props.get("move_interval", 1.5),
+                idle_move_interval=props.get(
+                    "idle_move_interval",
+                    float(props.get("move_interval", 1.5)) * 1.8,
+                ),
                 drops=drops,
                 spawn=spawn,
             )

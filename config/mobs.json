@@ -10,6 +10,7 @@
       "attack_damage": 0,
       "attack_interval": 0.0,
       "move_interval": 1.5,
+      "idle_move_interval": 2.8,
       "drops": [
         { "item": "RAW_MEAT", "chance": 1.0, "count": 1 },
         { "item": "LEATHER", "chance": 0.4, "count": 1 }
@@ -31,6 +32,7 @@
       "attack_damage": 8,
       "attack_interval": 1.5,
       "move_interval": 0.8,
+      "idle_move_interval": 1.7,
       "drops": [
         { "item": "ZOMBIE_FLESH", "chance": 1, "count": 1 }
       ],
@@ -51,6 +53,7 @@
       "attack_damage": 4,
       "attack_interval": 1.0,
       "move_interval": 0.5,
+      "idle_move_interval": 1.2,
       "drops": [
         { "item": "STONE", "chance": 0.3, "count": 1 }
       ],
@@ -71,6 +74,7 @@
       "attack_damage": 6,
       "attack_interval": 2.0,
       "move_interval": 1.2,
+      "idle_move_interval": 2.2,
       "drops": [
         { "item": "STONE", "chance": 0.7, "count": 1 },
         { "item": "COAL_ORE", "chance": 0.3, "count": 1 }

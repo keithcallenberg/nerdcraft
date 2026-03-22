@@ -153,7 +153,7 @@ class Mob:
                 self._state = _WALK
                 self._walk_dir = self._rng.choice([-1, 1])
                 self.facing_right = self._walk_dir > 0
-                self._move_timer = defn.move_interval
+                self._move_timer = defn.idle_move_interval
 
         if self._state == _WALK:
             return self._walk_dir

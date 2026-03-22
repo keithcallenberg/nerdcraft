@@ -27,6 +27,7 @@ GRAVITY_INTERVAL = _cfg.gravity_interval
 JUMP_HEIGHT = _cfg.jump_height
 SAFE_FALL_DISTANCE = _cfg.safe_fall_distance
 FALL_DAMAGE_PER_BLOCK = _cfg.fall_damage_per_block
+AUTO_JUMP = _cfg.auto_jump
 
 # Player
 PLAYER_CHAR = _cfg.player_char

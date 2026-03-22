@@ -7,7 +7,7 @@ from pathlib import Path
 
 from game.config import (
     TICK_DURATION, GRAVITY_INTERVAL, JUMP_HEIGHT,
-    SAFE_FALL_DISTANCE, FALL_DAMAGE_PER_BLOCK,
+    SAFE_FALL_DISTANCE, FALL_DAMAGE_PER_BLOCK, AUTO_JUMP,
 )
 from world.world import World
 from world.block import BlockType, get_properties
@@ -104,6 +104,7 @@ class GameEngine:
         self.physics = PhysicsEngine(
             self.world, GRAVITY_INTERVAL, JUMP_HEIGHT,
             SAFE_FALL_DISTANCE, FALL_DAMAGE_PER_BLOCK,
+            auto_jump=AUTO_JUMP,
         )
         self.renderer = Renderer(stdscr)
         self.input_handler = InputHandler()

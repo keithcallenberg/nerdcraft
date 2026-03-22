@@ -8,13 +8,15 @@ class PhysicsEngine:
     """Handles discrete grid-based physics."""
 
     def __init__(self, world: World, gravity_interval: float, jump_height: int,
-                 safe_fall_distance: int = 6, fall_damage_per_block: int = 5):
+                 safe_fall_distance: int = 6, fall_damage_per_block: int = 5,
+                 auto_jump: bool = True):
         """Initialize physics with world reference and tuning parameters."""
         self.world = world
         self.gravity_interval = gravity_interval
         self.jump_height = jump_height
         self.safe_fall_distance = safe_fall_distance
         self.fall_damage_per_block = fall_damage_per_block
+        self.auto_jump = auto_jump
         self._gravity_timers: dict[int, float] = {}
 
     def update(self, entity, dt: float) -> None:
@@ -64,4 +66,23 @@ class PhysicsEngine:
             entity.x = target_x
             entity.y = target_y
             return True
+
+        # Auto-jump assist for horizontal movement into 1-block obstacles.
+        if (
+            self.auto_jump
+            and dy == 0
+            and dx != 0
+            and getattr(entity, 'on_ground', False)
+            and getattr(entity, 'jump_remaining', 0) <= 0
+        ):
+            # Need headroom at current x and open step-up target.
+            can_raise_here = not self.world.is_solid(entity.x, entity.y + 1)
+            can_step_up = not self.world.is_solid(target_x, entity.y + 1)
+            if can_raise_here and can_step_up:
+                entity.x = target_x
+                entity.y = entity.y + 1
+                entity.on_ground = False
+                entity.jump_remaining = max(0, self.jump_height - 1)
+                return True
+
         return False

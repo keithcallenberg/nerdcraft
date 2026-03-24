@@ -151,7 +151,9 @@ class Mob:
                 self._move_timer = self._rng.uniform(0.8, 2.0)
             else:
                 self._state = _WALK
-                self._walk_dir = self._rng.choice([-1, 1])
+                # Keep same walk direction most of the time to avoid ping-pong jitter.
+                if self._walk_dir == 0 or self._rng.random() < 0.25:
+                    self._walk_dir = self._rng.choice([-1, 1])
                 self.facing_right = self._walk_dir > 0
                 self._move_timer = defn.idle_move_interval
 

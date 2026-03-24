@@ -92,10 +92,15 @@ class MobRegistry:
                 detection_range=props.get("detection_range", 0),
                 attack_damage=props.get("attack_damage", 0),
                 attack_interval=props.get("attack_interval", 1.0),
-                move_interval=props.get("move_interval", 1.5),
-                idle_move_interval=props.get(
-                    "idle_move_interval",
-                    float(props.get("move_interval", 1.5)) * 1.8,
+                move_interval=max(0.10, float(props.get("move_interval", 1.5))),
+                idle_move_interval=max(
+                    0.20,
+                    float(
+                        props.get(
+                            "idle_move_interval",
+                            float(props.get("move_interval", 1.5)) * 1.8,
+                        )
+                    ),
                 ),
                 move_speed=max(1, int(props.get("move_speed", 1))),
                 drops=drops,

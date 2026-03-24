@@ -108,7 +108,7 @@ class SaveManager:
 
         world._chunks.clear()
         for (cx, cy), raw_cols in chunk_data.items():
-            chunk = Chunk(cx, cy)
+            chunk = Chunk(cx, cy, world.chunk_size)
             for lx, col in enumerate(raw_cols):
                 for ly, val in enumerate(col):
                     chunk._blocks[lx][ly] = _val_to_block.get(val, BlockType.AIR)

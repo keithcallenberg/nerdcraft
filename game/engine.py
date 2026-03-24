@@ -47,7 +47,8 @@ class GameEngine:
     }
 
     def __init__(self, stdscr, seed: int | None = None,
-                 save_name: str = "default", force_new: bool = False):
+                 save_name: str = "default", force_new: bool = False,
+                 world_size_chunks: tuple[int, int] | None = None):
         """Initialize game engine with curses screen."""
         self.stdscr = stdscr
         self.running = False
@@ -80,6 +81,10 @@ class GameEngine:
         self._ticks_since_save = 0
         self._save_flash: float = 0.0   # seconds remaining for "Saved!" flash
 
+        # Runtime world size override for new world generation
+        if force_new and world_size_chunks is not None:
+            self._cfg.set_world_size_chunks(world_size_chunks[0], world_size_chunks[1])
+
         # Initialize world and player
         self.world = World()
         self.player = Player()
@@ -93,7 +98,8 @@ class GameEngine:
         else:
             # Generate a fresh world
             self.generator = WorldGenerator(seed)
-            self.generator.generate_world(self.world)
+            self._render_generation_progress(0, 1)
+            self.generator.generate_world(self.world, progress_callback=self._render_generation_progress)
             spawn_x, spawn_y = self.generator.get_spawn_position()
             self.player.x = spawn_x
             self.player.y = spawn_y
@@ -143,6 +149,24 @@ class GameEngine:
     @property
     def selected_item(self) -> InventoryType | None:
         return self._hotbar[self._hotbar_index]
+
+    def _render_generation_progress(self, done: int, total: int) -> None:
+        """Render a blocking world-generation progress screen."""
+        percent = 0 if total <= 0 else int((done / total) * 100)
+        self.stdscr.erase()
+        h, w = self.stdscr.getmaxyx()
+        title = "Generating world..."
+        pct = f"{percent}%"
+        bar_w = max(10, min(50, w - 10))
+        filled = int((percent / 100.0) * bar_w)
+        bar = "[" + ("#" * filled) + ("-" * (bar_w - filled)) + "]"
+        try:
+            self.stdscr.addstr(max(0, h // 2 - 1), max(0, (w - len(title)) // 2), title)
+            self.stdscr.addstr(max(0, h // 2), max(0, (w - len(bar)) // 2), bar)
+            self.stdscr.addstr(max(0, h // 2 + 1), max(0, (w - len(pct)) // 2), pct)
+        except Exception:
+            pass
+        self.stdscr.refresh()
 
     def run(self) -> None:
         """Run the main game loop."""

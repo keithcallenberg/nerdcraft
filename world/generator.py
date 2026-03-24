@@ -7,10 +7,7 @@ import random
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Tuple
-from game.config import (
-    CHUNK_SIZE, WORLD_WIDTH_CHUNKS, WORLD_HEIGHT_CHUNKS,
-    SEA_LEVEL, DIRT_DEPTH, STONE_DEPTH
-)
+from config import GameConfig
 from world.block import BlockType
 from world.world import World
 from world.chunk import Chunk
@@ -281,7 +278,7 @@ class WorldGenerator:
         # 1.0 = current default variation, lower = flatter terrain.
         base_amplitude = 15
         height_variation = int(noise * base_amplitude * roughness)
-        return SEA_LEVEL + height_variation
+        return self.cfg.sea_level + height_variation
 
     def _get_tree_for_cell(self, cell_index: int) -> tuple | None:
         """Get tree properties for a cell, or None if no tree spawns.
@@ -407,7 +404,7 @@ class WorldGenerator:
 
         # Check for caves
         cave_noise = self._noise2d(world_x * 0.1, world_y * 0.1)
-        if cave_noise > 0.7 and depth > DIRT_DEPTH + 2:
+        if cave_noise > 0.7 and depth > self.cfg.dirt_depth + 2:
             if biome.surface_block == BlockType.SNOW:
                 return BlockType.ICE
             return BlockType.WATER
@@ -449,12 +446,17 @@ class WorldGenerator:
 
         return BlockType.STONE
 
-    def generate_world(self, world: World) -> None:
+    def generate_world(self, world: World, progress_callback=None) -> None:
         """Generate all chunks in the world."""
-        for chunk_x in range(WORLD_WIDTH_CHUNKS):
-            for chunk_y in range(WORLD_HEIGHT_CHUNKS):
+        total = self.cfg.world_width_chunks * self.cfg.world_height_chunks
+        done = 0
+        for chunk_x in range(self.cfg.world_width_chunks):
+            for chunk_y in range(self.cfg.world_height_chunks):
                 chunk = world.get_or_create_chunk(chunk_x, chunk_y)
                 self.generate_chunk(chunk)
+                done += 1
+                if progress_callback is not None:
+                    progress_callback(done, total)
 
     def _weighted_pick_mob_id(self, weighted_ids: list[tuple[str, int]], pick: int) -> str | None:
         """Pick a mob id from (mob_id, weight) pairs using a deterministic integer pick."""
@@ -505,7 +507,7 @@ class WorldGenerator:
         global_weights = [(d.mob_id, d.spawn.weight) for d in surface_pool if d.spawn.weight > 0]
 
         mobs = []
-        world_width = WORLD_WIDTH_CHUNKS * CHUNK_SIZE
+        world_width = self.cfg.world_width_chunks * self.cfg.chunk_size
         for sample_x in range(0, world_width, 40):
             # Use perm table for deterministic spawning (~40% chance)
             h = self._perm[(sample_x * 11 + 53) & 255]
@@ -542,7 +544,7 @@ class WorldGenerator:
         global_weights = [(d.mob_id, d.spawn.weight) for d in night_pool if d.spawn.weight > 0]
         occupied = occupied_positions or set()
 
-        world_width = WORLD_WIDTH_CHUNKS * CHUNK_SIZE
+        world_width = self.cfg.world_width_chunks * self.cfg.chunk_size
         for _ in range(6):
             sample_x = self._rng.randrange(0, world_width)
             surface_y = self.get_surface_height(sample_x)
@@ -562,7 +564,7 @@ class WorldGenerator:
 
     def get_spawn_position(self) -> tuple[int, int]:
         """Get a valid spawn position for the player."""
-        spawn_x = (WORLD_WIDTH_CHUNKS * CHUNK_SIZE) // 2
+        spawn_x = (self.cfg.world_width_chunks * self.cfg.chunk_size) // 2
         surface_y = self.get_surface_height(spawn_x)
         # Spawn player just above the surface
         return (spawn_x, surface_y + 2)

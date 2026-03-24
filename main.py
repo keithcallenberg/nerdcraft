@@ -19,6 +19,7 @@ def main(stdscr, args: argparse.Namespace) -> None:
     seed = args.seed
     save_name = args.save
     force_new = args.new
+    world_size_chunks = None
 
     # Show menu by default unless explicit CLI world args are provided.
     explicit_cli_world = (args.seed is not None) or args.new or (args.save != "default")
@@ -29,8 +30,15 @@ def main(stdscr, args: argparse.Namespace) -> None:
         seed = menu_result.seed
         save_name = menu_result.save_name
         force_new = menu_result.force_new
+        world_size_chunks = menu_result.world_size_chunks
 
-    engine = GameEngine(stdscr, seed=seed, save_name=save_name, force_new=force_new)
+    engine = GameEngine(
+        stdscr,
+        seed=seed,
+        save_name=save_name,
+        force_new=force_new,
+        world_size_chunks=world_size_chunks,
+    )
     engine.run()
 
 

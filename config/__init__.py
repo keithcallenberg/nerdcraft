@@ -134,7 +134,8 @@ class GameConfig:
         # Terrain
         terrain = data.get('terrain', {})
         sea_level_ratio = terrain.get('sea_level_ratio', 0.5)
-        self.sea_level = int(self.world_height * sea_level_ratio)
+        self.sea_level_ratio = float(sea_level_ratio)
+        self.sea_level = int(self.world_height * self.sea_level_ratio)
         self.dirt_depth = terrain.get('dirt_depth', 4)
         self.stone_depth = terrain.get('stone_depth', 20)
 
@@ -297,6 +298,14 @@ class GameConfig:
             if isinstance(behavior, dict):
                 return behavior
         return {}
+
+    def set_world_size_chunks(self, width_chunks: int, height_chunks: int) -> None:
+        """Runtime override for world dimensions (new world generation)."""
+        self.world_width_chunks = int(width_chunks)
+        self.world_height_chunks = int(height_chunks)
+        self.world_width = self.world_width_chunks * self.chunk_size
+        self.world_height = self.world_height_chunks * self.chunk_size
+        self.sea_level = int(self.world_height * self.sea_level_ratio)
 
     def get_block_color_pair(self, block_name: str) -> int:
         """Get the curses color pair ID for a block."""

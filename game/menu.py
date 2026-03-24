@@ -129,15 +129,82 @@ class MainMenu:
         return text or default
 
     def _new_world_flow(self) -> MenuResult:
-        name = self._prompt_text("Enter world/save name:", "default")
-        seed_text = self._prompt_text("Seed (blank = random):", "")
-        seed: int | None = None
-        if seed_text.strip():
+        """Single-screen new world setup with editable settings."""
+        sizes: list[tuple[str, tuple[int, int]]] = [
+            ("Small", (40, 12)),
+            ("Medium", (64, 16)),
+            ("Large", (96, 24)),
+        ]
+
+        save_name = "default"
+        seed_text = ""
+        size_index = 1
+        field_index = 0
+
+        while True:
+            self.stdscr.erase()
+            h, w = self.stdscr.getmaxyx()
+            title = "Create New World"
             try:
-                seed = int(seed_text.strip())
-            except ValueError:
-                seed = None
-        return MenuResult(start_game=True, save_name=name, force_new=True, seed=seed)
+                self.stdscr.addstr(1, max(0, (w - len(title)) // 2), title, curses.A_BOLD)
+            except curses.error:
+                pass
+
+            fields = [
+                ("Save Name", save_name or "default"),
+                ("Seed", seed_text or "(random)"),
+                ("World Size", f"{sizes[size_index][0]} ({sizes[size_index][1][0]}x{sizes[size_index][1][1]} chunks)"),
+                ("Generate", "Press Enter"),
+            ]
+
+            start_y = 4
+            for i, (label, value) in enumerate(fields):
+                line = f"{label}: {value}"
+                attr = curses.A_REVERSE if i == field_index else curses.A_NORMAL
+                try:
+                    self.stdscr.addstr(start_y + i * 2, max(2, (w - len(line)) // 2), line, attr)
+                except curses.error:
+                    pass
+
+            hint = "W/S: field  A/D: change size  Enter: edit/confirm  Esc: back"
+            try:
+                self.stdscr.addstr(h - 2, max(0, (w - len(hint)) // 2), hint, curses.A_DIM)
+            except curses.error:
+                pass
+            self.stdscr.refresh()
+
+            k = self.stdscr.getch()
+            if k in (ord('w'), ord('W'), curses.KEY_UP):
+                field_index = (field_index - 1) % len(fields)
+            elif k in (ord('s'), ord('S'), curses.KEY_DOWN):
+                field_index = (field_index + 1) % len(fields)
+            elif k in (ord('a'), ord('A'), curses.KEY_LEFT) and field_index == 2:
+                size_index = (size_index - 1) % len(sizes)
+            elif k in (ord('d'), ord('D'), curses.KEY_RIGHT) and field_index == 2:
+                size_index = (size_index + 1) % len(sizes)
+            elif k in (10, 13, curses.KEY_ENTER):
+                if field_index == 0:
+                    save_name = self._prompt_text("Enter world/save name:", save_name or "default")
+                elif field_index == 1:
+                    seed_text = self._prompt_text("Seed (blank = random):", seed_text)
+                elif field_index == 2:
+                    size_index = (size_index + 1) % len(sizes)
+                elif field_index == 3:
+                    seed: int | None = None
+                    if seed_text.strip():
+                        try:
+                            seed = int(seed_text.strip())
+                        except ValueError:
+                            seed = None
+                    return MenuResult(
+                        start_game=True,
+                        save_name=save_name or "default",
+                        force_new=True,
+                        seed=seed,
+                        world_size_chunks=sizes[size_index][1],
+                    )
+            elif k in (27, ord('q'), ord('Q')):
+                return self.run()
 
     def _load_world_flow(self) -> MenuResult:
         saves = self._list_saves()

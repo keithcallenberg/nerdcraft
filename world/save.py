@@ -128,6 +128,7 @@ class SaveManager:
             "x": player.x,
             "y": player.y,
             "health": player.health,
+            "breath": getattr(player, 'breath', 0),
             "facing_right": player.facing_right,
             "inventory": {
                 _inv_key(item): count

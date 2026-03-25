@@ -1,15 +1,24 @@
 """Physics engine with discrete grid-based gravity and jumping."""
 
 from __future__ import annotations
+
+from world.block import BlockType
 from world.world import World
 
 
 class PhysicsEngine:
     """Handles discrete grid-based physics."""
 
-    def __init__(self, world: World, gravity_interval: float, jump_height: int,
-                 safe_fall_distance: int = 6, fall_damage_per_block: int = 5,
-                 auto_jump: bool = True):
+    def __init__(
+        self,
+        world: World,
+        gravity_interval: float,
+        jump_height: int,
+        safe_fall_distance: int = 6,
+        fall_damage_per_block: int = 5,
+        auto_jump: bool = True,
+        in_water_gravity_multiplier: float = 2.2,
+    ):
         """Initialize physics with world reference and tuning parameters."""
         self.world = world
         self.gravity_interval = gravity_interval
@@ -17,6 +26,7 @@ class PhysicsEngine:
         self.safe_fall_distance = safe_fall_distance
         self.fall_damage_per_block = fall_damage_per_block
         self.auto_jump = auto_jump
+        self.in_water_gravity_multiplier = max(1.0, float(in_water_gravity_multiplier))
         self._gravity_timers: dict[int, float] = {}
 
     def update(self, entity, dt: float) -> None:
@@ -24,14 +34,20 @@ class PhysicsEngine:
         eid = id(entity)
         timer = self._gravity_timers.get(eid, 0.0) + dt
 
-        while timer >= self.gravity_interval:
-            timer -= self.gravity_interval
+        step_interval = self.gravity_interval
+        if self.world.get_block(entity.x, entity.y) == BlockType.WATER:
+            step_interval = self.gravity_interval * self.in_water_gravity_multiplier
+
+        while timer >= step_interval:
+            timer -= step_interval
             self._gravity_step(entity)
 
         self._gravity_timers[eid] = timer
 
     def _gravity_step(self, entity) -> None:
         """Perform one discrete gravity or jump step."""
+        in_water = self.world.get_block(entity.x, entity.y) == BlockType.WATER
+
         if entity.jump_remaining > 0:
             # Rising — try to move up
             if not self.world.is_solid(entity.x, entity.y + 1):
@@ -50,8 +66,8 @@ class PhysicsEngine:
                 entity.fall_distance += 1
                 entity.on_ground = False
             else:
-                # Landed — apply fall damage if needed
-                if entity.fall_distance > self.safe_fall_distance:
+                # Landed — apply fall damage if needed (not in water)
+                if (not in_water) and entity.fall_distance > self.safe_fall_distance:
                     excess = entity.fall_distance - self.safe_fall_distance
                     damage = excess * self.fall_damage_per_block
                     entity.health = max(0, entity.health - damage)

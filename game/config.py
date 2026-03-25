@@ -28,6 +28,8 @@ JUMP_HEIGHT = _cfg.jump_height
 SAFE_FALL_DISTANCE = _cfg.safe_fall_distance
 FALL_DAMAGE_PER_BLOCK = _cfg.fall_damage_per_block
 AUTO_JUMP = _cfg.auto_jump
+SWIM_JUMP_HEIGHT = _cfg.swim_jump_height
+IN_WATER_GRAVITY_MULTIPLIER = _cfg.in_water_gravity_multiplier
 
 # Player
 PLAYER_CHAR = _cfg.player_char

@@ -111,6 +111,7 @@ class GameEngine:
             self.world, GRAVITY_INTERVAL, JUMP_HEIGHT,
             SAFE_FALL_DISTANCE, FALL_DAMAGE_PER_BLOCK,
             auto_jump=AUTO_JUMP,
+            in_water_gravity_multiplier=IN_WATER_GRAVITY_MULTIPLIER,
         )
         self.renderer = Renderer(stdscr)
         self.input_handler = InputHandler()
@@ -145,6 +146,16 @@ class GameEngine:
         self._ticks_since_night_spawn = 0
         self._night_spawn_cap = self._cfg.engine.night_spawn_cap
         self._night_spawn_min_player_distance = self._cfg.engine.night_spawn_min_player_distance
+
+        # Water simulation / breathing
+        self._water_flow_enabled = self._cfg.water_flow_enabled
+        self._water_flow_interval_ticks = max(1, self._cfg.water_flow_interval_ticks)
+        self._water_max_flow_changes = max(1, self._cfg.water_max_flow_changes)
+        self._drowning_damage = self._cfg.drowning_damage
+        self._drowning_interval_seconds = max(0.2, self._cfg.drowning_interval_seconds)
+        self._breath_recover_per_second = max(0.1, self._cfg.breath_recover_per_second)
+        self._drown_timer_seconds = 0.0
+        self._water_tick_counter = 0
 
     @property
     def selected_item(self) -> InventoryType | None:
@@ -278,8 +289,9 @@ class GameEngine:
                     self.sound.play(SoundEvent.FOOTSTEP)
                 self.player.facing_right = True
             elif action == Action.JUMP:
-                if self.player.on_ground:
-                    self.player.jump_remaining = self.physics.jump_height
+                in_water = self.world.get_block(self.player.x, self.player.y) == BlockType.WATER
+                if self.player.on_ground or in_water:
+                    self.player.jump_remaining = SWIM_JUMP_HEIGHT if in_water else self.physics.jump_height
                     self.player.on_ground = False
             elif action == Action.USE:
                 selected = self.selected_item
@@ -303,6 +315,7 @@ class GameEngine:
         """Update game state for one tick."""
         self.physics.update(self.player, dt)
         self.clock.tick()
+        self._update_water_and_breath(dt)
 
         # Update mobs
         dead_mobs = []
@@ -367,12 +380,84 @@ class GameEngine:
         if self._ticks_since_save >= self._auto_save_ticks:
             self._do_save()
 
+    def _update_water_and_breath(self, dt: float) -> None:
+        """Run simple water flow and drowning/surface breathing simulation."""
+        self._water_tick_counter += 1
+        if self._water_flow_enabled and (self._water_tick_counter % self._water_flow_interval_ticks == 0):
+            self._update_water_flow()
+
+        # Drowning: use block above player as head-space check.
+        head_underwater = self.world.get_block(self.player.x, self.player.y + 1) == BlockType.WATER
+        if head_underwater:
+            self.player.breath = max(0.0, self.player.breath - dt)
+            if self.player.breath <= 0:
+                self._drown_timer_seconds += dt
+                while self._drown_timer_seconds >= self._drowning_interval_seconds:
+                    self.player.health = max(0, self.player.health - self._drowning_damage)
+                    self._drown_timer_seconds -= self._drowning_interval_seconds
+            else:
+                self._drown_timer_seconds = 0.0
+        else:
+            self._drown_timer_seconds = 0.0
+            self.player.breath = min(
+                self.player.max_breath,
+                self.player.breath + dt * self._breath_recover_per_second,
+            )
+
+    def _update_water_flow(self) -> None:
+        """Very lightweight cellular water movement (downward first, then sideways)."""
+        clear_cells: set[tuple[int, int]] = set()
+        fill_cells: set[tuple[int, int]] = set()
+        changes = 0
+
+        for chunk in self.world.get_loaded_chunks():
+            for lx in range(chunk.chunk_size):
+                for ly in range(chunk.chunk_size):
+                    if changes >= self._water_max_flow_changes:
+                        break
+
+                    if chunk.get_block(lx, ly) != BlockType.WATER:
+                        continue
+
+                    wx = chunk.world_x + lx
+                    wy = chunk.world_y + ly
+
+                    # Gravity flow downward
+                    if self.world.get_block(wx, wy - 1) == BlockType.AIR:
+                        clear_cells.add((wx, wy))
+                        fill_cells.add((wx, wy - 1))
+                        changes += 1
+                        continue
+
+                    # Lateral flow when supported beneath target
+                    dirs = [-1, 1]
+                    random.shuffle(dirs)
+                    for dx in dirs:
+                        nx = wx + dx
+                        if self.world.get_block(nx, wy) == BlockType.AIR and self.world.get_block(nx, wy - 1) != BlockType.AIR:
+                            clear_cells.add((wx, wy))
+                            fill_cells.add((nx, wy))
+                            changes += 1
+                            break
+
+                if changes >= self._water_max_flow_changes:
+                    break
+            if changes >= self._water_max_flow_changes:
+                break
+
+        for x, y in clear_cells:
+            if (x, y) not in fill_cells:
+                self.world.set_block(x, y, BlockType.AIR)
+        for x, y in fill_cells:
+            self.world.set_block(x, y, BlockType.WATER)
+
     def _respawn(self) -> None:
         """Reset player to spawn after death."""
         spawn_x, spawn_y = self.generator.get_spawn_position()
         self.player.x = spawn_x
         self.player.y = spawn_y
         self.player.health = self._max_health
+        self.player.breath = self.player.max_breath
         self.player.fall_distance = 0
         self.player.jump_remaining = 0
         self.player.on_ground = False

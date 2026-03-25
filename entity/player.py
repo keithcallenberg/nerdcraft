@@ -20,6 +20,8 @@ class Player:
         self.health = GameConfig.get().combat.max_health
         self.fall_distance = 0  # blocks fallen continuously
         self.inventory = Inventory()
+        self.max_breath = GameConfig.get().max_breath_seconds
+        self.breath = self.max_breath
         self.armor: dict[str, ItemType | None] = {
             'helmet': None,
             'chestpiece': None,

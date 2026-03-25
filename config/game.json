@@ -18,7 +18,18 @@
     "jump_height": 4,
     "safe_fall_distance": 6,
     "fall_damage_per_block": 5,
-    "auto_jump": true
+    "auto_jump": true,
+    "swim_jump_height": 2,
+    "in_water_gravity_multiplier": 2.2
+  },
+  "water": {
+    "flow_enabled": true,
+    "flow_interval_ticks": 8,
+    "max_flow_changes": 350,
+    "max_breath_seconds": 12.0,
+    "breath_recover_per_second": 2.5,
+    "drowning_damage": 4,
+    "drowning_interval_seconds": 1.0
   },
   "player": {
     "char": "@"

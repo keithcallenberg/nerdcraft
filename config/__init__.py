@@ -146,6 +146,18 @@ class GameConfig:
         self.safe_fall_distance = physics.get('safe_fall_distance', 6)
         self.fall_damage_per_block = physics.get('fall_damage_per_block', 5)
         self.auto_jump = bool(physics.get('auto_jump', True))
+        self.swim_jump_height = int(physics.get('swim_jump_height', 2))
+        self.in_water_gravity_multiplier = float(physics.get('in_water_gravity_multiplier', 2.2))
+
+        # Water / breathing
+        water = data.get('water', {})
+        self.water_flow_enabled = bool(water.get('flow_enabled', True))
+        self.water_flow_interval_ticks = int(water.get('flow_interval_ticks', 8))
+        self.water_max_flow_changes = int(water.get('max_flow_changes', 350))
+        self.max_breath_seconds = float(water.get('max_breath_seconds', 12.0))
+        self.breath_recover_per_second = float(water.get('breath_recover_per_second', 2.5))
+        self.drowning_damage = int(water.get('drowning_damage', 4))
+        self.drowning_interval_seconds = float(water.get('drowning_interval_seconds', 1.0))
 
         # Player
         player = data.get('player', {})

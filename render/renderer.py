@@ -208,10 +208,17 @@ class Renderer:
 
         # --- Health (left side) ---
         heart = '\u2665'  # ♥
+        o2_str = ""
+        if hasattr(player, 'max_breath') and getattr(player, 'max_breath', 0) > 0:
+            breath = float(getattr(player, 'breath', player.max_breath))
+            if breath < player.max_breath:
+                pct = int((breath / player.max_breath) * 100)
+                o2_str = f"  O2 {pct}%"
+
         if time_icon:
-            hp_str = f" {heart} {player.health}  {time_icon}"
+            hp_str = f" {heart} {player.health}{o2_str}  {time_icon}"
         else:
-            hp_str = f" {heart} {player.health}"
+            hp_str = f" {heart} {player.health}{o2_str}"
         try:
             if curses.has_colors():
                 self.stdscr.addstr(

@@ -63,7 +63,7 @@ class InputHandler:
         'TAB': ord('\t'),
         'SPACE': ord(' '),
         'ESC': 27,
-        'F12': curses.KEY_F(12),
+        'F12': curses.KEY_F0 + 12,
     }
 
     def __init__(self):

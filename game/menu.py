@@ -15,6 +15,7 @@ class MenuResult:
     save_name: str = "default"
     force_new: bool = False
     seed: int | None = None
+    world_size_chunks: tuple[int, int] | None = None
 
 
 class MainMenu:

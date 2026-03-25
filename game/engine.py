@@ -8,6 +8,7 @@ from pathlib import Path
 from game.config import (
     TICK_DURATION, GRAVITY_INTERVAL, JUMP_HEIGHT,
     SAFE_FALL_DISTANCE, FALL_DAMAGE_PER_BLOCK, AUTO_JUMP,
+    SWIM_JUMP_HEIGHT, IN_WATER_GRAVITY_MULTIPLIER,
 )
 from world.world import World
 from world.block import BlockType, get_properties

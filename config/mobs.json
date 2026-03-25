@@ -62,7 +62,7 @@
       ],
       "spawn": {
         "surface": false,
-        "underground": true,
+        "underground": false,
         "night_only": false,
         "weight": 40
       }

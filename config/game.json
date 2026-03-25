@@ -1,7 +1,7 @@
 {
   "game_loop": {
     "tick_rate": 600,
-    "day_length_ticks": 48000
+    "day_length_ticks": 10000
   },
   "world": {
     "chunk_size": 16,
@@ -26,10 +26,10 @@
     "flow_enabled": true,
     "flow_interval_ticks": 12,
     "max_flow_changes": 120,
-    "max_breath_seconds": 12.0,
+    "max_breath_seconds": 10.0,
     "breath_recover_per_second": 2.5,
-    "drowning_damage": 4,
-    "drowning_interval_seconds": 1.0
+    "drowning_damage": 6,
+    "drowning_interval_seconds": 0.2
   },
   "player": {
     "char": "@"

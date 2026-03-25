@@ -26,6 +26,7 @@ class Action(Enum):
     CRAFT = auto()
     CRAFT_CONFIRM = auto()
     QUIT = auto()
+    SCREENSHOT = auto()
 
 
 class InputHandler:

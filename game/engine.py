@@ -25,6 +25,7 @@ from config import GameConfig
 from game.clock import DayClock
 from game.sound import SoundManager, SoundEvent
 from game.music import AmbientMusic
+from util.clipboard import copy_text_to_clipboard
 
 
 class GameEngine:
@@ -261,6 +262,14 @@ class GameEngine:
             if action == Action.QUIT:
                 self.running = False
                 return
+
+            if action == Action.SCREENSHOT:
+                shot = self.renderer.capture_screen_text()
+                if copy_text_to_clipboard(shot):
+                    self._set_status_flash("Screenshot copied to clipboard")
+                else:
+                    self._set_status_flash("Clipboard tool not found (wl-copy/xclip/xsel)")
+                continue
 
             # If a directional use is pending, next direction key executes use
             if self._pending_use:

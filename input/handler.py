@@ -48,6 +48,7 @@ class InputHandler:
         'craft': Action.CRAFT,
         'craft_confirm': Action.CRAFT_CONFIRM,
         'quit': Action.QUIT,
+        'screenshot': Action.SCREENSHOT,
     }
 
     _SPECIAL_KEYS = {
@@ -61,6 +62,7 @@ class InputHandler:
         'TAB': ord('\t'),
         'SPACE': ord(' '),
         'ESC': 27,
+        'F12': curses.KEY_F(12),
     }
 
     def __init__(self):

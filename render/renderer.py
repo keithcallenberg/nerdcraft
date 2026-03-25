@@ -580,6 +580,18 @@ class Renderer:
 
         self.stdscr.refresh()
 
+    def capture_screen_text(self) -> str:
+        """Capture the currently drawn curses screen as plain text."""
+        lines: list[str] = []
+        for row in range(self.height):
+            try:
+                raw = self.stdscr.instr(row, 0, max(1, self.width - 1))
+                line = raw.decode('utf-8', errors='ignore').rstrip()
+            except Exception:
+                line = ''
+            lines.append(line)
+        return "\n".join(lines).rstrip() + "\n"
+
     def get_key(self) -> int:
         """Get key press (non-blocking)."""
         try:

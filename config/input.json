@@ -15,6 +15,7 @@
     "inventory": ["i", "I", "TAB"],
     "craft": ["c", "C"],
     "craft_confirm": ["KEY_ENTER", "ENTER", "RETURN"],
-    "quit": ["q", "Q", "ESC"]
+    "quit": ["q", "Q", "ESC"],
+    "screenshot": ["F12"]
   }
 }

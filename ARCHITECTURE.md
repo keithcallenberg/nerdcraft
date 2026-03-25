@@ -1,175 +1,67 @@
 # Nerdcraft Architecture
 
-> Last updated: 2026-03-09
+> Last updated: 2026-03-25
 
-## Overview
+## High-Level Structure
 
-Nerdcraft is a 2D ASCII side-scroller implemented in Python using curses for rendering.
-Systems are cleanly separated and communicate through well-defined interfaces.
+- `main.py`
+  - CLI parsing
+  - curses bootstrap
+  - main menu entry
+- `game/engine.py`
+  - primary game loop orchestration
+  - input/update/render sequencing
+  - save/load, spawning, overlays, water/breath integration
+- `world/`
+  - `world.py` chunked storage + block access
+  - `chunk.py` runtime-config chunk container
+  - `generator.py` procedural generation + biomes + blending
+  - `save.py` world/player serialization
+- `entity/`
+  - `player.py` player state (health, inventory, armor, breath)
+  - `mob.py` AI entity behavior
+  - `mob_registry.py` data-driven mob definitions
+  - `physics.py` movement/gravity/jump/autojump core
+  - `crafting.py` recipe engine
+  - `item.py` JSON-driven item registry
+- `render/`
+  - `renderer.py` curses drawing + HUD/panels
+  - `camera.py` world-to-screen mapping
+- `input/`
+  - `handler.py` configurable key binding mapping
+- `config/`
+  - all gameplay/content tuning via JSON
 
-```
-┌─────────────────────────────────────────────┐
-│                  main.py                    │
-│   Entry point, curses.wrapper, CLI args     │
-└───────────────────┬─────────────────────────┘
-                    │
-┌───────────────────▼─────────────────────────┐
-│             game/engine.py                  │
-│   GameEngine — orchestrates all systems     │
-│   Fixed-timestep game loop (600 TPS cap)    │
-│   Input → Update → Render cycle             │
-└──┬──────────┬──────────┬────────────┬───────┘
-   │          │          │            │
-┌──▼───┐  ┌──▼───┐  ┌───▼──┐  ┌─────▼─────┐
-│World │  │Entity│  │Render│  │  Input    │
-│Layer │  │Layer │  │Layer │  │  Handler  │
-└──┬───┘  └──┬───┘  └───┬──┘  └───────────┘
-   │         │           │
-  Chunks   Player      Camera
-  Generator  Mob       Renderer
-  Block      Physics   HUD
-  Save/Load  Inventory Death/Inv screens
-```
+## Data-Driven Core
 
-## Module Descriptions
+Most tunable content and behavior is configured through JSON files:
 
-### `main.py`
-- Entry point
-- Parses CLI args: `--seed`, `--new`
-- Wraps `GameEngine.run()` in `curses.wrapper()`
+- World/physics/water/save timing: `config/game.json`
+- Engine pacing: `config/engine.json`
+- UI strings/layout: `config/ui.json`
+- Input bindings: `config/input.json`
+- Blocks/tiers/colors: `config/blocks.json`, `config/colors.json`
+- Items: `config/items.json`
+- Mobs: `config/mobs.json`
+- Recipes: `config/recipes.json`
+- Biomes: `config/biomes.json`
+- Block mine behavior: `config/block_behaviors.json`
+- Main menu text/header: `config/menu.json`
 
-### `game/engine.py` — GameEngine
-- Central orchestrator
-- Owns: World, Player, mobs list, PhysicsEngine, Renderer, InputHandler, DayClock
-- Hotbar (5 slots), pending action state machine
-- Death timer → respawn flow
-- Inventory overlay mode
-- `_handle_input()` → `_update(dt)` → `_render()`
+## Runtime Flow
 
-### `game/config.py`
-- Exposes constants loaded from JSON via `GameConfig` singleton
-- All physics, world-size, terrain constants live here
+1. Start via menu or CLI world settings
+2. Load save or generate new world
+3. Tick loop:
+   - input handling
+   - fixed-step updates (physics, mobs, water/breath, clock)
+   - rendering
+   - autosave cadence
 
-### `game/clock.py` — DayClock *(Phase 4 groundwork)*
-- Tracks global simulation ticks as in-game time-of-day
-- Provides wrapped `tick_in_day`, normalized `day_progress`, day/night state
-- Exposes HUD helpers (`☀` / `☾`, `HH:MM` string)
+## Notable Systems
 
-### `game/sound.py` — SoundManager
-- Lightweight event-driven SFX dispatcher (best-effort, non-fatal)
-- Uses `curses.beep()` with terminal bell fallback
-- Current events: `footstep`, `mining`, `hit`, `death`
-
-### `game/music.py` — AmbientMusic
-- Optional procedural ambient music system
-- Uses `numpy` + `sounddevice` output stream when available
-- Runs on a background thread with graceful no-op fallback when deps/device are unavailable
-
-### `world/world.py` — World
-- Chunk-based block storage: `dict[(cx,cy)] → Chunk`
-- World/chunk coordinate conversion
-- `get_block()`, `set_block()`, `is_solid()` public API
-
-### `world/chunk.py` — Chunk
-- 16×16 grid of `BlockType` values
-- Stores `chunk_x, chunk_y` for world-coordinate helpers
-
-### `world/generator.py` — WorldGenerator
-- Seeded PRNG + permutation table
-- 1D FBM noise → terrain height
-- 1D low-frequency FBM (second pass) → biome region map (`get_biome_id`)
-- 2D value noise → caves, ore veins
-- Tree placement via cell-based algorithm
-- `generate_world(world)` fills all chunks
-- `spawn_mobs(world)` → list of Mob instances (biome spawn-table aware)
-- `spawn_night_hostile(world, occupied_positions)` uses night-only hostiles filtered by biome tables
-
-### `world/save.py` — SaveManager *(Phase 1, new)*
-- Saves/loads world chunk data + player state
-- Format: `saves/<name>/world.pkl` + `saves/<name>/player.json`
-- Auto-save every N ticks; save-on-quit
-
-### `world/block.py` — BlockType + BlockProperties
-- `BlockType` enum (maps to JSON config keys)
-- `BlockProperties` dataclass: char, solid, breakable, color_pair
-- Registry initialized lazily from `GameConfig`
-
-### `entity/player.py` — Player
-- Integer grid position (x, y)
-- health, on_ground, jump_remaining, fall_distance, facing_right
-- Owns `Inventory`
-- Helper methods for adjacent block positions
-
-### `entity/mob.py` — Mob
-- Duck-typed with Player for PhysicsEngine compatibility
-- `mob_type` string key into mob registry
-- Simple state-machine AI: idle / walk / [chase / attack — Phase 2]
-- `drops` list loaded from mob config
-
-### `entity/physics.py` — PhysicsEngine
-- Discrete grid-based gravity (timer-driven steps)
-- `try_move(entity, dx, dy)` — collision check
-- Fall damage accumulation
-- Per-entity gravity timer dict (works for player + all mobs)
-
-### `entity/inventory.py` — Inventory
-- `dict[BlockType → count]` storage
-- `add()`, `remove()`, `count()`, `items()`
-
-### `entity/crafting.py` — RecipeEngine
-- Loads recipes from `config/recipes.json`
-- `available_recipes(inventory)` returns currently craftable recipes
-- `craft(inventory, recipe_id)` consumes inputs and adds outputs
-- Station-gated recipes are supported (`station: "workbench"`, etc.)
-
-### `render/renderer.py` — Renderer
-- Curses-based rendering
-- HUD row (top): health + hotbar
-- World rows: block chars with color pairs (dimmed at night)
-- Mob and player overlaid
-- Status bar (bottom): position + controls hint
-- Inventory overlay (modal)
-- Death screen (modal)
-
-### `render/camera.py` — Camera
-- Viewport tracking player center
-- `world_to_screen()` / `screen_to_world()` (Y-flip: world Y up, screen Y down)
-
-### `input/handler.py` — InputHandler
-- Key → `Action` enum mapping
-- WASD + arrows, M/P, 1-5, E/R, I, Q/Esc
-
-### `config/__init__.py` — GameConfig
-- Singleton loading `game.json`, `blocks.json`, `colors.json`
-- Typed dataclasses: `BlockConfig`, `ColorConfig`
-- `get_block(name)`, `get_color(name)`, `get_block_color_pair(name)`
-
-## Data Flow
-
-```
-JSON configs ──► GameConfig (singleton)
-                    │
-          ┌─────────┼──────────┐
-      BlockType   Colors    Physics/World constants
-      properties  pairs
-
-GameEngine.run()
-  loop:
-    getch() → InputHandler.process_key() → Action
-    Action → engine state mutations (move, mine, place…)
-    accumulator >= TICK_DURATION:
-      PhysicsEngine.update(player, dt)
-      PhysicsEngine.update(mob, dt) × N
-      mob.update_ai(world, dt) → dx → try_move
-    Renderer.render(world, player, mobs, hotbar…)
-```
-
-## Key Design Decisions
-
-1. **Integer grid coordinates** — all entities snap to whole-block positions.
-   Physics is discrete (step-based), not continuous.
-2. **JSON-driven content** — blocks, colors, game constants, (Phase 2) mobs all in JSON.
-3. **Chunk-based world** — enables partial loading and future infinite world.
-4. **Fixed-timestep loop** — physics ticks decouple from render framerate.
-5. **Duck-typed entities** — `PhysicsEngine` works on any object with the right attributes,
-   so mobs and player share the same physics without inheritance.
+- **World-size override at new-world creation**
+- **Directional use model for non-consumables**
+- **Armor slots + mitigation**
+- **Biome transition smoothing**
+- **Performance-focused local water simulation**

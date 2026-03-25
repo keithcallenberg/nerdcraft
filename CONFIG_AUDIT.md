@@ -1,39 +1,38 @@
-# Config Audit (Pass 3)
+# Config Audit
 
-Goal: eliminate gameplay hardcoding and move behavior into JSON configs.
+> Last updated: 2026-03-25
 
-## ✅ Completed
+## Current State
 
-- **Input bindings** (`config/input.json`)
-  - Movement/use/hotbar/inventory/craft/quit
-  - Craft confirm now config-driven (`craft_confirm`), used by crafting UI logic
+Nerdcraft is largely JSON-driven for gameplay tuning and content.
 
-- **Combat config** (`config/combat.json`)
-  - max health
-  - fist/tool attack damage
-  - tool requirement status template
+### Implemented config domains
 
-- **Mining + progression config**
-  - per-block mining tier in `config/blocks.json` (`required_mining_tier`)
-  - tier display names + leaf fallback apple chance in `config/mining.json`
+- Input (`config/input.json`)
+- UI text/layout (`config/ui.json`)
+- Engine timing/pacing (`config/engine.json`)
+- World/physics/water/save (`config/game.json`)
+- Blocks + mining tiers (`config/blocks.json`)
+- Items + equipment stats (`config/items.json`)
+- Recipes (`config/recipes.json`)
+- Mobs (`config/mobs.json`)
+- Biomes (`config/biomes.json`)
+- Block mine behavior (`config/block_behaviors.json`)
+- Menu labels/ASCII header (`config/menu.json`)
 
-- **UI config** (`config/ui.json`)
-  - status strings/templates
-  - inventory/crafting titles/footers/labels
-  - inventory/crafting box dimensions
-  - death message
+## Remaining non-config logic
 
-- **Engine pacing config** (`config/engine.json`)
-  - frame cap/sleep
-  - save/status/death timers
-  - night spawn interval/cap/min distance
+These are intentional code-side systems (not content tuning):
 
-- **Block behavior config** (`config/block_behaviors.json`)
-  - on-mine drop behavior (replace/custom/default)
-  - configurable trunk replacement drops and leaves custom drops
+- State machines (mob AI transitions, overlay/menu state transitions)
+- Physics/collision algorithms
+- World generation procedural algorithms
+- Render pipeline and curses drawing primitives
 
-## Notes
+## Suggested Next Hardening Step
 
-At this point, major gameplay/configurable values are JSON-driven.
-Remaining code-level logic is mostly structural flow (state machine + control flow),
-not tuning data.
+- Add strict config validation/fail-fast startup checks for:
+  - unknown item/block IDs
+  - invalid color references
+  - invalid action names/key tokens
+  - malformed recipe station/item references

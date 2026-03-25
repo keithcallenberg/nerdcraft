@@ -1,17 +1,31 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Quick contributor guidance for code assistants working in this repo.
 
-## Project Overview
+## Project Snapshot
 
-Nerdcraft is a 2D side-scroller game inspired by Terraria, rendered using ASCII art similar to Cursedcraft. It targets Linux with Python.
+Nerdcraft is a curses-based ASCII 2D sandbox/survival game in Python.
+It is heavily config-driven through JSON under `config/`.
 
-## Inspiration
+## Contribution Priorities
 
-- **Cursedcraft**: A portable 3D voxel sandbox game for TTY, written in C99 with ncurses/fbdev output and software rendering using 32-bit fixed point math
-- **Terraria**: A 2D side-scroller with Minecraft-like sandbox elements
+1. Keep gameplay stable (avoid regressions in loop/input/save/worldgen).
+2. Prefer config-driven tuning over hardcoded constants.
+3. Preserve performance in the main loop (especially generation/water/mob logic).
+4. Run compile/tests before committing.
 
-## Target Platform
+## Important Paths
 
-- Linux
-- Python
+- Entry: `main.py`
+- Core loop: `game/engine.py`
+- Generation: `world/generator.py`
+- Data model: `entity/`
+- Rendering: `render/`
+- Config loader: `config/__init__.py`
+- Content: `config/*.json`
+
+## Before Commit
+
+- `python3 -m compileall .`
+- sanity scan for merge artifacts
+- keep commits focused and descriptive

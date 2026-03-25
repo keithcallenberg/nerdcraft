@@ -406,45 +406,47 @@ class GameEngine:
             )
 
     def _update_water_flow(self) -> None:
-        """Very lightweight cellular water movement (downward first, then sideways)."""
+        """Simplified local water simulation near player (performance-first)."""
         clear_cells: set[tuple[int, int]] = set()
         fill_cells: set[tuple[int, int]] = set()
         changes = 0
 
-        for chunk in self.world.get_loaded_chunks():
-            for lx in range(chunk.chunk_size):
-                for ly in range(chunk.chunk_size):
-                    if changes >= self._water_max_flow_changes:
-                        break
+        # Only simulate water near the player to avoid full-world scans every tick.
+        radius_x = 48
+        radius_y = 20
+        min_x = self.player.x - radius_x
+        max_x = self.player.x + radius_x
+        min_y = max(1, self.player.y - radius_y)
+        max_y = self.player.y + radius_y
 
-                    if chunk.get_block(lx, ly) != BlockType.WATER:
-                        continue
-
-                    wx = chunk.world_x + lx
-                    wy = chunk.world_y + ly
-
-                    # Gravity flow downward
-                    if self.world.get_block(wx, wy - 1) == BlockType.AIR:
-                        clear_cells.add((wx, wy))
-                        fill_cells.add((wx, wy - 1))
-                        changes += 1
-                        continue
-
-                    # Lateral flow when supported beneath target
-                    dirs = [-1, 1]
-                    random.shuffle(dirs)
-                    for dx in dirs:
-                        nx = wx + dx
-                        if self.world.get_block(nx, wy) == BlockType.AIR and self.world.get_block(nx, wy - 1) != BlockType.AIR:
-                            clear_cells.add((wx, wy))
-                            fill_cells.add((nx, wy))
-                            changes += 1
-                            break
-
-                if changes >= self._water_max_flow_changes:
-                    break
+        # Bottom-up gives stable gravity-like behavior.
+        for wy in range(min_y, max_y + 1):
             if changes >= self._water_max_flow_changes:
                 break
+            for wx in range(min_x, max_x + 1):
+                if changes >= self._water_max_flow_changes:
+                    break
+
+                if self.world.get_block(wx, wy) != BlockType.WATER:
+                    continue
+
+                # Gravity flow downward
+                if self.world.get_block(wx, wy - 1) == BlockType.AIR:
+                    clear_cells.add((wx, wy))
+                    fill_cells.add((wx, wy - 1))
+                    changes += 1
+                    continue
+
+                # Very simple lateral flow
+                dirs = [-1, 1]
+                random.shuffle(dirs)
+                for dx in dirs:
+                    nx = wx + dx
+                    if self.world.get_block(nx, wy) == BlockType.AIR and self.world.get_block(nx, wy - 1) != BlockType.AIR:
+                        clear_cells.add((wx, wy))
+                        fill_cells.add((nx, wy))
+                        changes += 1
+                        break
 
         for x, y in clear_cells:
             if (x, y) not in fill_cells:

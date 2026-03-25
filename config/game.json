@@ -24,8 +24,8 @@
   },
   "water": {
     "flow_enabled": true,
-    "flow_interval_ticks": 8,
-    "max_flow_changes": 350,
+    "flow_interval_ticks": 12,
+    "max_flow_changes": 120,
     "max_breath_seconds": 12.0,
     "breath_recover_per_second": 2.5,
     "drowning_damage": 4,

@@ -30,6 +30,7 @@ class WorldGenerator:
 
     def __init__(self, seed: int | None = None):
         """Initialize generator with optional seed."""
+        self.cfg = GameConfig.get()
         self.seed = seed if seed is not None else random.randint(0, 2**32 - 1)
         self._rng = random.Random(self.seed)
         # Generate permutation table for noise

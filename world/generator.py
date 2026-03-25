@@ -348,11 +348,11 @@ class WorldGenerator:
 
     def generate_chunk(self, chunk: Chunk) -> None:
         """Generate terrain for a chunk."""
-        for local_x in range(CHUNK_SIZE):
+        for local_x in range(self.cfg.chunk_size):
             world_x = chunk.world_x + local_x
             surface_height = self.get_surface_height(world_x)
 
-            for local_y in range(CHUNK_SIZE):
+            for local_y in range(self.cfg.chunk_size):
                 world_y = chunk.world_y + local_y
                 block_type = self._get_block_at(world_x, world_y, surface_height)
                 chunk.set_block(local_x, local_y, block_type)
@@ -396,7 +396,7 @@ class WorldGenerator:
             )
 
         # Biome subsurface layer (blend materials near biome borders)
-        if depth < DIRT_DEPTH:
+        if depth < self.cfg.dirt_depth:
             return self._choose_blended_block(
                 world_x,
                 world_y,
@@ -411,11 +411,11 @@ class WorldGenerator:
             return BlockType.WATER
 
         # Stone with biome-tuned ore generation
-        if depth >= STONE_DEPTH:
+        if depth >= self.cfg.stone_depth:
             return self._generate_ore(world_x, world_y, depth, biome)
 
         # Transition zone (mostly dirt/subsurface, some stone)
-        if depth >= DIRT_DEPTH:
+        if depth >= self.cfg.dirt_depth:
             return BlockType.STONE
 
         return biome.subsurface_block

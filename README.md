@@ -71,6 +71,15 @@ Core files in `config/`:
 
 Detailed schemas: see `CONTENT_FORMAT.md`.
 
+## License
+
+This project uses a custom **Attribution + Non-Commercial** license.
+
+- You may use, modify, and redistribute the code with attribution.
+- Commercial use requires prior permission from the project owner.
+
+See `LICENSE` for full terms.
+
 ## Docs
 
 - Architecture: `ARCHITECTURE.md`

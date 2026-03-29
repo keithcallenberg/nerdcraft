@@ -24,6 +24,34 @@ ASCII 2D sandbox/survival inspired by Terraria.
   - Breath / drowning
 - Mobs with data-driven AI and drops
 
+## Screenshot (Colorized, Monospace)
+
+<pre style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; line-height: 1.1;">
+<span style="color:#ff4d6d;">♥ 39</span>  <span style="color:#9aa0a6;">☾</span>                                                  <span style="color:#cccccc;">1[/] 2[T] 3[=] 4[#] 5</span>
+
+                                          <span style="color:#e5e5e5;">==</span>
+<span style="color:#27c93f;">&&&</span>                                      <span style="color:#e5e5e5;">=##=</span>
+<span style="color:#27c93f;">&&&&</span>                <span style="color:#27c93f;">&&</span>                  <span style="color:#e5e5e5;">=#  #=</span>
+<span style="color:#27c93f;">&&&&&</span>             <span style="color:#27c93f;">&&&&&</span>                <span style="color:#e5e5e5;">=#    #=</span>
+<span style="color:#27c93f;">&amp; &amp;&amp;&amp;&amp;</span>           <span style="color:#27c93f;">&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;</span>             <span style="color:#e5e5e5;">=#      #=</span>
+ <span style="color:#8b5a2b;">|</span>               <span style="color:#27c93f;">&amp;&amp;&amp;&amp;&amp;&amp;&amp;&amp;</span>            <span style="color:#e5e5e5;">=#        #=</span>        <span style="color:#f0f0f0;">K</span>
+                    <span style="color:#8b5a2b;">|</span>                 <span style="color:#9e9e9e;">#        #</span>
+                    <span style="color:#8b5a2b;">|</span>                 <span style="color:#9e9e9e;">#        #</span>        <span style="color:#9e9e9e;">##</span><span style="color:#4fc3f7;">WW</span><span style="color:#9e9e9e;">#####</span><span style="color:#4fc3f7;">WWWWWWW</span><span style="color:#9e9e9e;">###</span><span style="color:#4fc3f7;">WWWWWWWW</span>
+<span style="color:#9e9e9e;">#############</span>       <span style="color:#8b5a2b;">|</span>       <span style="color:#9e9e9e;">####</span>      <span style="color:#8b5a2b;">|</span>   <span style="color:#ff6b6b;">@</span>    <span style="color:#9e9e9e;">#</span>      <span style="color:#9e9e9e;">####</span><span style="color:#4fc3f7;">WW</span><span style="color:#9e9e9e;">#####</span><span style="color:#4fc3f7;">WWWWWWW</span><span style="color:#9e9e9e;">###</span><span style="color:#4fc3f7;">WWWWWWWW</span>
+<span style="color:#9e9e9e;">############################################## ###########</span><span style="color:#4fc3f7;">WW</span><span style="color:#9e9e9e;">#####</span><span style="color:#4fc3f7;">WWWWWWW</span><span style="color:#9e9e9e;">###</span><span style="color:#4fc3f7;">WWWWWWWW</span>
+<span style="color:#9e9e9e;">##############################################  ##########</span><span style="color:#4fc3f7;">WW</span><span style="color:#9e9e9e;">#####</span><span style="color:#4fc3f7;">WWWWWWW</span><span style="color:#9e9e9e;">###</span><span style="color:#4fc3f7;">WWWWWWWW</span>
+<span style="color:#9e9e9e;">###############################################  #########</span><span style="color:#4fc3f7;">WW</span><span style="color:#9e9e9e;">######</span><span style="color:#4fc3f7;">WWWWWW</span><span style="color:#9e9e9e;">##</span><span style="color:#4fc3f7;">WWWWWWWWW</span>
+<span style="color:#9e9e9e;">################################################  ########</span><span style="color:#27c93f;">Z</span><span style="color:#4fc3f7;">W</span><span style="color:#9e9e9e;">#######</span><span style="color:#4fc3f7;">WWWWWWWWWWWWWWWW</span>
+<span style="color:#9e9e9e;">#################################################  ################################</span>
+<span style="color:#9e9e9e;">##################################################  ###############################</span>
+<span style="color:#9e9e9e;">###################################################  ##############################</span>
+<span style="color:#9e9e9e;">####################################################  #############</span><span style="color:#4fc3f7;">W</span><span style="color:#9e9e9e;">###############</span>
+<span style="color:#9e9e9e;">#####################################                 ###########</span><span style="color:#4fc3f7;">WWWW</span><span style="color:#9e9e9e;">##############</span>
+<span style="color:#9e9e9e;">###############</span><span style="color:#4fc3f7;">WWWWW</span><span style="color:#9e9e9e;">############################################</span><span style="color:#4fc3f7;">WWWWWW</span><span style="color:#9e9e9e;">#############</span>
+<span style="color:#9e9e9e;">################</span><span style="color:#4fc3f7;">WWW</span><span style="color:#9e9e9e;">############################################</span><span style="color:#4fc3f7;">WWWWWWWW</span><span style="color:#9e9e9e;">############</span>
+ <span style="color:#7bd88f;">✓ World saved!</span>  <span style="color:#9aa0a6;">|  A/D:Move  W:Jump  Space:Use  1-5/E/R:Hotbar  I:Inv  C:Craft</span>
+</pre>
+
 ## Controls
 
 - `A / D` (or arrows): move

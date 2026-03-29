@@ -24,7 +24,7 @@ ASCII 2D sandbox/survival inspired by Terraria.
   - Breath / drowning
 - Mobs with data-driven AI and drops
 
-## Screenshot (Colorized, Monospace)
+## Screenshot
 
 <pre style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; line-height: 1.1;">
 <span style="color:#ff4d6d;">♥ 39</span>  <span style="color:#9aa0a6;">☾</span>                                                  <span style="color:#cccccc;">1[/] 2[T] 3[=] 4[#] 5</span>

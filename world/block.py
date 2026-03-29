@@ -30,6 +30,7 @@ class BlockType(Enum):
     TORCH = auto()
     STONE_BRICK = auto()
     WORKBENCH = auto()
+    FORGE = auto()
     LEATHER = auto()
     SAND = auto()
     CACTUS = auto()

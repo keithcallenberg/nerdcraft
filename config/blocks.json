@@ -116,6 +116,12 @@
       "breakable": true,
       "color": "yellow"
     },
+    "forge": {
+      "char": "F",
+      "solid": true,
+      "breakable": true,
+      "color": "red"
+    },
     "leather": {
       "char": "~",
       "solid": false,

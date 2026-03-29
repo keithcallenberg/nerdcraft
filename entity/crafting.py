@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Callable
 
 from config import _load_json
 from entity.inventory import Inventory, InventoryType
@@ -27,7 +27,7 @@ class Recipe:
     name: str
     inputs: tuple[RecipeItem, ...]
     outputs: tuple[RecipeItem, ...]
-    station: Optional[str]
+    stations: tuple[str, ...]
     description: str
 
 
@@ -48,7 +48,7 @@ class RecipeEngine:
                 name=raw_recipe.get("name", recipe_id),
                 inputs=tuple(self._parse_recipe_items(raw_recipe.get("inputs", []))),
                 outputs=tuple(self._parse_recipe_items(raw_recipe.get("outputs", []))),
-                station=raw_recipe.get("station"),
+                stations=self._parse_stations(raw_recipe.get("station")),
                 description=raw_recipe.get("description", ""),
             )
 
@@ -64,6 +64,17 @@ class RecipeEngine:
                 )
             )
         return parsed
+
+    def _parse_stations(self, raw_station) -> tuple[str, ...]:
+        """Support station as null, string, plus-delimited string, or array."""
+        if raw_station is None:
+            return ()
+        if isinstance(raw_station, str):
+            parts = [s.strip() for s in raw_station.split('+') if s.strip()]
+            return tuple(parts)
+        if isinstance(raw_station, list):
+            return tuple(str(s).strip() for s in raw_station if str(s).strip())
+        return ()
 
     def _to_inventory_type(self, item_name: str) -> InventoryType:
         upper = item_name.upper()
@@ -81,21 +92,30 @@ class RecipeEngine:
         """Return all known recipes in load order."""
         return list(self._recipes.values())
 
-    def available_recipes(self, inventory: Inventory) -> list[Recipe]:
-        """Return recipes that can currently be crafted from inventory."""
+    def available_recipes(
+        self,
+        inventory: Inventory,
+        has_station_near: Optional[Callable[[str], bool]] = None,
+    ) -> list[Recipe]:
+        """Return recipes that can currently be crafted from inventory/context."""
         return [
             recipe
             for recipe in self._recipes.values()
-            if self._can_craft(inventory, recipe)
+            if self._can_craft(inventory, recipe, has_station_near=has_station_near)
         ]
 
-    def craft(self, inventory: Inventory, recipe_id: str) -> bool:
+    def craft(
+        self,
+        inventory: Inventory,
+        recipe_id: str,
+        has_station_near: Optional[Callable[[str], bool]] = None,
+    ) -> bool:
         """Craft a recipe by ID, mutating inventory. Returns True on success."""
         recipe = self._recipes.get(recipe_id)
         if recipe is None:
             return False
 
-        if not self._can_craft(inventory, recipe):
+        if not self._can_craft(inventory, recipe, has_station_near=has_station_near):
             return False
 
         # Consume inputs.
@@ -112,15 +132,27 @@ class RecipeEngine:
 
         return True
 
-    def _can_craft(self, inventory: Inventory, recipe: Recipe) -> bool:
-        # Station requirements are currently represented as owning the station item.
-        if recipe.station is not None:
-            try:
-                station_item = self._to_inventory_type(recipe.station)
-            except ValueError:
-                return False
-            if inventory.count(station_item) <= 0:
-                return False
+    def _can_craft(
+        self,
+        inventory: Inventory,
+        recipe: Recipe,
+        has_station_near: Optional[Callable[[str], bool]] = None,
+    ) -> bool:
+        # Station requirements are proximity-based when callback is provided.
+        if recipe.stations:
+            if has_station_near is not None:
+                for station_name in recipe.stations:
+                    if not has_station_near(station_name):
+                        return False
+            else:
+                # Backward compatibility fallback: require stations in inventory.
+                for station_name in recipe.stations:
+                    try:
+                        station_item = self._to_inventory_type(station_name)
+                    except ValueError:
+                        return False
+                    if inventory.count(station_item) <= 0:
+                        return False
 
         for req in recipe.inputs:
             try:

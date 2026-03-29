@@ -519,6 +519,17 @@ class GameEngine:
                 self.running = False
                 return
 
+    def _is_station_near(self, station_name: str, radius: int = 3) -> bool:
+        """Return True if a required station block is placed near the player."""
+        bt = BlockType.__members__.get(station_name.upper())
+        if bt is None:
+            return False
+        for dx in range(-radius, radius + 1):
+            for dy in range(-radius, radius + 1):
+                if self.world.get_block(self.player.x + dx, self.player.y + dy) == bt:
+                    return True
+        return False
+
     def _handle_crafting_input(self) -> None:
         """Process input while crafting overlay is open."""
         while True:
@@ -527,7 +538,10 @@ class GameEngine:
                 break
 
             action = self.input_handler.process_key(key)
-            recipes = self._recipe_engine.available_recipes(self.player.inventory)
+            recipes = self._recipe_engine.available_recipes(
+                self.player.inventory,
+                has_station_near=self._is_station_near,
+            )
 
             if action == Action.CRAFT:
                 self._crafting_open = False
@@ -545,8 +559,15 @@ class GameEngine:
                 # Configurable craft confirm key(s); allow USE (space) in crafting screen.
                 if recipes and 0 <= self._crafting_cursor < len(recipes):
                     recipe = recipes[self._crafting_cursor]
-                    self._recipe_engine.craft(self.player.inventory, recipe.recipe_id)
-                    refreshed = self._recipe_engine.available_recipes(self.player.inventory)
+                    self._recipe_engine.craft(
+                        self.player.inventory,
+                        recipe.recipe_id,
+                        has_station_near=self._is_station_near,
+                    )
+                    refreshed = self._recipe_engine.available_recipes(
+                        self.player.inventory,
+                        has_station_near=self._is_station_near,
+                    )
                     if refreshed:
                         self._crafting_cursor = min(self._crafting_cursor, len(refreshed) - 1)
                     else:
@@ -566,7 +587,10 @@ class GameEngine:
                 self._hotbar_index, self._inventory_cursor,
             )
         elif self._crafting_open:
-            recipes = self._recipe_engine.available_recipes(self.player.inventory)
+            recipes = self._recipe_engine.available_recipes(
+                self.player.inventory,
+                has_station_near=self._is_station_near,
+            )
             if recipes:
                 self._crafting_cursor = min(self._crafting_cursor, len(recipes) - 1)
             else:

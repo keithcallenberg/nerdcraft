@@ -16,30 +16,33 @@ from game.menu import MainMenu
 
 def main(stdscr, args: argparse.Namespace) -> None:
     """Main function wrapped by curses."""
-    seed = args.seed
-    save_name = args.save
-    force_new = args.new
-    world_size_chunks = None
-
-    # Show menu by default unless explicit CLI world args are provided.
+    # Explicit CLI world args: run once and exit to terminal.
     explicit_cli_world = (args.seed is not None) or args.new or (args.save != "default")
-    if not explicit_cli_world:
+    if explicit_cli_world:
+        engine = GameEngine(
+            stdscr,
+            seed=args.seed,
+            save_name=args.save,
+            force_new=args.new,
+            world_size_chunks=None,
+        )
+        engine.run()
+        return
+
+    # Default UX: menu loop. Quitting a world returns to main menu.
+    while True:
         menu_result = MainMenu(stdscr).run()
         if not menu_result.start_game:
             return
-        seed = menu_result.seed
-        save_name = menu_result.save_name
-        force_new = menu_result.force_new
-        world_size_chunks = menu_result.world_size_chunks
 
-    engine = GameEngine(
-        stdscr,
-        seed=seed,
-        save_name=save_name,
-        force_new=force_new,
-        world_size_chunks=world_size_chunks,
-    )
-    engine.run()
+        engine = GameEngine(
+            stdscr,
+            seed=menu_result.seed,
+            save_name=menu_result.save_name,
+            force_new=menu_result.force_new,
+            world_size_chunks=menu_result.world_size_chunks,
+        )
+        engine.run()
 
 
 def parse_args() -> argparse.Namespace:

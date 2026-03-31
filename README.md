@@ -71,7 +71,7 @@ ASCII 2D sandbox/survival inspired by Terraria.
 python3 main.py
 ```
 
-CLI options:
+CLI options(Optional, as the game now has a main menu):
 
 ```bash
 python3 main.py --seed 123 --save myworld --new

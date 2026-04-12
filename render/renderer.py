@@ -259,6 +259,8 @@ class Renderer:
                     slot_parts.append((props.char, block_attr))
                 else:
                     props = get_item_properties(block_type)
+                    if curses.has_colors() and props.color_pair > 0:
+                        block_attr |= curses.color_pair(props.color_pair)
                     slot_parts.append((props.char, block_attr))
             else:
                 slot_parts.append((' ', attr))
@@ -365,6 +367,8 @@ class Renderer:
                     self._safe_addstr(hb_row, hb_col + 2, props.char, ch_attr)
                 else:
                     props = get_item_properties(slot)
+                    if curses.has_colors() and props.color_pair > 0:
+                        ch_attr |= curses.color_pair(props.color_pair)
                     self._safe_addstr(hb_row, hb_col + 2, props.char, ch_attr)
             else:
                 self._safe_addstr(hb_row, hb_col + 2, ' ', attr)

@@ -16,6 +16,8 @@ class ItemType(Enum):
     COOKED_MEAT = auto()
     ZOMBIE_FLESH = auto()
     LEATHER = auto()
+    SILK = auto()
+    STRING = auto()
     COAL = auto()
     IRON_INGOT = auto()
     GOLD_INGOT = auto()

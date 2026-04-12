@@ -29,6 +29,16 @@
       "color": "yellow",
       "item_class": "material"
     },
+    "silk": {
+      "char": "s",
+      "color": "white",
+      "item_class": "material"
+    },
+    "string": {
+      "char": "~",
+      "color": "white",
+      "item_class": "material"
+    },
     "coal": {
       "char": "c",
       "color": "blue",

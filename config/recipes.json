@@ -38,6 +38,18 @@
       "description": "Craft torches for portable light."
     },
     {
+      "id": "silk_to_string",
+      "name": "String",
+      "inputs": [
+        { "item": "silk", "count": 2 }
+      ],
+      "outputs": [
+        { "item": "string", "count": 1 }
+      ],
+      "station": null,
+      "description": "Twist spider silk into usable string."
+    },
+    {
       "id": "cook meat",
       "name": "Cook Meat",
       "inputs": [

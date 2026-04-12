@@ -58,13 +58,13 @@
       "idle_move_interval": 1.5,
       "move_speed": 1,
       "drops": [
-        { "item": "STONE", "chance": 0.3, "count": 1 }
+        { "item": "SILK", "chance": 1.0, "count": 2 }
       ],
       "spawn": {
-        "surface": false,
-        "underground": false,
-        "night_only": false,
-        "weight": 40
+        "surface": true,
+        "underground": true,
+        "night_only": true,
+        "weight": 65
       }
     },
     "skeleton": {

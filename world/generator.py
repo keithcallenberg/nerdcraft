@@ -23,6 +23,7 @@ class BiomeRules:
     mob_spawn_table: list[tuple[str, int]]
     surface_roughness: float
     biome_size_weight: float
+    lake_frequency: float
 
 
 class WorldGenerator:
@@ -138,6 +139,7 @@ class WorldGenerator:
 
             surface_roughness = max(0.0, float(cfg.get("surface_roughness", 1.0)))
             biome_size_weight = max(0.01, float(cfg.get("biome_size_weight", 1.0)))
+            lake_frequency = max(0.0, min(1.0, float(cfg.get("lake_frequency", 0.0))))
 
             rules[biome_id] = BiomeRules(
                 surface_block=surface,
@@ -147,6 +149,7 @@ class WorldGenerator:
                 mob_spawn_table=spawn_table,
                 surface_roughness=surface_roughness,
                 biome_size_weight=biome_size_weight,
+                lake_frequency=lake_frequency,
             )
 
         if not biome_ids:
@@ -165,6 +168,7 @@ class WorldGenerator:
                     mob_spawn_table=[],
                     surface_roughness=1.0,
                     biome_size_weight=1.0,
+                    lake_frequency=0.0,
                 )
             }
 
@@ -357,6 +361,20 @@ class WorldGenerator:
                 block_type = self._get_block_at(world_x, world_y, surface_height)
                 chunk.set_block(local_x, local_y, block_type)
 
+    def _lake_depth_at(self, world_x: int, surface_height: int, biome: BiomeRules) -> int:
+        """Return lake depth at a surface column, or 0 if no lake spawns here."""
+        if biome.lake_frequency <= 0:
+            return 0
+
+        coarse = self._noise1d(world_x * 0.035 + 2048.0)
+        threshold = 0.72 - (0.32 * biome.lake_frequency)
+        if coarse < threshold:
+            return 0
+
+        shape = self._noise1d(world_x * 0.09 + 4096.0)
+        depth = 1 + int(max(0.0, (coarse - threshold) * 10.0) + max(0.0, shape + 0.2) * 2.0)
+        return min(5, max(1, depth))
+
     def _get_block_at(self, world_x: int, world_y: int, surface_height: int) -> BlockType:
         """Determine block type at given world coordinates."""
         biome = self._get_biome_rules(world_x)
@@ -386,6 +404,11 @@ class WorldGenerator:
 
         # Depth below surface
         depth = surface_height - world_y
+
+        # Surface lakes: carve shallow depressions filled with water based on biome frequency.
+        lake_depth = self._lake_depth_at(world_x, surface_height, biome)
+        if lake_depth > 0 and surface_height - lake_depth < world_y <= surface_height:
+            return BlockType.WATER
 
         # Biome surface block (blend materials near biome borders)
         if depth == 0:

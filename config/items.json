@@ -29,6 +29,21 @@
       "color": "yellow",
       "item_class": "material"
     },
+    "iron_ingot": {
+      "char": "i",
+      "color": "white",
+      "item_class": "material"
+    },
+    "gold_ingot": {
+      "char": "i",
+      "color": "yellow",
+      "item_class": "material"
+    },
+    "diamond_gem": {
+      "char": "d",
+      "color": "cyan_bright",
+      "item_class": "material"
+    },
 
     "wood_pickaxe": {
       "char": "T",

@@ -16,6 +16,9 @@ class ItemType(Enum):
     COOKED_MEAT = auto()
     ZOMBIE_FLESH = auto()
     LEATHER = auto()
+    IRON_INGOT = auto()
+    GOLD_INGOT = auto()
+    DIAMOND_GEM = auto()
 
     WOOD_PICKAXE = auto()
     STONE_PICKAXE = auto()

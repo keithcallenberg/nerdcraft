@@ -466,12 +466,14 @@ class GameEngine:
             )
 
     def _update_water_flow(self) -> None:
-        """Simplified local water simulation near player (performance-first)."""
-        clear_cells: set[tuple[int, int]] = set()
-        fill_cells: set[tuple[int, int]] = set()
+        """Conservative water simulation: move water only downward.
+
+        This preserves total volume and prevents the strange springing/sideways growth.
+        """
+        moves: list[tuple[int, int]] = []
+        occupied_targets: set[tuple[int, int]] = set()
         changes = 0
 
-        # Only simulate water in active nearby chunks instead of a dense rectangle scan.
         active_chunks = self.world.get_chunks_in_radius(
             self.player.x,
             self.player.y,
@@ -488,35 +490,26 @@ class GameEngine:
                     if changes >= self._water_max_flow_changes:
                         break
 
-                    wx = chunk.world_x + lx
-                    wy = chunk.world_y + ly
-
                     if chunk.get_block(lx, ly) != BlockType.WATER:
                         continue
 
-                # Gravity flow downward
-                if self.world.get_block(wx, wy - 1) == BlockType.AIR:
-                    clear_cells.add((wx, wy))
-                    fill_cells.add((wx, wy - 1))
+                    wx = chunk.world_x + lx
+                    wy = chunk.world_y + ly
+                    target = (wx, wy - 1)
+
+                    if target in occupied_targets:
+                        continue
+                    if self.world.get_block(wx, wy - 1) != BlockType.AIR:
+                        continue
+
+                    moves.append((wx, wy))
+                    occupied_targets.add(target)
                     changes += 1
-                    continue
 
-                # Very simple lateral flow
-                dirs = [-1, 1]
-                random.shuffle(dirs)
-                for dx in dirs:
-                    nx = wx + dx
-                    if self.world.get_block(nx, wy) == BlockType.AIR and self.world.get_block(nx, wy - 1) != BlockType.AIR:
-                        clear_cells.add((wx, wy))
-                        fill_cells.add((nx, wy))
-                        changes += 1
-                        break
-
-        for x, y in clear_cells:
-            if (x, y) not in fill_cells:
-                self.world.set_block(x, y, BlockType.AIR)
-        for x, y in fill_cells:
-            self.world.set_block(x, y, BlockType.WATER)
+        for x, y in moves:
+            self.world.set_block(x, y, BlockType.AIR)
+        for x, y in moves:
+            self.world.set_block(x, y - 1, BlockType.WATER)
 
     def _respawn(self) -> None:
         """Reset player to spawn after death."""

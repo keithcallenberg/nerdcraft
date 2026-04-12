@@ -9,7 +9,7 @@
     "title": "INVENTORY",
     "hotbar_label": "  Hotbar: ",
     "empty_label": "Empty",
-    "footer": "[W/S] Scroll  [1-5] Hotbar  [I] Close",
+    "footer": "[W/S] Scroll  [Enter] Use/Equip  [1-5] Hotbar  [I] Close",
     "box_width": 42,
     "box_height": 22
   },

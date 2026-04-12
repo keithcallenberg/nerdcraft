@@ -531,6 +531,7 @@ class GameEngine:
             if key == -1:
                 break
             action = self.input_handler.process_key(key)
+            items = self.player.inventory.items()
             if action == Action.INVENTORY:
                 self._inventory_open = False
             elif action == Action.QUIT:
@@ -541,12 +542,10 @@ class GameEngine:
                     self._inventory_cursor -= 1
             elif action == Action.STOP:
                 # S / Down = cursor down
-                items = self.player.inventory.items()
                 if self._inventory_cursor < len(items) - 1:
                     self._inventory_cursor += 1
             elif action in self._HOTBAR_SELECT:
                 # 1-5 assigns highlighted item to that hotbar slot
-                items = self.player.inventory.items()
                 if items and 0 <= self._inventory_cursor < len(items):
                     slot = self._HOTBAR_SELECT[action]
                     block_type = items[self._inventory_cursor][0]
@@ -555,6 +554,22 @@ class GameEngine:
                         self._hotbar[slot] = None
                     else:
                         self._hotbar[slot] = block_type
+            elif action in (Action.CRAFT_CONFIRM, Action.USE):
+                if items and 0 <= self._inventory_cursor < len(items):
+                    selected = items[self._inventory_cursor][0]
+                    if isinstance(selected, ItemType):
+                        props = get_item_properties(selected)
+                        if props.item_class == ItemClass.CONSUMABLE:
+                            if self.player.inventory.remove(selected):
+                                self.player.health = min(self._max_health, self.player.health + props.heal_amount)
+                                self._clear_hotbar_item_if_empty(selected)
+                        elif props.item_class == ItemClass.ARMOR:
+                            if self.player.equip_armor(selected):
+                                self._clear_hotbar_item_if_empty(selected)
+                                self._set_status_flash(
+                                    f"Equipped {selected.name.replace('_', ' ').title()} "
+                                    f"(DEF {self.player.total_armor_defense()})"
+                                )
 
     def _drain_input(self) -> None:
         """Consume all pending input without acting on it (still allow quit)."""
@@ -628,6 +643,7 @@ class GameEngine:
             self.renderer.render_inventory(
                 self.player.inventory, self._hotbar,
                 self._hotbar_index, self._inventory_cursor,
+                player=self.player,
             )
         elif self._crafting_open:
             recipes = self._get_available_crafting_recipes()
@@ -656,6 +672,11 @@ class GameEngine:
                 time_icon=self.clock.hud_icon,
                 status_message=status_message,
             )
+
+    def _clear_hotbar_item_if_empty(self, item_type: ItemType) -> None:
+        for i, slot in enumerate(self._hotbar):
+            if slot == item_type and self.player.inventory.count(item_type) <= 0:
+                self._hotbar[i] = None
 
     def _set_status_flash(self, message: str, duration: float | None = None) -> None:
         self._status_flash = message

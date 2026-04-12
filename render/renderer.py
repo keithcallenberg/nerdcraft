@@ -313,7 +313,8 @@ class Renderer:
     def render_inventory(self, inventory: Inventory,
                          hotbar: List[InventoryType | None] | None = None,
                          hotbar_index: int = 0,
-                         cursor: int = 0) -> None:
+                         cursor: int = 0,
+                         player: Player | None = None) -> None:
         """Render the inventory overlay screen."""
         self.stdscr.erase()
 
@@ -375,17 +376,33 @@ class Renderer:
             self._safe_addstr(hb_row, hb_col + 3, '] ', attr)
             hb_col += 5
 
+        info_row = start_row + 5
+        if player is not None:
+            armor_names = []
+            for slot_name in ('helmet', 'chestpiece', 'pants'):
+                equipped = player.armor.get(slot_name)
+                label = slot_name.title()
+                if equipped is None:
+                    armor_names.append(f"{label}: None")
+                else:
+                    armor_names.append(f"{label}: {item_display_name(equipped)}")
+            self._safe_addstr(info_row, start_col + 2, f"Health: {player.health}", curses.A_BOLD)
+            self._safe_addstr(info_row + 1, start_col + 2, f"Armor: {player.total_armor_defense()}", curses.A_BOLD)
+            self._safe_addstr(info_row + 2, start_col + 2, armor_names[0][:box_w - 4])
+            self._safe_addstr(info_row + 3, start_col + 2, armor_names[1][:box_w - 4])
+            self._safe_addstr(info_row + 4, start_col + 2, armor_names[2][:box_w - 4])
+
         # --- Item list ---
         items = inventory.items()
         inner_w = box_w - 4  # padding inside borders
-        items_start_row = start_row + 5
+        items_start_row = start_row + 11
 
         if not items:
             msg = self.cfg.get_ui_text('inventory', 'empty_label', 'Empty')
             msg_col = start_col + (box_w - len(msg)) // 2
             self._safe_addstr(start_row + box_h // 2, msg_col, msg, curses.A_DIM)
         else:
-            max_items = box_h - 8  # room for title, hotbar, footer, borders
+            max_items = box_h - 14  # room for title, hotbar, player info, footer, borders
 
             # Scroll window to keep cursor visible in long inventories.
             total_items = len(items)

@@ -135,14 +135,14 @@
       "color": "yellow"
     },
     "clay": {
-      "char": "~",
+      "char": "C",
       "solid": true,
       "breakable": true,
-      "color": "magenta"
+      "color": "yellow"
     },
     "cactus": {
       "char": "|",
-      "solid": true,
+      "solid": false,
       "breakable": true,
       "color": "green"
     },

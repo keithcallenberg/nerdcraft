@@ -413,8 +413,12 @@ class WorldGenerator:
 
         # Surface lakes: carve shallow depressions filled with water based on biome frequency.
         lake_depth = self._lake_depth_at(world_x, surface_height, biome)
-        if lake_depth > 0 and surface_height - lake_depth < world_y <= surface_height:
-            return BlockType.WATER
+        if lake_depth > 0:
+            lake_bottom_y = surface_height - lake_depth
+            if world_y == lake_bottom_y:
+                return BlockType.CLAY
+            if lake_bottom_y < world_y <= surface_height:
+                return BlockType.WATER
 
         # Biome surface block (blend materials near biome borders)
         if depth == 0:

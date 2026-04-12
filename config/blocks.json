@@ -134,6 +134,12 @@
       "breakable": true,
       "color": "yellow"
     },
+    "clay": {
+      "char": "~",
+      "solid": true,
+      "breakable": true,
+      "color": "magenta"
+    },
     "cactus": {
       "char": "|",
       "solid": true,

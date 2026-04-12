@@ -297,8 +297,14 @@ class WorldGenerator:
 
         # Biome-specific density check at the center of this cell.
         center_x = cell_index * 20 + 10
-        tree_density = self._get_biome_rules(center_x).tree_density
+        biome = self._get_biome_rules(center_x)
+        tree_density = biome.tree_density
         if (h / 255.0) > tree_density:
+            return None
+
+        # Do not spawn trees where the local surface column is part of a lake.
+        center_surface = self.get_surface_height(center_x)
+        if self._lake_depth_at(center_x, center_surface, biome) > 0:
             return None
 
         cell_start = cell_index * 20

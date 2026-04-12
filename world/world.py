@@ -67,3 +67,19 @@ class World:
     def get_loaded_chunks(self) -> list[Chunk]:
         """Get all currently loaded chunks."""
         return list(self._chunks.values())
+
+    def world_to_chunk_coords(self, world_x: int, world_y: int) -> tuple[int, int]:
+        """Get chunk coordinates containing a world coordinate."""
+        chunk_x, chunk_y, _, _ = self._world_to_chunk(world_x, world_y)
+        return chunk_x, chunk_y
+
+    def get_chunks_in_radius(self, center_x: int, center_y: int, radius_chunks: int) -> list[Chunk]:
+        """Return loaded chunks within a chunk-radius of a world position."""
+        cx, cy = self.world_to_chunk_coords(center_x, center_y)
+        result: list[Chunk] = []
+        for dx in range(-radius_chunks, radius_chunks + 1):
+            for dy in range(-radius_chunks, radius_chunks + 1):
+                chunk = self.get_chunk(cx + dx, cy + dy)
+                if chunk is not None:
+                    result.append(chunk)
+        return result

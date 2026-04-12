@@ -158,6 +158,13 @@ class GameEngine:
         self._breath_recover_per_second = max(0.1, self._cfg.breath_recover_per_second)
         self._drown_timer_seconds = 0.0
         self._water_tick_counter = 0
+        self._active_chunk_radius = 3
+
+        # Cached crafting availability while crafting UI is open
+        self._crafting_cache_valid = False
+        self._cached_crafting_recipes = []
+        self._cached_station_signature = None
+        self._cached_player_chunk = None
 
     @property
     def selected_item(self) -> InventoryType | None:
@@ -250,6 +257,41 @@ class GameEngine:
         except Exception:
             pass  # Don't crash on save failure
 
+    def _current_player_chunk(self) -> tuple[int, int]:
+        return self.world.world_to_chunk_coords(self.player.x, self.player.y)
+
+    def _mob_is_active(self, mob) -> bool:
+        pcx, pcy = self._current_player_chunk()
+        mcx, mcy = self.world.world_to_chunk_coords(mob.x, mob.y)
+        return abs(mcx - pcx) <= self._active_chunk_radius and abs(mcy - pcy) <= self._active_chunk_radius
+
+    def _station_signature(self) -> tuple[bool, ...]:
+        known = ('workbench', 'forge')
+        return tuple(self._is_station_near(name) for name in known)
+
+    def _invalidate_crafting_cache(self) -> None:
+        self._crafting_cache_valid = False
+
+    def _get_available_crafting_recipes(self):
+        player_chunk = self._current_player_chunk()
+        station_sig = self._station_signature()
+        if (
+            self._crafting_cache_valid
+            and self._cached_station_signature == station_sig
+            and self._cached_player_chunk == player_chunk
+        ):
+            return self._cached_crafting_recipes
+
+        recipes = self._recipe_engine.available_recipes(
+            self.player.inventory,
+            has_station_near=self._is_station_near,
+        )
+        self._cached_crafting_recipes = recipes
+        self._cached_station_signature = station_sig
+        self._cached_player_chunk = player_chunk
+        self._crafting_cache_valid = True
+        return recipes
+
     def _handle_input(self) -> None:
         """Process all pending input."""
         while True:
@@ -319,6 +361,7 @@ class GameEngine:
                 self._inventory_open = True
             elif action == Action.CRAFT:
                 self._pending_use = False
+                self._invalidate_crafting_cache()
                 self._crafting_open = True
 
     def _update(self, dt: float) -> None:
@@ -332,6 +375,9 @@ class GameEngine:
         for mob in self.mobs:
             if not mob.is_alive:
                 dead_mobs.append(mob)
+                continue
+
+            if not self._mob_is_active(mob):
                 continue
 
             self.physics.update(mob, dt)
@@ -370,7 +416,7 @@ class GameEngine:
             ):
                 self._ticks_since_night_spawn = 0
                 occupied = {(self.player.x, self.player.y)}
-                occupied.update((mob.x, mob.y) for mob in self.mobs if mob.is_alive)
+                occupied.update((mob.x, mob.y) for mob in self.mobs if mob.is_alive and self._mob_is_active(mob))
                 spawned = self.generator.spawn_night_hostile(self.world, occupied)
                 if (
                     spawned is not None
@@ -393,7 +439,12 @@ class GameEngine:
     def _update_water_and_breath(self, dt: float) -> None:
         """Run simple water flow and drowning/surface breathing simulation."""
         self._water_tick_counter += 1
-        if self._water_flow_enabled and (self._water_tick_counter % self._water_flow_interval_ticks == 0):
+        if (
+            self._water_flow_enabled
+            and not self._inventory_open
+            and not self._crafting_open
+            and (self._water_tick_counter % self._water_flow_interval_ticks == 0)
+        ):
             self._update_water_flow()
 
         # Drowning: use block above player as head-space check.
@@ -420,24 +471,28 @@ class GameEngine:
         fill_cells: set[tuple[int, int]] = set()
         changes = 0
 
-        # Only simulate water near the player to avoid full-world scans every tick.
-        radius_x = 48
-        radius_y = 20
-        min_x = self.player.x - radius_x
-        max_x = self.player.x + radius_x
-        min_y = max(1, self.player.y - radius_y)
-        max_y = self.player.y + radius_y
+        # Only simulate water in active nearby chunks instead of a dense rectangle scan.
+        active_chunks = self.world.get_chunks_in_radius(
+            self.player.x,
+            self.player.y,
+            self._active_chunk_radius,
+        )
 
-        # Bottom-up gives stable gravity-like behavior.
-        for wy in range(min_y, max_y + 1):
+        for chunk in active_chunks:
             if changes >= self._water_max_flow_changes:
                 break
-            for wx in range(min_x, max_x + 1):
+            for ly in range(chunk.chunk_size):
                 if changes >= self._water_max_flow_changes:
                     break
+                for lx in range(chunk.chunk_size):
+                    if changes >= self._water_max_flow_changes:
+                        break
 
-                if self.world.get_block(wx, wy) != BlockType.WATER:
-                    continue
+                    wx = chunk.world_x + lx
+                    wy = chunk.world_y + ly
+
+                    if chunk.get_block(lx, ly) != BlockType.WATER:
+                        continue
 
                 # Gravity flow downward
                 if self.world.get_block(wx, wy - 1) == BlockType.AIR:
@@ -538,10 +593,7 @@ class GameEngine:
                 break
 
             action = self.input_handler.process_key(key)
-            recipes = self._recipe_engine.available_recipes(
-                self.player.inventory,
-                has_station_near=self._is_station_near,
-            )
+            recipes = self._get_available_crafting_recipes()
 
             if action == Action.CRAFT:
                 self._crafting_open = False
@@ -564,10 +616,8 @@ class GameEngine:
                         recipe.recipe_id,
                         has_station_near=self._is_station_near,
                     )
-                    refreshed = self._recipe_engine.available_recipes(
-                        self.player.inventory,
-                        has_station_near=self._is_station_near,
-                    )
+                    self._invalidate_crafting_cache()
+                    refreshed = self._get_available_crafting_recipes()
                     if refreshed:
                         self._crafting_cursor = min(self._crafting_cursor, len(refreshed) - 1)
                     else:
@@ -587,10 +637,7 @@ class GameEngine:
                 self._hotbar_index, self._inventory_cursor,
             )
         elif self._crafting_open:
-            recipes = self._recipe_engine.available_recipes(
-                self.player.inventory,
-                has_station_near=self._is_station_near,
-            )
+            recipes = self._get_available_crafting_recipes()
             if recipes:
                 self._crafting_cursor = min(self._crafting_cursor, len(recipes) - 1)
             else:

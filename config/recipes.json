@@ -165,6 +165,31 @@
       "description": "Basic melee weapon."
     },
     {
+      "id": "bow",
+      "name": "Bow",
+      "inputs": [
+        { "item": "wood", "count": 5 },
+        { "item": "string", "count": 3 }
+      ],
+      "outputs": [
+        { "item": "bow", "count": 1 }
+      ],
+      "station": "workbench",
+      "description": "A ranged weapon that shoots in a straight line."
+    },
+    {
+      "id": "wood_spear",
+      "name": "Wood Spear",
+      "inputs": [
+        { "item": "wood", "count": 3 }
+      ],
+      "outputs": [
+        { "item": "wood_spear", "count": 1 }
+      ],
+      "station": "workbench",
+      "description": "Long reach melee weapon."
+    },
+    {
       "id": "stone_sword",
       "name": "Stone Sword",
       "inputs": [
@@ -176,6 +201,19 @@
       ],
       "station": "workbench",
       "description": "Stronger melee weapon."
+    },
+    {
+      "id": "stone_spear",
+      "name": "Stone Spear",
+      "inputs": [
+        { "item": "stone", "count": 2 },
+        { "item": "wood", "count": 2 }
+      ],
+      "outputs": [
+        { "item": "stone_spear", "count": 1 }
+      ],
+      "station": "workbench",
+      "description": "Long reach melee weapon."
     },
     {
       "id": "iron_sword",
@@ -191,6 +229,19 @@
       "description": "High-damage melee weapon."
     },
     {
+      "id": "iron_spear",
+      "name": "Iron Spear",
+      "inputs": [
+        { "item": "iron_ingot", "count": 2 },
+        { "item": "wood", "count": 2 }
+      ],
+      "outputs": [
+        { "item": "iron_spear", "count": 1 }
+      ],
+      "station": ["workbench", "forge"],
+      "description": "Long reach melee weapon."
+    },
+    {
       "id": "diamond_sword",
       "name": "Diamond Sword",
       "inputs": [
@@ -202,6 +253,19 @@
       ],
       "station": ["workbench", "forge"],
       "description": "Highest tier melee weapon."
+    },
+    {
+      "id": "diamond_spear",
+      "name": "Diamond Spear",
+      "inputs": [
+        { "item": "diamond", "count": 2 },
+        { "item": "wood", "count": 2 }
+      ],
+      "outputs": [
+        { "item": "diamond_spear", "count": 1 }
+      ],
+      "station": ["workbench", "forge"],
+      "description": "Longest reach melee weapon."
     },
     {
       "id": "leather_helmet",

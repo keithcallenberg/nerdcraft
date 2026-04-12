@@ -31,6 +31,11 @@ class ItemType(Enum):
     STONE_SWORD = auto()
     IRON_SWORD = auto()
     DIAMOND_SWORD = auto()
+    BOW = auto()
+    WOOD_SPEAR = auto()
+    STONE_SPEAR = auto()
+    IRON_SPEAR = auto()
+    DIAMOND_SPEAR = auto()
 
     LEATHER_HELMET = auto()
     LEATHER_CHESTPIECE = auto()
@@ -63,6 +68,7 @@ class ItemProperties:
     heal_amount: int = 0
     mining_tier: int = 0
     attack_damage: int = 0
+    range: int = 1
     armor_slot: str = ""
     armor_defense: int = 0
 
@@ -115,6 +121,7 @@ def _init_from_config() -> None:
             heal_amount=int(item_cfg.get("heal_amount", 0)),
             mining_tier=int(item_cfg.get("mining_tier", 0)),
             attack_damage=int(item_cfg.get("attack_damage", 0)),
+            range=max(1, int(item_cfg.get("range", 1))),
             armor_slot=str(item_cfg.get("armor_slot", "")),
             armor_defense=int(item_cfg.get("armor_defense", 0)),
         )

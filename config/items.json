@@ -83,25 +83,64 @@
       "char": "/",
       "color": "yellow",
       "item_class": "weapon",
-      "attack_damage": 8
+      "attack_damage": 8,
+      "range": 1
     },
     "stone_sword": {
       "char": "/",
       "color": "white",
       "item_class": "weapon",
-      "attack_damage": 12
+      "attack_damage": 12,
+      "range": 1
     },
     "iron_sword": {
       "char": "/",
       "color": "cyan",
       "item_class": "weapon",
-      "attack_damage": 16
+      "attack_damage": 16,
+      "range": 1
     },
     "diamond_sword": {
       "char": "/",
       "color": "cyan_bright",
       "item_class": "weapon",
-      "attack_damage": 24
+      "attack_damage": 24,
+      "range": 1
+    },
+    "bow": {
+      "char": ")",
+      "color": "yellow",
+      "item_class": "weapon",
+      "attack_damage": 10,
+      "range": 15
+    },
+    "wood_spear": {
+      "char": "!",
+      "color": "yellow",
+      "item_class": "weapon",
+      "attack_damage": 5,
+      "range": 2
+    },
+    "stone_spear": {
+      "char": "!",
+      "color": "white",
+      "item_class": "weapon",
+      "attack_damage": 8,
+      "range": 2
+    },
+    "iron_spear": {
+      "char": "!",
+      "color": "cyan",
+      "item_class": "weapon",
+      "attack_damage": 10,
+      "range": 2
+    },
+    "diamond_spear": {
+      "char": "!",
+      "color": "cyan_bright",
+      "item_class": "weapon",
+      "attack_damage": 16,
+      "range": 3
     },
 
     "leather_helmet": {

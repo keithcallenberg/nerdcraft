@@ -39,16 +39,17 @@ class Player:
         else:  # down
             return (self.x, self.y - 1)
 
-    def get_minable_positions_in_direction(self, direction: str) -> list[tuple[int, int]]:
+    def get_minable_positions_in_direction(self, direction: str, reach: int = 1) -> list[tuple[int, int]]:
         """Get mineable positions for a direction, in priority order."""
+        reach = max(1, reach)
         if direction == 'left':
-            return [(self.x - 1, self.y)]
+            return [(self.x - step, self.y) for step in range(1, reach + 1)]
         elif direction == 'right':
-            return [(self.x + 1, self.y)]
+            return [(self.x + step, self.y) for step in range(1, reach + 1)]
         elif direction == 'up':
-            return [(self.x, self.y + 1)]
+            return [(self.x, self.y + step) for step in range(1, reach + 1)]
         else:  # down
-            return [(self.x, self.y - 1)]
+            return [(self.x, self.y - step) for step in range(1, reach + 1)]
 
     def equip_armor(self, item_type: ItemType) -> bool:
         """Equip an armor item from inventory. Returns True if equipped."""

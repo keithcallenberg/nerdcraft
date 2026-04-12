@@ -697,6 +697,7 @@ class GameEngine:
                     attack_damage=max(1, props.attack_damage),
                     mining_tier=0,
                     allow_block_break=False,
+                    reach=max(1, props.range),
                 )
                 return
 
@@ -729,9 +730,10 @@ class GameEngine:
         attack_damage: int = 5,
         mining_tier: int = 0,
         allow_block_break: bool = True,
+        reach: int = 1,
     ) -> None:
         """Mine the first breakable block or attack a mob in the given direction."""
-        for block_x, block_y in self.player.get_minable_positions_in_direction(direction):
+        for block_x, block_y in self.player.get_minable_positions_in_direction(direction, reach=reach):
             # Check for mobs at this position first
             for mob in self.mobs:
                 if mob.is_alive and mob.x == block_x and mob.y == block_y:

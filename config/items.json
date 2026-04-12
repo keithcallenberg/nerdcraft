@@ -74,7 +74,7 @@
     },
     "iron_pickaxe": {
       "char": "T",
-      "color": "cyan",
+      "color": "red",
       "item_class": "tool",
       "mining_tier": 3
     },
@@ -95,7 +95,7 @@
     },
     "iron_sword": {
       "char": "/",
-      "color": "cyan",
+      "color": "red",
       "item_class": "weapon",
       "attack_damage": 16,
       "range": 1
@@ -130,7 +130,7 @@
     },
     "iron_spear": {
       "char": "!",
-      "color": "cyan",
+      "color": "red",
       "item_class": "weapon",
       "attack_damage": 10,
       "range": 2

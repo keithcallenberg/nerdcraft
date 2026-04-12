@@ -11,6 +11,18 @@
       "drops": [
         { "item": "apple", "count": 1, "chance": 0.12 }
       ]
+    },
+    "coal_ore": {
+      "drop_mode": "custom",
+      "drops": [
+        { "item": "coal", "count": 1, "chance": 1.0 }
+      ]
+    },
+    "diamond_ore": {
+      "drop_mode": "custom",
+      "drops": [
+        { "item": "diamond", "count": 1, "chance": 1.0 }
+      ]
     }
   }
 }

@@ -29,6 +29,11 @@
       "color": "yellow",
       "item_class": "material"
     },
+    "coal": {
+      "char": "c",
+      "color": "blue",
+      "item_class": "material"
+    },
     "iron_ingot": {
       "char": "i",
       "color": "white",
@@ -39,7 +44,7 @@
       "color": "yellow",
       "item_class": "material"
     },
-    "diamond_gem": {
+    "diamond": {
       "char": "d",
       "color": "cyan_bright",
       "item_class": "material"

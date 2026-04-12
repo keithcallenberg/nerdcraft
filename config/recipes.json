@@ -29,7 +29,7 @@
       "name": "Torch",
       "inputs": [
         { "item": "wood_plank", "count": 1 },
-        { "item": "coal_ore", "count": 1 }
+        { "item": "coal", "count": 1 }
       ],
       "outputs": [
         { "item": "torch", "count": 4 }
@@ -104,7 +104,8 @@
       "id": "smelt_iron_ingot",
       "name": "Smelt Iron Ingot",
       "inputs": [
-        { "item": "iron_ore", "count": 1 }
+        { "item": "iron_ore", "count": 1 },
+        { "item": "coal", "count": 1 }
       ],
       "outputs": [
         { "item": "iron_ingot", "count": 1 }
@@ -116,25 +117,14 @@
       "id": "smelt_gold_ingot",
       "name": "Smelt Gold Ingot",
       "inputs": [
-        { "item": "gold_ore", "count": 1 }
+        { "item": "gold_ore", "count": 1 },
+        { "item": "coal", "count": 1 }
       ],
       "outputs": [
         { "item": "gold_ingot", "count": 1 }
       ],
       "station": "forge",
       "description": "Smelt gold ore into usable metal."
-    },
-    {
-      "id": "cut_diamond_gem",
-      "name": "Cut Diamond Gem",
-      "inputs": [
-        { "item": "diamond_ore", "count": 1 }
-      ],
-      "outputs": [
-        { "item": "diamond_gem", "count": 1 }
-      ],
-      "station": "forge",
-      "description": "Refine diamond ore into a crafting gem."
     },
     {
       "id": "iron_pickaxe",
@@ -192,7 +182,7 @@
       "id": "diamond_sword",
       "name": "Diamond Sword",
       "inputs": [
-        { "item": "diamond_gem", "count": 2 },
+        { "item": "diamond", "count": 2 },
         { "item": "wood", "count": 1 }
       ],
       "outputs": [
@@ -277,7 +267,7 @@
       "id": "diamond_helmet",
       "name": "Diamond Helmet",
       "inputs": [
-        { "item": "diamond_gem", "count": 6 }
+        { "item": "diamond", "count": 6 }
       ],
       "outputs": [
         { "item": "diamond_helmet", "count": 1 }
@@ -289,7 +279,7 @@
       "id": "diamond_chestpiece",
       "name": "Diamond Chestpiece",
       "inputs": [
-        { "item": "diamond_gem", "count": 9 }
+        { "item": "diamond", "count": 9 }
       ],
       "outputs": [
         { "item": "diamond_chestpiece", "count": 1 }
@@ -301,7 +291,7 @@
       "id": "diamond_pants",
       "name": "Diamond Pants",
       "inputs": [
-        { "item": "diamond_gem", "count": 8 }
+        { "item": "diamond", "count": 8 }
       ],
       "outputs": [
         { "item": "diamond_pants", "count": 1 }

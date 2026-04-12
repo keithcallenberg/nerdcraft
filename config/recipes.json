@@ -78,7 +78,7 @@
       "name": "Forge",
       "inputs": [
         { "item": "stone_brick", "count": 8 },
-        { "item": "iron_ingot", "count": 4 }
+        { "item": "iron_ore", "count": 4 }
       ],
       "outputs": [
         { "item": "forge", "count": 1 }

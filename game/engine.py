@@ -377,10 +377,12 @@ class GameEngine:
                 dead_mobs.append(mob)
                 continue
 
+            # Gravity/landing should apply to all mobs so they do not slow-fall offscreen.
+            self.physics.update(mob, dt)
+
             if not self._mob_is_active(mob):
                 continue
 
-            self.physics.update(mob, dt)
             dx = mob.update_ai(
                 self.world, dt,
                 player_x=self.player.x,

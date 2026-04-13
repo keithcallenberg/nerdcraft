@@ -56,6 +56,7 @@ class Mob:
         self._move_timer: float = 0.0
         self._attack_timer: float = 0.0
         self._walk_dir: int = 0          # -1 left, +1 right
+        self._wander_steps_remaining: int = 0
         # Small per-mob RNG so behaviour varies between individuals
         self._rng = random.Random(id(self))
 
@@ -143,22 +144,29 @@ class Mob:
         # --- Passive wander (idle / walk) ---
         self._move_timer -= dt
         if self._move_timer <= 0:
+            if self._state == _WALK and self._wander_steps_remaining > 0:
+                self._wander_steps_remaining -= 1
+                self._move_timer = defn.idle_move_interval
+                return self._walk_dir
+
             # Pick next action
             roll = self._rng.random()
-            if roll < 0.35:
+            if roll < 0.55:
                 self._state = _IDLE
                 self._walk_dir = 0
-                self._move_timer = self._rng.uniform(0.8, 2.0)
+                self._wander_steps_remaining = 0
+                self._move_timer = self._rng.uniform(1.4, 3.2)
             else:
                 self._state = _WALK
-                # Keep same walk direction most of the time to avoid ping-pong jitter.
-                if self._walk_dir == 0 or self._rng.random() < 0.25:
+                if self._walk_dir == 0 or self._rng.random() < 0.15:
                     self._walk_dir = self._rng.choice([-1, 1])
                 self.facing_right = self._walk_dir > 0
+                self._wander_steps_remaining = self._rng.randint(1, 3)
                 self._move_timer = defn.idle_move_interval
+                return self._walk_dir
 
-        if self._state == _WALK:
-            return self._walk_dir
+        if self._state == _WALK and self._wander_steps_remaining > 0:
+            return 0
         return 0
 
     def get_attack_damage(self) -> int:

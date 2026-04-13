@@ -34,6 +34,7 @@ class BlockType(Enum):
     LEATHER = auto()
     SAND = auto()
     CLAY = auto()
+    DOOR = auto()
     CACTUS = auto()
     SNOW = auto()
     ICE = auto()

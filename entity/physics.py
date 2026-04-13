@@ -50,7 +50,7 @@ class PhysicsEngine:
 
         if entity.jump_remaining > 0:
             # Rising — try to move up
-            if not self.world.is_solid(entity.x, entity.y + 1):
+            if not self.world.is_solid(entity.x, entity.y + 1, entity=entity):
                 entity.y += 1
                 entity.jump_remaining -= 1
                 entity.on_ground = False
@@ -61,7 +61,7 @@ class PhysicsEngine:
             entity.fall_distance = 0
         else:
             # Falling — try to move down
-            if not self.world.is_solid(entity.x, entity.y - 1):
+            if not self.world.is_solid(entity.x, entity.y - 1, entity=entity):
                 entity.y -= 1
                 entity.fall_distance += 1
                 entity.on_ground = False
@@ -78,7 +78,7 @@ class PhysicsEngine:
         """Try to move entity by (dx, dy). Returns True if successful."""
         target_x = entity.x + dx
         target_y = entity.y + dy
-        if not self.world.is_solid(target_x, target_y):
+        if not self.world.is_solid(target_x, target_y, entity=entity):
             entity.x = target_x
             entity.y = target_y
             return True
@@ -92,8 +92,8 @@ class PhysicsEngine:
             and getattr(entity, 'jump_remaining', 0) <= 0
         ):
             # Need headroom at current x and open step-up target.
-            can_raise_here = not self.world.is_solid(entity.x, entity.y + 1)
-            can_step_up = not self.world.is_solid(target_x, entity.y + 1)
+            can_raise_here = not self.world.is_solid(entity.x, entity.y + 1, entity=entity)
+            can_step_up = not self.world.is_solid(target_x, entity.y + 1, entity=entity)
             if can_raise_here and can_step_up:
                 entity.x = target_x
                 entity.y = entity.y + 1

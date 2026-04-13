@@ -59,10 +59,15 @@ class World:
         chunk.set_block(local_x, local_y, block_type)
         return True
 
-    def is_solid(self, world_x: int, world_y: int) -> bool:
-        """Check if block at world coordinates is solid."""
+    def is_solid(self, world_x: int, world_y: int, entity=None) -> bool:
+        """Check if block at world coordinates is solid for a given entity."""
+        block = self.get_block(world_x, world_y)
+        if block == BlockType.DOOR:
+            from entity.player import Player
+            return not isinstance(entity, Player)
+
         from world.block import is_solid
-        return is_solid(self.get_block(world_x, world_y))
+        return is_solid(block)
 
     def get_loaded_chunks(self) -> list[Chunk]:
         """Get all currently loaded chunks."""

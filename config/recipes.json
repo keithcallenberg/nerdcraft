@@ -38,6 +38,18 @@
       "description": "Craft torches for portable light."
     },
     {
+      "id": "wood_plank_to_door",
+      "name": "Door",
+      "inputs": [
+        { "item": "wood_plank", "count": 4 }
+      ],
+      "outputs": [
+        { "item": "door", "count": 1 }
+      ],
+      "station": "workbench",
+      "description": "A barrier that only the player can pass through."
+    },
+    {
       "id": "silk_to_string",
       "name": "String",
       "inputs": [

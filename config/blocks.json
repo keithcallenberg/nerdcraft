@@ -140,6 +140,12 @@
       "breakable": true,
       "color": "yellow"
     },
+    "door": {
+      "char": "D",
+      "solid": true,
+      "breakable": true,
+      "color": "yellow"
+    },
     "cactus": {
       "char": "|",
       "solid": false,

@@ -141,7 +141,7 @@
       "color": "yellow"
     },
     "door": {
-      "char": "D",
+      "char": ":",
       "solid": true,
       "breakable": true,
       "color": "yellow"

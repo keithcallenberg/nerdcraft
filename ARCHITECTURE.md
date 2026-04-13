@@ -12,10 +12,11 @@
   - primary game loop orchestration
   - input/update/render sequencing
   - save/load, spawning, overlays, water/breath integration
+  - weapon reach handling, inventory use/equip actions, active-chunk mob simulation
 - `world/`
   - `world.py` chunked storage + block access
   - `chunk.py` runtime-config chunk container
-  - `generator.py` procedural generation + biomes + blending
+  - `generator.py` procedural generation + biomes + blending + lakes/clay
   - `save.py` world/player serialization
 - `entity/`
   - `player.py` player state (health, inventory, armor, breath)
@@ -23,7 +24,7 @@
   - `mob_registry.py` data-driven mob definitions
   - `physics.py` movement/gravity/jump/autojump core
   - `crafting.py` recipe engine
-  - `item.py` JSON-driven item registry
+  - `item.py` JSON-driven item registry with weapon range support
 - `render/`
   - `renderer.py` curses drawing + HUD/panels
   - `camera.py` world-to-screen mapping
@@ -64,4 +65,6 @@ Most tunable content and behavior is configured through JSON files:
 - **Directional use model for non-consumables**
 - **Armor slots + mitigation**
 - **Biome transition smoothing**
+- **Biome-configured surface lakes with clay bottoms**
 - **Performance-focused local water simulation**
+- **Entity-aware solidity for player-only door traversal**

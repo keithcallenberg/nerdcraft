@@ -7,21 +7,25 @@
 1. **Stability + performance pass**
    - Continue profiling update-loop hotspots (water, mob updates, generation)
    - Add guardrails for config values that can destabilize gameplay
+   - Keep active-chunk optimizations from breaking mob gravity or AI feel
 
-2. **Water pass 2**
-   - Improve water feel without reintroducing lag
-   - Optional source-vs-flow behavior
-   - Better visual/readability cues for water state
+2. **Gameplay balancing + content pass**
+   - Tune passive mob wandering and hostile pacing
+   - Balance bows, spears, armor, and mob drops
+   - Expand utility/building blocks like doors
 
-3. **Gameplay balancing**
-   - Tool/weapon/armor progression tuning
-   - Mob aggression pacing and spawn pressure tuning
+3. **Worldgen pass 2**
+   - Improve lake shaping and shoreline polish
+   - Expand biome-specific surface details and resources
 
 4. **Config hardening**
    - Validation/fail-fast for bad IDs/colors/actions
    - Better diagnostics for config authoring
 
-5. **Multiplayer foundations (Phase 7)**
+5. **Documentation sync**
+   - Keep README/task/architecture docs aligned with shipped gameplay changes
+
+6. **Multiplayer foundations (Phase 7)**
    - Networking skeleton and state model
 
 ## Mid-Term

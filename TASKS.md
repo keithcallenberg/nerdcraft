@@ -50,6 +50,9 @@
 - [x] Item drops (apple/raw meat/zombie flesh)
 - [x] `config/items.json` and config-driven item color/stats
 - [x] Directional use for non-consumables
+- [x] Weapon range support
+- [x] Bow and spear weapon types
+- [x] Silk and string materials
 
 ## Phase 9 — Armor ✅
 - [x] Armor items + slots (helmet/chestpiece/pants)
@@ -62,12 +65,22 @@
 - [x] Single-screen new world setup
 - [x] New world size selector
 - [x] World generation progress UI with percentage
+- [x] Inventory shows health and equipped armor
+- [x] Enter-to-consume / Enter-to-equip in inventory
 
 ## Phase 11 — Water Systems 🚧
 - [x] Swimming controls
 - [x] Breath + drowning system
 - [x] Simplified local water flow (performance-safe)
+- [x] Surface lakes with biome-specific frequency
+- [x] Clay on lake bottoms
 - [ ] Additional fluid polish (source/flow distinction, advanced spread)
+
+## Phase 12 — World + Utility Content 🚧
+- [x] Ocean biome replaced with surface lakes
+- [x] Trees prevented from spawning on lake columns
+- [x] Player-only door block
+- [ ] Additional building/utility blocks
 
 ## Ongoing
 - [ ] Performance tuning

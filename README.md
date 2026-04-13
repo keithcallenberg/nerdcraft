@@ -65,6 +65,33 @@ ASCII 2D sandbox/survival inspired by Terraria.
 - `C`: crafting
 - `Q` / `Esc`: quit
 
+## How to Play
+
+### Basic loop
+- Start a new world from the main menu
+- Gather nearby wood, stone, coal, and food
+- Put useful blocks/items on your hotbar
+- Craft a **workbench** to unlock more recipes
+- Build shelter before night, because hostile mobs spawn after dark
+- Upgrade from fists to tools, swords, bows, spears, armor, torches, and utility blocks
+
+### Survival tips
+- **Space** uses the selected hotbar item
+  - consumables and armor use immediately
+  - tools, weapons, blocks, and empty-hand actions wait for a direction key
+- Use **torches** to light up areas at night
+- Water can be swum through, but you can still **run out of breath** underwater
+- Spiders drop **silk**, which can be crafted into **string**
+- Bows attack in a straight line at long range, while spears trade damage for reach
+- Doors only allow the **player** to pass through them
+
+### Progression snapshot
+- Wood and stone get you started
+- Coal fuels smelting
+- Iron and gold are processed at the **forge**
+- Diamond gear is the current top tier
+- Armor is split into **helmet**, **chestpiece**, and **pants**
+
 ## Running
 
 ```bash

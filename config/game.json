@@ -40,10 +40,10 @@
   },
   "underground_fog": {
     "enabled": true,
-    "depth": 25,
+    "depth": 20,
     "discovery_radius": 3,
     "char": "?",
-    "color": "magenta",
+    "color": "default",
     "dim": true
   }
 }

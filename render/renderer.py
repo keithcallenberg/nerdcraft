@@ -151,8 +151,11 @@ class Renderer:
             return False
 
         radius = fog_cfg.discovery_radius
+        radius_sq = radius * radius
         for discovered_x, discovered_y in player.discovered_tiles:
-            if abs(world_x - discovered_x) <= radius and abs(world_y - discovered_y) <= radius:
+            dx = world_x - discovered_x
+            dy = world_y - discovered_y
+            if (dx * dx + dy * dy) <= radius_sq:
                 return False
         return True
 

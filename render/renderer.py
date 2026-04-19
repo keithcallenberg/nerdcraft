@@ -151,10 +151,9 @@ class Renderer:
             return False
 
         radius = fog_cfg.discovery_radius
-        for dx in range(-radius, radius + 1):
-            for dy in range(-radius, radius + 1):
-                if (world_x - dx, world_y - dy) in player.discovered_tiles:
-                    return False
+        for discovered_x, discovered_y in player.discovered_tiles:
+            if abs(world_x - discovered_x) <= radius and abs(world_y - discovered_y) <= radius:
+                return False
         return True
 
     def _collect_visible_light_sources(self, world: World) -> list[tuple[int, int, int]]:

@@ -1,6 +1,6 @@
 # Nerdcraft
 
-ASCII 2D sandbox/survival inspired by Terraria.
+ASCII art 2D sandbox/survival inspired by Terraria. Have any suggestions? Please submit them [here](https://docs.google.com/forms/d/e/1FAIpQLScLjLLMc4T-54_wfkNnDURBuseiQmCjcZWp-v1Uz0M49XhE5A/viewform?usp=publish-editor)
 
 ## Current Features
 
@@ -81,7 +81,7 @@ ASCII 2D sandbox/survival inspired by Terraria.
   - tools, weapons, blocks, and empty-hand actions wait for a direction key
 - Use **torches** to light up areas at night
 - Water can be swum through, but you can still **run out of breath** underwater
-- Spiders drop **silk**, which can be crafted into **string**
+- Spiders drop **silk**, which can be crafted into **string** which can be used to make a **bow**
 - Bows attack in a straight line at long range, while spears trade damage for reach
 - Doors only allow the **player** to pass through them
 

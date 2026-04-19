@@ -82,6 +82,16 @@ class EngineConfig:
     night_spawn_min_player_distance: int = 12
 
 
+@dataclass
+class UndergroundFogConfig:
+    enabled: bool = True
+    depth: int = 25
+    discovery_radius: int = 3
+    char: str = '?'
+    color: str = 'default'
+    dim: bool = True
+
+
 class GameConfig:
     """Centralized game configuration loaded from JSON files."""
 
@@ -173,6 +183,17 @@ class GameConfig:
         self.save = SaveConfig(
             auto_save_ticks=save.get('auto_save_ticks', 3600),
             save_dir=save_dir,
+        )
+
+        underground_fog = data.get('underground_fog', {})
+        fog_char = str(underground_fog.get('char', '?')) or '?'
+        self.underground_fog = UndergroundFogConfig(
+            enabled=bool(underground_fog.get('enabled', True)),
+            depth=max(0, int(underground_fog.get('depth', 25))),
+            discovery_radius=max(0, int(underground_fog.get('discovery_radius', 3))),
+            char=fog_char[0],
+            color=str(underground_fog.get('color', 'default')),
+            dim=bool(underground_fog.get('dim', True)),
         )
 
     def _load_blocks_config(self) -> None:

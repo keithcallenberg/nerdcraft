@@ -84,6 +84,7 @@ ASCII art 2D sandbox/survival inspired by Terraria. Have any suggestions? Please
 - Spiders drop **silk**, which can be crafted into **string** which can be used to make a **bow**
 - Bows attack in a straight line at long range, while spears trade damage for reach
 - Doors only allow the **player** to pass through them
+- Underground fog hides undiscovered tiles below a configurable depth threshold
 
 ### Progression snapshot
 - Wood and stone get you started
@@ -112,7 +113,7 @@ python3 main.py --seed 123 --save myworld --new
 
 Core files in `config/`:
 
-- `game.json` – world/physics/water/save/day-night
+- `game.json` – world/physics/water/save/day-night/underground fog
 - `blocks.json` – block defs + mining tiers
 - `items.json` – item defs + classes/stats/colors
 - `mobs.json` – mob defs, timings, movement speed, drops, spawn rules

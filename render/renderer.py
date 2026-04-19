@@ -119,8 +119,13 @@ class Renderer:
                 block = world.get_block(world_x, world_y)
 
                 if self._should_hide_underground_block(player, world_x, world_y, generator):
+                    fog_cfg = self.cfg.underground_fog
+                    fog_attr = curses.A_DIM if fog_cfg.dim else curses.A_NORMAL
+                    fog_color = self.cfg.get_color(fog_cfg.color)
+                    if curses.has_colors() and fog_color and fog_color.pair_id > 0:
+                        fog_attr |= curses.color_pair(fog_color.pair_id)
                     try:
-                        self.stdscr.addch(screen_row, col, '?', curses.A_DIM)
+                        self.stdscr.addch(screen_row, col, fog_cfg.char, fog_attr)
                     except curses.error:
                         pass
                     continue
@@ -137,15 +142,17 @@ class Renderer:
                         pass  # Ignore errors at screen edges
 
     def _should_hide_underground_block(self, player: Player, world_x: int, world_y: int, generator) -> bool:
-        if generator is None:
+        fog_cfg = self.cfg.underground_fog
+        if generator is None or not fog_cfg.enabled:
             return False
 
-        player_depth = generator.get_surface_height(player.x) - player.y
-        if player_depth < 25:
+        tile_depth = generator.get_surface_height(world_x) - world_y
+        if tile_depth < fog_cfg.depth:
             return False
 
-        for dx in range(-3, 4):
-            for dy in range(-3, 4):
+        radius = fog_cfg.discovery_radius
+        for dx in range(-radius, radius + 1):
+            for dy in range(-radius, radius + 1):
                 if (world_x - dx, world_y - dy) in player.discovered_tiles:
                     return False
         return True

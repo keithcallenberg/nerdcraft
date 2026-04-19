@@ -680,8 +680,9 @@ class GameEngine:
             )
 
     def _update_discovery(self) -> None:
-        for dx in range(-1, 2):
-            for dy in range(-1, 2):
+        radius = self._cfg.underground_fog.discovery_radius
+        for dx in range(-radius, radius + 1):
+            for dy in range(-radius, radius + 1):
                 self.player.discovered_tiles.add((self.player.x + dx, self.player.y + dy))
 
     def _clear_hotbar_item_if_empty(self, item_type: ItemType) -> None:

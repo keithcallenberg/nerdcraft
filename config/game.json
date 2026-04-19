@@ -37,5 +37,13 @@
   "save": {
     "auto_save_ticks": 3600,
     "save_dir": "saves"
+  },
+  "underground_fog": {
+    "enabled": true,
+    "depth": 25,
+    "discovery_radius": 3,
+    "char": "?",
+    "color": "magenta",
+    "dim": true
   }
 }

@@ -26,7 +26,7 @@
   - `crafting.py` recipe engine
   - `item.py` JSON-driven item registry with weapon range support
 - `render/`
-  - `renderer.py` curses drawing + HUD/panels
+  - `renderer.py` curses drawing + HUD/panels + underground fog rendering
   - `camera.py` world-to-screen mapping
 - `input/`
   - `handler.py` configurable key binding mapping
@@ -37,7 +37,7 @@
 
 Most tunable content and behavior is configured through JSON files:
 
-- World/physics/water/save timing: `config/game.json`
+- World/physics/water/save timing + underground fog tuning: `config/game.json`
 - Engine pacing: `config/engine.json`
 - UI strings/layout: `config/ui.json`
 - Input bindings: `config/input.json`
@@ -68,3 +68,4 @@ Most tunable content and behavior is configured through JSON files:
 - **Biome-configured surface lakes with clay bottoms**
 - **Performance-focused local water simulation**
 - **Entity-aware solidity for player-only door traversal**
+- **Configurable underground fog based on each tile's local surface depth**

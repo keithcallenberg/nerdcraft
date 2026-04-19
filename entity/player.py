@@ -27,6 +27,7 @@ class Player:
             'chestpiece': None,
             'pants': None,
         }
+        self.discovered_tiles: set[tuple[int, int]] = set()
 
     def get_block_in_direction(self, direction: str) -> tuple[int, int]:
         """Get the adjacent block position for a direction."""

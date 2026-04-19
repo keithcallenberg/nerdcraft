@@ -130,6 +130,9 @@ class SaveManager:
             "health": player.health,
             "breath": getattr(player, 'breath', 0),
             "facing_right": player.facing_right,
+            "discovered_tiles": sorted([
+                [x, y] for x, y in getattr(player, 'discovered_tiles', set())
+            ]),
             "inventory": {
                 _inv_key(item): count
                 for item, count in player.inventory.items()
@@ -159,6 +162,11 @@ class SaveManager:
         player.fall_distance = 0
 
         player.inventory._items.clear()
+        player.discovered_tiles = {
+            (int(pos[0]), int(pos[1]))
+            for pos in state.get("discovered_tiles", [])
+            if isinstance(pos, list) and len(pos) == 2
+        }
         _name_to_block = {b.name: b for b in BlockType}
         _name_to_item = {i.name: i for i in ItemType}
 

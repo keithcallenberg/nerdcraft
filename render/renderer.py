@@ -82,7 +82,8 @@ class Renderer:
                save_flash: bool = False,
                is_night: bool = False,
                time_icon: str = "",
-               status_message: str | None = None) -> None:
+               status_message: str | None = None,
+               generator = None) -> None:
         """Render the current game state."""
         self.stdscr.erase()
 
@@ -90,7 +91,7 @@ class Renderer:
         self.camera.update(player)
 
         # Render world blocks
-        self._render_world(world, is_night=is_night)
+        self._render_world(world, player, is_night=is_night, generator=generator)
 
         # Render mobs (between world and player so player draws on top)
         if mobs:
@@ -107,7 +108,7 @@ class Renderer:
 
         self.stdscr.refresh()
 
-    def _render_world(self, world: World, is_night: bool = False) -> None:
+    def _render_world(self, world: World, player: Player, is_night: bool = False, generator=None) -> None:
         """Render visible world blocks."""
         light_sources = self._collect_visible_light_sources(world) if is_night else []
 
@@ -116,6 +117,13 @@ class Renderer:
             for col in range(self.width):
                 world_x, world_y = self.camera.screen_to_world(col, view_row)
                 block = world.get_block(world_x, world_y)
+
+                if self._should_hide_underground_block(player, world_x, world_y, generator):
+                    try:
+                        self.stdscr.addch(screen_row, col, '?', curses.A_DIM)
+                    except curses.error:
+                        pass
+                    continue
 
                 if block != BlockType.AIR:
                     props = get_properties(block)
@@ -127,6 +135,20 @@ class Renderer:
                         self.stdscr.addch(screen_row, col, props.char, attr)
                     except curses.error:
                         pass  # Ignore errors at screen edges
+
+    def _should_hide_underground_block(self, player: Player, world_x: int, world_y: int, generator) -> bool:
+        if generator is None:
+            return False
+
+        player_depth = generator.get_surface_height(player.x) - player.y
+        if player_depth < 25:
+            return False
+
+        for dx in range(-3, 4):
+            for dy in range(-3, 4):
+                if (world_x - dx, world_y - dy) in player.discovered_tiles:
+                    return False
+        return True
 
     def _collect_visible_light_sources(self, world: World) -> list[tuple[int, int, int]]:
         """Collect light-emitting blocks around the viewport."""

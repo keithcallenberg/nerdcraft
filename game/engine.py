@@ -97,6 +97,7 @@ class GameEngine:
             self.generator = WorldGenerator(loaded_seed)
             # Spawn mobs fresh (mobs are not saved for now)
             self.mobs = self.generator.spawn_mobs(self.world)
+            self._update_discovery()
         else:
             # Generate a fresh world
             self.generator = WorldGenerator(seed)
@@ -106,6 +107,7 @@ class GameEngine:
             self.player.x = spawn_x
             self.player.y = spawn_y
             self.mobs = self.generator.spawn_mobs(self.world)
+            self._update_discovery()
 
         # Initialize systems
         self.clock = DayClock(day_length_ticks=self._cfg.day_length_ticks)
@@ -369,6 +371,7 @@ class GameEngine:
         self.physics.update(self.player, dt)
         self.clock.tick()
         self._update_water_and_breath(dt)
+        self._update_discovery()
 
         # Update mobs
         dead_mobs = []
@@ -673,7 +676,13 @@ class GameEngine:
                 is_night=self.clock.is_night,
                 time_icon=self.clock.hud_icon,
                 status_message=status_message,
+                generator=self.generator,
             )
+
+    def _update_discovery(self) -> None:
+        for dx in range(-1, 2):
+            for dy in range(-1, 2):
+                self.player.discovered_tiles.add((self.player.x + dx, self.player.y + dy))
 
     def _clear_hotbar_item_if_empty(self, item_type: ItemType) -> None:
         for i, slot in enumerate(self._hotbar):

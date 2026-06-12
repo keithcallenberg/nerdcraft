@@ -12,8 +12,8 @@ if TYPE_CHECKING:
     from world.world import World
     from entity.player import Player
 
-# Save format version — bump if layout changes incompatibly
-SAVE_VERSION = 1
+# Save format version — bump when new state is persisted.
+SAVE_VERSION = 2
 
 
 class SaveManager:
@@ -44,23 +44,35 @@ class SaveManager:
             and (self.save_path / "player.json").exists()
         )
 
-    def save(self, world: "World", player: "Player", seed: int) -> None:
+    def save(
+        self,
+        world: "World",
+        player: "Player",
+        seed: int,
+        hotbar: list[Any] | None = None,
+        hotbar_index: int = 0,
+    ) -> None:
         """Write world + player state to disk."""
         self.save_path.mkdir(parents=True, exist_ok=True)
         self._write_meta(seed)
         self._write_world(world)
-        self._write_player(player)
+        self._write_player(player, hotbar=hotbar, hotbar_index=hotbar_index)
 
-    def load(self, world: "World", player: "Player") -> int:
+    def load(
+        self,
+        world: "World",
+        player: "Player",
+    ) -> tuple[int, list[Any | None], int]:
         """Load world + player state from disk into existing objects.
 
         Returns the original generation seed so the engine can recreate
-        a WorldGenerator for spawn-position queries etc.
+        a WorldGenerator for spawn-position queries etc., along with the
+        saved hotbar state.
         """
         meta = self._read_meta()
         self._read_world(world)
-        self._read_player(player)
-        return meta["seed"]
+        hotbar, hotbar_index = self._read_player(player)
+        return meta["seed"], hotbar, hotbar_index
 
     # ------------------------------------------------------------------
     # Internal helpers
@@ -114,7 +126,12 @@ class SaveManager:
                     chunk._blocks[lx][ly] = _val_to_block.get(val, BlockType.AIR)
             world._chunks[(cx, cy)] = chunk
 
-    def _write_player(self, player: "Player") -> None:
+    def _write_player(
+        self,
+        player: "Player",
+        hotbar: list[Any] | None = None,
+        hotbar_index: int = 0,
+    ) -> None:
         """Write player state as human-readable JSON."""
         from entity.item import ItemType
         from world.block import BlockType
@@ -141,11 +158,16 @@ class SaveManager:
                 slot: (item.name if item is not None else None)
                 for slot, item in player.armor.items()
             },
+            "hotbar": [
+                _inv_key(item) if item is not None else None
+                for item in (hotbar or [])
+            ],
+            "hotbar_index": max(0, int(hotbar_index)),
         }
         with open(self.save_path / "player.json", "w") as f:
             json.dump(state, f, indent=2)
 
-    def _read_player(self, player: "Player") -> None:
+    def _read_player(self, player: "Player") -> tuple[list[Any | None], int]:
         """Restore player state from JSON."""
         from entity.item import ItemType
         from world.block import BlockType
@@ -170,42 +192,37 @@ class SaveManager:
         _name_to_block = {b.name: b for b in BlockType}
         _name_to_item = {i.name: i for i in ItemType}
 
-        for raw_name, count in state.get("inventory", {}).items():
-            if count <= 0:
-                continue
-
+        def _decode_inventory_type(raw_name: str) -> BlockType | ItemType | None:
             if ":" in raw_name:
                 prefix, name = raw_name.split(":", 1)
                 if prefix == "block":
                     # Leather migrated from block -> item
                     if name == "LEATHER":
-                        item = _name_to_item.get("LEATHER")
-                        if item is not None:
-                            player.inventory._items[item] = count
-                            continue
-                    block = _name_to_block.get(name)
-                    if block is not None:
-                        player.inventory._items[block] = count
-                elif prefix == "item":
-                    item = _name_to_item.get(name)
-                    if item is not None:
-                        player.inventory._items[item] = count
-                continue
+                        return _name_to_item.get("LEATHER")
+                    return _name_to_block.get(name)
+                if prefix == "item":
+                    return _name_to_item.get(name)
+                return None
 
-            # Backward compatibility with old save format
             item = _name_to_item.get(raw_name)
             if item is not None:
-                player.inventory._items[item] = count
-                continue
+                return item
 
             block = _name_to_block.get(raw_name)
             if block is not None:
                 if raw_name == "LEATHER":
-                    item = _name_to_item.get("LEATHER")
-                    if item is not None:
-                        player.inventory._items[item] = count
-                else:
-                    player.inventory._items[block] = count
+                    return _name_to_item.get("LEATHER")
+                return block
+
+            return None
+
+        for raw_name, count in state.get("inventory", {}).items():
+            if count <= 0:
+                continue
+
+            item = _decode_inventory_type(raw_name)
+            if item is not None:
+                player.inventory._items[item] = count
 
         player.armor = {'helmet': None, 'chestpiece': None, 'pants': None}
         for slot, raw_item in state.get("armor", {}).items():
@@ -214,3 +231,13 @@ class SaveManager:
             item = _name_to_item.get(str(raw_item))
             if item is not None:
                 player.armor[slot] = item
+
+        hotbar: list[BlockType | ItemType | None] = []
+        for raw_item in state.get("hotbar", []):
+            if raw_item is None:
+                hotbar.append(None)
+                continue
+            hotbar.append(_decode_inventory_type(str(raw_item)))
+
+        hotbar_index = max(0, int(state.get("hotbar_index", 0)))
+        return hotbar, hotbar_index

@@ -90,13 +90,16 @@ class GameEngine:
         # Initialize world and player
         self.world = World()
         self.player = Player()
+        self._hotbar: list[InventoryType | None] = [None] * self.HOTBAR_SIZE
+        self._hotbar_index = 0
 
         if not force_new and self._save_manager.save_exists():
             # Load existing save
-            loaded_seed = self._save_manager.load(self.world, self.player)
+            loaded_seed, saved_hotbar, saved_hotbar_index = self._save_manager.load(self.world, self.player)
             self.generator = WorldGenerator(loaded_seed)
             # Spawn mobs fresh (mobs are not saved for now)
             self.mobs = self.generator.spawn_mobs(self.world)
+            self._restore_hotbar(saved_hotbar, saved_hotbar_index)
             self._update_discovery()
         else:
             # Generate a fresh world
@@ -121,10 +124,6 @@ class GameEngine:
         self.input_handler = InputHandler()
         self.sound = SoundManager()
         self.music = AmbientMusic()
-
-        # Hotbar: 5 assignable slots, all start empty
-        self._hotbar: list[InventoryType | None] = [None] * self.HOTBAR_SIZE
-        self._hotbar_index = 0
 
         # Inventory overlay state
         self._inventory_open = False
@@ -253,11 +252,30 @@ class GameEngine:
     def _do_save(self) -> None:
         """Perform a save and reset the auto-save counter."""
         try:
-            self._save_manager.save(self.world, self.player, self.generator.seed)
+            self._save_manager.save(
+                self.world,
+                self.player,
+                self.generator.seed,
+                hotbar=self._hotbar,
+                hotbar_index=self._hotbar_index,
+            )
             self._ticks_since_save = 0
             self._save_flash = self._save_flash_duration
         except Exception:
             pass  # Don't crash on save failure
+
+    def _restore_hotbar(
+        self,
+        saved_hotbar: list[InventoryType | None],
+        saved_hotbar_index: int,
+    ) -> None:
+        normalized: list[InventoryType | None] = [None] * self.HOTBAR_SIZE
+        for index, item in enumerate(saved_hotbar[:self.HOTBAR_SIZE]):
+            if item is None or self.player.inventory.count(item) <= 0:
+                continue
+            normalized[index] = item
+        self._hotbar = normalized
+        self._hotbar_index = min(max(0, saved_hotbar_index), self.HOTBAR_SIZE - 1)
 
     def _current_player_chunk(self) -> tuple[int, int]:
         return self.world.world_to_chunk_coords(self.player.x, self.player.y)

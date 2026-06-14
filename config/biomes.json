@@ -5,15 +5,35 @@
       "name": "Forest",
       "surface_block": "grass",
       "subsurface_block": "dirt",
-      "tree_density": 0.7,
       "surface_roughness": 0.5,
       "biome_size_weight": 1.8,
       "lake_frequency": 0.28,
+      "lake_fill_block": "water",
+      "lake_bottom_block": "clay",
+      "cave_fill_block": "water",
+      "tree": {
+        "density": 0.7,
+        "trunk_block": "trunk",
+        "leaf_block": "leaves",
+        "cell_width": 20,
+        "x_margin": 3,
+        "x_jitter": 14,
+        "trunk_height": [3, 7],
+        "canopy_radius": [2, 4],
+        "canopy_height": [2, 4]
+      },
+      "column_features": [],
       "ore_multipliers": {
         "coal_ore": 1.0,
         "iron_ore": 1.0,
         "diamond_ore": 0.9
       },
+      "ore_rules": [
+        { "block": "diamond_ore", "min_depth": 50, "threshold": 0.95, "multiplier": "diamond_ore" },
+        { "block": "gold_ore", "min_depth": 35, "threshold": 0.9, "multiplier": "gold_ore" },
+        { "block": "iron_ore", "min_depth": 20, "threshold": 0.85, "multiplier": "iron_ore" },
+        { "block": "coal_ore", "min_depth": 0, "threshold": 0.8, "multiplier": "coal_ore" }
+      ],
       "mob_spawn_table": [
         { "mob": "cow", "weight": 5 },
         { "mob": "zombie", "weight": 4 },
@@ -24,15 +44,35 @@
       "name": "Fields",
       "surface_block": "grass",
       "subsurface_block": "dirt",
-      "tree_density": 0.2,
       "surface_roughness": 0.2,
       "biome_size_weight": 2.4,
       "lake_frequency": 0.18,
+      "lake_fill_block": "water",
+      "lake_bottom_block": "clay",
+      "cave_fill_block": "water",
+      "tree": {
+        "density": 0.2,
+        "trunk_block": "trunk",
+        "leaf_block": "leaves",
+        "cell_width": 20,
+        "x_margin": 3,
+        "x_jitter": 14,
+        "trunk_height": [3, 7],
+        "canopy_radius": [2, 4],
+        "canopy_height": [2, 4]
+      },
+      "column_features": [],
       "ore_multipliers": {
         "coal_ore": 1.0,
         "iron_ore": 1.0,
         "diamond_ore": 0.9
       },
+      "ore_rules": [
+        { "block": "diamond_ore", "min_depth": 50, "threshold": 0.95, "multiplier": "diamond_ore" },
+        { "block": "gold_ore", "min_depth": 35, "threshold": 0.9, "multiplier": "gold_ore" },
+        { "block": "iron_ore", "min_depth": 20, "threshold": 0.85, "multiplier": "iron_ore" },
+        { "block": "coal_ore", "min_depth": 0, "threshold": 0.8, "multiplier": "coal_ore" }
+      ],
       "mob_spawn_table": [
         { "mob": "cow", "weight": 12 },
         { "mob": "zombie", "weight": 2 },
@@ -43,15 +83,42 @@
       "name": "Desert",
       "surface_block": "sand",
       "subsurface_block": "sand",
-      "tree_density": 0.02,
       "surface_roughness": 0.6,
       "biome_size_weight": 3.0,
       "lake_frequency": 0.03,
+      "lake_fill_block": "water",
+      "lake_bottom_block": "clay",
+      "cave_fill_block": "water",
+      "tree": {
+        "density": 0.02,
+        "trunk_block": "trunk",
+        "leaf_block": "leaves",
+        "cell_width": 20,
+        "x_margin": 3,
+        "x_jitter": 14,
+        "trunk_height": [3, 7],
+        "canopy_radius": [2, 4],
+        "canopy_height": [2, 4]
+      },
+      "column_features": [
+        {
+          "block": "cactus",
+          "requires_surface_block": "sand",
+          "spawn_mod": 23,
+          "height": [2, 3]
+        }
+      ],
       "ore_multipliers": {
         "coal_ore": 0.8,
         "iron_ore": 0.9,
         "diamond_ore": 1.1
       },
+      "ore_rules": [
+        { "block": "diamond_ore", "min_depth": 50, "threshold": 0.95, "multiplier": "diamond_ore" },
+        { "block": "gold_ore", "min_depth": 35, "threshold": 0.9, "multiplier": "gold_ore" },
+        { "block": "iron_ore", "min_depth": 20, "threshold": 0.85, "multiplier": "iron_ore" },
+        { "block": "coal_ore", "min_depth": 0, "threshold": 0.8, "multiplier": "coal_ore" }
+      ],
       "mob_spawn_table": [
         { "mob": "zombie", "weight": 2 },
         { "mob": "skeleton", "weight": 5 },
@@ -62,15 +129,35 @@
       "name": "Tundra",
       "surface_block": "snow",
       "subsurface_block": "dirt",
-      "tree_density": 0.15,
       "surface_roughness": 0.8,
       "biome_size_weight": 1.2,
       "lake_frequency": 0.12,
+      "lake_fill_block": "water",
+      "lake_bottom_block": "clay",
+      "cave_fill_block": "ice",
+      "tree": {
+        "density": 0.15,
+        "trunk_block": "trunk",
+        "leaf_block": "leaves",
+        "cell_width": 20,
+        "x_margin": 3,
+        "x_jitter": 14,
+        "trunk_height": [3, 7],
+        "canopy_radius": [2, 4],
+        "canopy_height": [2, 4]
+      },
+      "column_features": [],
       "ore_multipliers": {
         "coal_ore": 1.1,
         "iron_ore": 1.2,
         "diamond_ore": 1.0
       },
+      "ore_rules": [
+        { "block": "diamond_ore", "min_depth": 50, "threshold": 0.95, "multiplier": "diamond_ore" },
+        { "block": "gold_ore", "min_depth": 35, "threshold": 0.9, "multiplier": "gold_ore" },
+        { "block": "iron_ore", "min_depth": 20, "threshold": 0.85, "multiplier": "iron_ore" },
+        { "block": "coal_ore", "min_depth": 0, "threshold": 0.8, "multiplier": "coal_ore" }
+      ],
       "mob_spawn_table": [
         { "mob": "cow", "weight": 1 },
         { "mob": "zombie", "weight": 6 },

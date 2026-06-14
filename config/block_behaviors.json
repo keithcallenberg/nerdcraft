@@ -1,4 +1,33 @@
 {
+  "blocks": {
+    "air": {
+      "tags": ["empty", "replaceable"]
+    },
+    "water": {
+      "tags": ["liquid", "replaceable"]
+    },
+    "door": {
+      "tags": ["player_passable"]
+    },
+    "trunk": {
+      "tags": ["tree_trunk"]
+    },
+    "leaves": {
+      "tags": ["tree_leaves", "replaceable"]
+    },
+    "torch": {
+      "tags": ["replaceable", "light_source"]
+    },
+    "workbench": {
+      "tags": ["station"]
+    },
+    "forge": {
+      "tags": ["station"]
+    },
+    "cactus": {
+      "tags": ["replaceable", "column_feature"]
+    }
+  },
   "on_mine": {
     "trunk": {
       "drop_mode": "replace",

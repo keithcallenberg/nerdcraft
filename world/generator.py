@@ -14,16 +14,61 @@ from world.chunk import Chunk
 
 
 @dataclass(frozen=True)
+class TreeRules:
+    """Procedural tree generation settings for a biome."""
+
+    density: float
+    trunk_block: BlockType
+    leaf_block: BlockType
+    cell_width: int
+    x_margin: int
+    x_jitter: int
+    trunk_height_min: int
+    trunk_height_max: int
+    canopy_radius_min: int
+    canopy_radius_max: int
+    canopy_height_min: int
+    canopy_height_max: int
+
+
+@dataclass(frozen=True)
+class ColumnFeatureRules:
+    """Vertical column feature generation such as cactus."""
+
+    block: BlockType
+    requires_surface_block: BlockType | None
+    spawn_mod: int
+    height_min: int
+    height_max: int
+
+
+@dataclass(frozen=True)
+class OreRule:
+    """Data-driven ore generation rule."""
+
+    block: BlockType
+    min_depth: int
+    threshold: float
+    multiplier_key: str
+
+
+@dataclass(frozen=True)
 class BiomeRules:
-    """Resolved biome generation rules with safe enum fallbacks."""
+    """Resolved biome generation rules with safe content-id fallbacks."""
+
     surface_block: BlockType
     subsurface_block: BlockType
-    tree_density: float
-    ore_multipliers: dict[BlockType, float]
+    tree: TreeRules | None
+    column_features: tuple[ColumnFeatureRules, ...]
+    ore_multipliers: dict[str, float]
+    ore_rules: tuple[OreRule, ...]
     mob_spawn_table: list[tuple[str, int]]
     surface_roughness: float
     biome_size_weight: float
     lake_frequency: float
+    lake_fill_block: BlockType
+    lake_bottom_block: BlockType
+    cave_fill_block: BlockType
 
 
 class WorldGenerator:
@@ -33,6 +78,9 @@ class WorldGenerator:
         """Initialize generator with optional seed."""
         self.cfg = GameConfig.get()
         self.seed = seed if seed is not None else random.randint(0, 2**32 - 1)
+        self._empty_block = BlockType[self.cfg.empty_block_id.upper()]
+        self._boundary_block = BlockType[self.cfg.boundary_block_id.upper()]
+        self._base_solid_block = BlockType[self.cfg.base_solid_block_id.upper()]
         self._rng = random.Random(self.seed)
         # Generate permutation table for noise
         self._perm = list(range(256))
@@ -98,6 +146,19 @@ class WorldGenerator:
         except KeyError:
             return fallback
 
+    @staticmethod
+    def _range_bounds(raw_range, default_min: int, default_max: int) -> tuple[int, int]:
+        if isinstance(raw_range, list) and len(raw_range) >= 2:
+            try:
+                low = int(raw_range[0])
+                high = int(raw_range[1])
+                if high < low:
+                    low, high = high, low
+                return (low, high)
+            except (TypeError, ValueError):
+                pass
+        return (default_min, default_max)
+
     def _load_biome_rules(self) -> tuple[list[str], dict[str, BiomeRules], float]:
         """Load biome ids + generation rules from config/biomes.json."""
         config_path = Path(__file__).resolve().parent.parent / "config" / "biomes.json"
@@ -116,15 +177,73 @@ class WorldGenerator:
             cfg = biomes.get(biome_id, {})
             surface = self._to_block_type(cfg.get("surface_block", "grass"), BlockType.GRASS)
             subsurface = self._to_block_type(cfg.get("subsurface_block", "dirt"), BlockType.DIRT)
-            tree_density = max(0.0, min(1.0, float(cfg.get("tree_density", 0.25))))
+            tree_cfg = cfg.get("tree", {})
+            if not isinstance(tree_cfg, dict):
+                tree_cfg = {}
+            tree_density = max(0.0, min(1.0, float(tree_cfg.get("density", cfg.get("tree_density", 0.25)))))
+            tree: TreeRules | None = None
+            if tree_density > 0:
+                trunk_height_min, trunk_height_max = self._range_bounds(tree_cfg.get("trunk_height"), 3, 7)
+                canopy_radius_min, canopy_radius_max = self._range_bounds(tree_cfg.get("canopy_radius"), 2, 4)
+                canopy_height_min, canopy_height_max = self._range_bounds(tree_cfg.get("canopy_height"), 2, 4)
+                tree = TreeRules(
+                    density=tree_density,
+                    trunk_block=self._to_block_type(tree_cfg.get("trunk_block", "trunk"), self._base_solid_block),
+                    leaf_block=self._to_block_type(tree_cfg.get("leaf_block", "leaves"), self._base_solid_block),
+                    cell_width=max(4, int(tree_cfg.get("cell_width", 20))),
+                    x_margin=max(0, int(tree_cfg.get("x_margin", 3))),
+                    x_jitter=max(1, int(tree_cfg.get("x_jitter", 14))),
+                    trunk_height_min=trunk_height_min,
+                    trunk_height_max=trunk_height_max,
+                    canopy_radius_min=canopy_radius_min,
+                    canopy_radius_max=canopy_radius_max,
+                    canopy_height_min=canopy_height_min,
+                    canopy_height_max=canopy_height_max,
+                )
 
             ore_cfg = cfg.get("ore_multipliers", {})
-            multipliers = {
-                BlockType.COAL_ORE: float(ore_cfg.get("coal_ore", 1.0)),
-                BlockType.IRON_ORE: float(ore_cfg.get("iron_ore", 1.0)),
-                BlockType.GOLD_ORE: float(ore_cfg.get("gold_ore", 1.0)),
-                BlockType.DIAMOND_ORE: float(ore_cfg.get("diamond_ore", 1.0)),
-            }
+            multipliers = {str(key): float(value) for key, value in ore_cfg.items()}
+
+            ore_rules_raw = cfg.get("ore_rules", [])
+            if not isinstance(ore_rules_raw, list) or not ore_rules_raw:
+                ore_rules_raw = [
+                    {"block": "diamond_ore", "min_depth": 50, "threshold": 0.95, "multiplier": "diamond_ore"},
+                    {"block": "gold_ore", "min_depth": 35, "threshold": 0.9, "multiplier": "gold_ore"},
+                    {"block": "iron_ore", "min_depth": 20, "threshold": 0.85, "multiplier": "iron_ore"},
+                    {"block": "coal_ore", "min_depth": 0, "threshold": 0.8, "multiplier": "coal_ore"},
+                ]
+            ore_rules: list[OreRule] = []
+            for entry in ore_rules_raw:
+                if not isinstance(entry, dict):
+                    continue
+                ore_rules.append(
+                    OreRule(
+                        block=self._to_block_type(str(entry.get("block", self.cfg.base_solid_block_id)), self._base_solid_block),
+                        min_depth=max(0, int(entry.get("min_depth", 0))),
+                        threshold=float(entry.get("threshold", 0.8)),
+                        multiplier_key=str(entry.get("multiplier", entry.get("block", ""))).strip(),
+                    )
+                )
+
+            column_features_raw = cfg.get("column_features", [])
+            column_features: list[ColumnFeatureRules] = []
+            if isinstance(column_features_raw, list):
+                for entry in column_features_raw:
+                    if not isinstance(entry, dict):
+                        continue
+                    height_min, height_max = self._range_bounds(entry.get("height"), 2, 3)
+                    surface_req = entry.get("requires_surface_block")
+                    column_features.append(
+                        ColumnFeatureRules(
+                            block=self._to_block_type(str(entry.get("block", self.cfg.base_solid_block_id)), self._base_solid_block),
+                            requires_surface_block=(
+                                self._to_block_type(str(surface_req), surface) if surface_req else None
+                            ),
+                            spawn_mod=max(1, int(entry.get("spawn_mod", 23))),
+                            height_min=height_min,
+                            height_max=height_max,
+                        )
+                    )
 
             spawn_table_cfg = cfg.get("mob_spawn_table", [])
             spawn_table: list[tuple[str, int]] = []
@@ -144,31 +263,46 @@ class WorldGenerator:
             rules[biome_id] = BiomeRules(
                 surface_block=surface,
                 subsurface_block=subsurface,
-                tree_density=tree_density,
+                tree=tree,
+                column_features=tuple(column_features),
                 ore_multipliers=multipliers,
+                ore_rules=tuple(ore_rules),
                 mob_spawn_table=spawn_table,
                 surface_roughness=surface_roughness,
                 biome_size_weight=biome_size_weight,
                 lake_frequency=lake_frequency,
+                lake_fill_block=self._to_block_type(cfg.get("lake_fill_block", self.cfg.water_block_id), self._empty_block),
+                lake_bottom_block=self._to_block_type(cfg.get("lake_bottom_block", self.cfg.base_solid_block_id), self._base_solid_block),
+                cave_fill_block=self._to_block_type(cfg.get("cave_fill_block", self.cfg.water_block_id), self._empty_block),
             )
 
         if not biome_ids:
             biome_ids = ["forest"]
             rules = {
                 "forest": BiomeRules(
-                    surface_block=BlockType.GRASS,
-                    subsurface_block=BlockType.DIRT,
-                    tree_density=0.25,
+                    surface_block=self._to_block_type("grass", self._base_solid_block),
+                    subsurface_block=self._to_block_type("dirt", self._base_solid_block),
+                    tree=TreeRules(0.25, self._to_block_type("trunk", self._base_solid_block), self._to_block_type("leaves", self._base_solid_block), 20, 3, 14, 3, 7, 2, 4, 2, 4),
+                    column_features=(),
                     ore_multipliers={
-                        BlockType.COAL_ORE: 1.0,
-                        BlockType.IRON_ORE: 1.0,
-                        BlockType.GOLD_ORE: 1.0,
-                        BlockType.DIAMOND_ORE: 1.0,
+                        "coal_ore": 1.0,
+                        "iron_ore": 1.0,
+                        "gold_ore": 1.0,
+                        "diamond_ore": 1.0,
                     },
+                    ore_rules=(
+                        OreRule(self._to_block_type("diamond_ore", self._base_solid_block), 50, 0.95, "diamond_ore"),
+                        OreRule(self._to_block_type("gold_ore", self._base_solid_block), 35, 0.9, "gold_ore"),
+                        OreRule(self._to_block_type("iron_ore", self._base_solid_block), 20, 0.85, "iron_ore"),
+                        OreRule(self._to_block_type("coal_ore", self._base_solid_block), 0, 0.8, "coal_ore"),
+                    ),
                     mob_spawn_table=[],
                     surface_roughness=1.0,
                     biome_size_weight=1.0,
                     lake_frequency=0.0,
+                    lake_fill_block=self._to_block_type(self.cfg.water_block_id, self._empty_block),
+                    lake_bottom_block=self._base_solid_block,
+                    cave_fill_block=self._to_block_type(self.cfg.water_block_id, self._empty_block),
                 )
             }
 
@@ -238,7 +372,7 @@ class WorldGenerator:
         """Deterministically choose a block from weighted biome options."""
         cleaned = [(b, max(0.0, w)) for b, w in options if w > 0]
         if not cleaned:
-            return BlockType.DIRT
+            return self._base_solid_block
 
         total = sum(w for _, w in cleaned)
         if total <= 0:
@@ -294,12 +428,17 @@ class WorldGenerator:
         Returns (tree_x, trunk_height, canopy_radius, canopy_height).
         """
         h = self._perm[(cell_index * 7 + 13) & 255]
-
-        # Biome-specific density check at the center of this cell.
-        center_x = cell_index * 20 + 10
+        cell_width = 20
+        center_x = cell_index * cell_width + (cell_width // 2)
         biome = self._get_biome_rules(center_x)
-        tree_density = biome.tree_density
-        if (h / 255.0) > tree_density:
+        tree = biome.tree
+        if tree is None:
+            return None
+        cell_width = tree.cell_width
+        center_x = cell_index * cell_width + (cell_width // 2)
+        biome = self._get_biome_rules(center_x)
+        tree = biome.tree
+        if tree is None or (h / 255.0) > tree.density:
             return None
 
         # Do not spawn trees where the local surface column is part of a lake.
@@ -307,31 +446,36 @@ class WorldGenerator:
         if self._lake_depth_at(center_x, center_surface, biome) > 0:
             return None
 
-        cell_start = cell_index * 20
+        cell_start = cell_index * tree.cell_width
         # Jitter x within the cell, leaving a margin for canopy overhang
-        jitter = self._perm[(cell_index * 13 + 37) & 255] % 14
-        tree_x = cell_start + jitter + 3
+        jitter = self._perm[(cell_index * 13 + 37) & 255] % tree.x_jitter
+        tree_x = cell_start + jitter + tree.x_margin
 
-        trunk_height = 3 + self._perm[(cell_index * 19 + 73) & 255] % 5   # 3-7
-        canopy_radius = 2 + self._perm[(cell_index * 23 + 97) & 255] % 3  # 2-4
-        canopy_height = 2 + self._perm[(cell_index * 29 + 113) & 255] % 3 # 2-4
-        return (tree_x, trunk_height, canopy_radius, canopy_height)
+        trunk_span = max(1, tree.trunk_height_max - tree.trunk_height_min + 1)
+        canopy_radius_span = max(1, tree.canopy_radius_max - tree.canopy_radius_min + 1)
+        canopy_height_span = max(1, tree.canopy_height_max - tree.canopy_height_min + 1)
+        trunk_height = tree.trunk_height_min + (self._perm[(cell_index * 19 + 73) & 255] % trunk_span)
+        canopy_radius = tree.canopy_radius_min + (self._perm[(cell_index * 23 + 97) & 255] % canopy_radius_span)
+        canopy_height = tree.canopy_height_min + (self._perm[(cell_index * 29 + 113) & 255] % canopy_height_span)
+        return (tree_x, trunk_height, canopy_radius, canopy_height, tree.trunk_block, tree.leaf_block, tree.cell_width)
 
     def _check_tree_block(self, world_x: int, world_y: int) -> BlockType | None:
         """Return TRUNK / LEAVES if this position belongs to a tree, else None."""
-        cell = world_x // 20
+        biome = self._get_biome_rules(world_x)
+        cell_width = biome.tree.cell_width if biome.tree is not None else 20
+        cell = world_x // cell_width
 
         for check_cell in range(cell - 1, cell + 2):
             tree = self._get_tree_for_cell(check_cell)
             if tree is None:
                 continue
 
-            tree_x, trunk_height, canopy_radius, canopy_height = tree
+            tree_x, trunk_height, canopy_radius, canopy_height, trunk_block, leaf_block, _ = tree
             tree_surface = self.get_surface_height(tree_x)
 
             # Trunk — single column rising from the surface
             if world_x == tree_x and tree_surface < world_y <= tree_surface + trunk_height:
-                return BlockType.TRUNK
+                return trunk_block
 
             # Canopy — sits on top of the trunk
             canopy_base = tree_surface + trunk_height
@@ -352,7 +496,7 @@ class WorldGenerator:
                 edge_adjust = (leaf_hash - 0.5) * 1.5
 
                 if dx <= effective_radius + edge_adjust:
-                    return BlockType.LEAVES
+                    return leaf_block
 
         return None
 
@@ -392,21 +536,27 @@ class WorldGenerator:
             if tree_block is not None:
                 return tree_block
 
-            # Sparse cactus columns in sandy biomes.
-            if biome.surface_block == BlockType.SAND:
-                cactus_hash = self._perm[(world_x * 5 + 41) & 255]
-                if cactus_hash % 23 == 0:
-                    cactus_height = 2 + (self._perm[(world_x * 7 + 89) & 255] % 2)
-                    if surface_height < world_y <= surface_height + cactus_height:
-                        return BlockType.CACTUS
+            for feature in biome.column_features:
+                if (
+                    feature.requires_surface_block is not None
+                    and biome.surface_block != feature.requires_surface_block
+                ):
+                    continue
+                feature_hash = self._perm[(world_x * 5 + 41) & 255]
+                if feature_hash % feature.spawn_mod != 0:
+                    continue
+                height_span = max(1, feature.height_max - feature.height_min + 1)
+                feature_height = feature.height_min + (self._perm[(world_x * 7 + 89) & 255] % height_span)
+                if surface_height < world_y <= surface_height + feature_height:
+                    return feature.block
 
         # Bedrock at bottom
         if world_y <= 0:
-            return BlockType.BEDROCK
+            return self._boundary_block
 
         # Air above surface
         if world_y > surface_height:
-            return BlockType.AIR
+            return self._empty_block
 
         # Depth below surface
         depth = surface_height - world_y
@@ -416,9 +566,9 @@ class WorldGenerator:
         if lake_depth > 0:
             lake_bottom_y = surface_height - lake_depth
             if world_y == lake_bottom_y:
-                return BlockType.CLAY
+                return biome.lake_bottom_block
             if lake_bottom_y < world_y <= surface_height:
-                return BlockType.WATER
+                return biome.lake_fill_block
 
         # Biome surface block (blend materials near biome borders)
         if depth == 0:
@@ -439,9 +589,7 @@ class WorldGenerator:
         # Check for caves
         cave_noise = self._noise2d(world_x * 0.1, world_y * 0.1)
         if cave_noise > 0.7 and depth > self.cfg.dirt_depth + 2:
-            if biome.surface_block == BlockType.SNOW:
-                return BlockType.ICE
-            return BlockType.WATER
+            return biome.cave_fill_block
 
         # Stone with biome-tuned ore generation
         if depth >= self.cfg.stone_depth:
@@ -449,7 +597,7 @@ class WorldGenerator:
 
         # Transition zone (mostly dirt/subsurface, some stone)
         if depth >= self.cfg.dirt_depth:
-            return BlockType.STONE
+            return self._base_solid_block
 
         return biome.subsurface_block
 
@@ -457,28 +605,12 @@ class WorldGenerator:
         """Generate ore blocks based on depth and biome ore multipliers."""
         ore_noise = self._noise2d(world_x * 0.3 + 1000, world_y * 0.3)
 
-        coal_mult = max(0.0, biome.ore_multipliers.get(BlockType.COAL_ORE, 1.0))
-        iron_mult = max(0.0, biome.ore_multipliers.get(BlockType.IRON_ORE, 1.0))
-        gold_mult = max(0.0, biome.ore_multipliers.get(BlockType.GOLD_ORE, 1.0))
-        diamond_mult = max(0.0, biome.ore_multipliers.get(BlockType.DIAMOND_ORE, 1.0))
+        for rule in biome.ore_rules:
+            mult = max(0.0, biome.ore_multipliers.get(rule.multiplier_key, 1.0))
+            if depth > rule.min_depth and ore_noise > (rule.threshold - 0.05 * max(0.0, mult - 1.0)):
+                return rule.block
 
-        # Diamond (deep and rare)
-        if depth > 50 and ore_noise > (0.95 - 0.05 * max(0.0, diamond_mult - 1.0)):
-            return BlockType.DIAMOND_ORE
-
-        # Gold (medium-deep)
-        if depth > 35 and ore_noise > (0.9 - 0.05 * max(0.0, gold_mult - 1.0)):
-            return BlockType.GOLD_ORE
-
-        # Iron (medium depth)
-        if depth > 20 and ore_noise > (0.85 - 0.05 * max(0.0, iron_mult - 1.0)):
-            return BlockType.IRON_ORE
-
-        # Coal (common, any depth)
-        if ore_noise > (0.8 - 0.05 * max(0.0, coal_mult - 1.0)):
-            return BlockType.COAL_ORE
-
-        return BlockType.STONE
+        return self._base_solid_block
 
     def generate_world(self, world: World, progress_callback=None) -> None:
         """Generate all chunks in the world."""

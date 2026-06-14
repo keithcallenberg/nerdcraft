@@ -140,6 +140,8 @@ class GameConfig:
         self.world_height_chunks = world.get('height_chunks', 16)
         self.world_width = self.world_width_chunks * self.chunk_size
         self.world_height = self.world_height_chunks * self.chunk_size
+        self.empty_block_id = str(world.get('empty_block', 'air')).strip().lower() or 'air'
+        self.boundary_block_id = str(world.get('boundary_block', 'bedrock')).strip().lower() or 'bedrock'
 
         # Terrain
         terrain = data.get('terrain', {})
@@ -148,6 +150,7 @@ class GameConfig:
         self.sea_level = int(self.world_height * self.sea_level_ratio)
         self.dirt_depth = terrain.get('dirt_depth', 4)
         self.stone_depth = terrain.get('stone_depth', 20)
+        self.base_solid_block_id = str(terrain.get('base_solid_block', 'stone')).strip().lower() or 'stone'
 
         # Physics
         physics = data.get('physics', {})
@@ -161,6 +164,7 @@ class GameConfig:
 
         # Water / breathing
         water = data.get('water', {})
+        self.water_block_id = str(water.get('block', 'water')).strip().lower() or 'water'
         self.water_flow_enabled = bool(water.get('flow_enabled', True))
         self.water_flow_interval_ticks = int(water.get('flow_interval_ticks', 8))
         self.water_max_flow_changes = int(water.get('max_flow_changes', 350))
@@ -311,6 +315,8 @@ class GameConfig:
         """Load block_behaviors.json configuration."""
         data = _load_json('block_behaviors.json')
         self.block_behaviors: Dict[str, Any] = data
+        blocks = data.get('blocks', {})
+        self.block_behavior_rules: Dict[str, Any] = blocks if isinstance(blocks, dict) else {}
 
     def get_ui_text(self, section: str, key: str, default: str = "") -> str:
         section_obj = self.ui.get(section, {}) if isinstance(self.ui, dict) else {}
@@ -331,6 +337,23 @@ class GameConfig:
             if isinstance(behavior, dict):
                 return behavior
         return {}
+
+    def get_block_behavior(self, block_name: str) -> Dict[str, Any]:
+        behavior = self.block_behavior_rules.get(block_name, {})
+        if isinstance(behavior, dict):
+            return behavior
+        return {}
+
+    def get_block_tags(self, block_name: str) -> frozenset[str]:
+        behavior = self.get_block_behavior(block_name)
+        raw_tags = behavior.get('tags', [])
+        if not isinstance(raw_tags, list):
+            return frozenset()
+        return frozenset(
+            str(tag).strip().lower()
+            for tag in raw_tags
+            if str(tag).strip()
+        )
 
     def set_world_size_chunks(self, width_chunks: int, height_chunks: int) -> None:
         """Runtime override for world dimensions (new world generation)."""

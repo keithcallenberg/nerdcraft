@@ -5,7 +5,7 @@ import curses
 from typing import Dict, List, Any
 from render.camera import Camera
 from world.world import World
-from world.block import BlockType, get_properties, display_name
+from world.block import BlockType, get_properties, display_name, max_light_radius
 from entity.player import Player
 from entity.inventory import Inventory, InventoryType
 from entity.item import ItemType, get_item_properties, item_display_name
@@ -161,7 +161,7 @@ class Renderer:
 
     def _collect_visible_light_sources(self, world: World) -> list[tuple[int, int, int]]:
         """Collect light-emitting blocks around the viewport."""
-        max_radius = get_properties(BlockType.TORCH).light_radius
+        max_radius = max_light_radius()
         if max_radius <= 0:
             return []
 

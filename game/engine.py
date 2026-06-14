@@ -11,7 +11,7 @@ from game.config import (
     SWIM_JUMP_HEIGHT, IN_WATER_GRAVITY_MULTIPLIER,
 )
 from world.world import World
-from world.block import BlockType, get_properties
+from world.block import BlockType, get_properties, has_tag
 from world.generator import WorldGenerator
 from world.save import SaveManager
 from entity.player import Player
@@ -73,6 +73,8 @@ class GameEngine:
             bt = BlockType.__members__.get(block_name.upper())
             if bt is not None:
                 self._mining_tier_required[bt] = int(block_cfg.required_mining_tier)
+        self._empty_block = BlockType[self._cfg.empty_block_id.upper()]
+        self._liquid_block = BlockType[self._cfg.water_block_id.upper()]
 
         # Save/load setup
         self._save_manager = SaveManager(
@@ -361,7 +363,7 @@ class GameEngine:
                     self.sound.play(SoundEvent.FOOTSTEP)
                 self.player.facing_right = True
             elif action == Action.JUMP:
-                in_water = self.world.get_block(self.player.x, self.player.y) == BlockType.WATER
+                in_water = has_tag(self.world.get_block(self.player.x, self.player.y), "liquid")
                 if self.player.on_ground or in_water:
                     self.player.jump_remaining = SWIM_JUMP_HEIGHT if in_water else self.physics.jump_height
                     self.player.on_ground = False
@@ -471,7 +473,7 @@ class GameEngine:
             self._update_water_flow()
 
         # Drowning: use block above player as head-space check.
-        head_underwater = self.world.get_block(self.player.x, self.player.y + 1) == BlockType.WATER
+        head_underwater = has_tag(self.world.get_block(self.player.x, self.player.y + 1), "liquid")
         if head_underwater:
             self.player.breath = max(0.0, self.player.breath - dt)
             if self.player.breath <= 0:
@@ -513,7 +515,7 @@ class GameEngine:
                     if changes >= self._water_max_flow_changes:
                         break
 
-                    if chunk.get_block(lx, ly) != BlockType.WATER:
+                    if chunk.get_block(lx, ly) != self._liquid_block:
                         continue
 
                     wx = chunk.world_x + lx
@@ -522,7 +524,7 @@ class GameEngine:
 
                     if target in occupied_targets:
                         continue
-                    if self.world.get_block(wx, wy - 1) != BlockType.AIR:
+                    if not has_tag(self.world.get_block(wx, wy - 1), "replaceable"):
                         continue
 
                     moves.append((wx, wy))
@@ -530,9 +532,9 @@ class GameEngine:
                     changes += 1
 
         for x, y in moves:
-            self.world.set_block(x, y, BlockType.AIR)
+            self.world.set_block(x, y, self._empty_block)
         for x, y in moves:
-            self.world.set_block(x, y - 1, BlockType.WATER)
+            self.world.set_block(x, y - 1, self._liquid_block)
 
     def _respawn(self) -> None:
         """Reset player to spawn after death."""
@@ -798,7 +800,7 @@ class GameEngine:
 
             block = self.world.get_block(block_x, block_y)
 
-            if block != BlockType.AIR:
+            if block != self._empty_block:
                 if not allow_block_break:
                     return
 
@@ -814,7 +816,7 @@ class GameEngine:
                         self._set_status_flash(msg)
                         return
 
-                    self.world.set_block(block_x, block_y, BlockType.AIR)
+                    self.world.set_block(block_x, block_y, self._empty_block)
 
                     behavior = self._cfg.get_mine_behavior(block.name.lower())
                     drop_mode = str(behavior.get('drop_mode', 'default'))
@@ -843,7 +845,7 @@ class GameEngine:
                         self.player.inventory.add(block)
 
                     # Legacy compatibility fallback for leaves if not configured
-                    if block == BlockType.LEAVES and not drops and random.random() < self._leaf_apple_chance:
+                    if has_tag(block, "tree_leaves") and not drops and random.random() < self._leaf_apple_chance:
                         self.player.inventory.add(ItemType.APPLE)
 
                     self.sound.play(SoundEvent.MINING)
@@ -858,7 +860,7 @@ class GameEngine:
         current = self.world.get_block(block_x, block_y)
 
         # Only place in air or water, and not inside the player
-        if current == BlockType.AIR or current == BlockType.WATER:
+        if has_tag(current, "replaceable"):
             if not (block_x == self.player.x and block_y == self.player.y):
                 self.world.set_block(block_x, block_y, block)
                 self.player.inventory.remove(block)

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from config import GameConfig
-from world.block import BlockType
+from world.block import BlockType, has_tag, is_solid
 from world.chunk import Chunk
 
 
@@ -15,6 +15,8 @@ class World:
         cfg = GameConfig.get()
         self.chunk_size = cfg.chunk_size
         self.world_height_chunks = cfg.world_height_chunks
+        self._empty_block = BlockType[cfg.empty_block_id.upper()]
+        self._boundary_block = BlockType[cfg.boundary_block_id.upper()]
 
     def _world_to_chunk(self, world_x: int, world_y: int) -> tuple[int, int, int, int]:
         """Convert world coordinates to chunk coordinates and local offsets."""
@@ -39,14 +41,14 @@ class World:
         """Get block at world coordinates."""
         # Out of bounds checks
         if world_y < 0:
-            return BlockType.BEDROCK
+            return self._boundary_block
         if world_y >= self.world_height_chunks * self.chunk_size:
-            return BlockType.AIR
+            return self._empty_block
 
         chunk_x, chunk_y, local_x, local_y = self._world_to_chunk(world_x, world_y)
         chunk = self.get_chunk(chunk_x, chunk_y)
         if chunk is None:
-            return BlockType.AIR
+            return self._empty_block
         return chunk.get_block(local_x, local_y)
 
     def set_block(self, world_x: int, world_y: int, block_type: BlockType) -> bool:
@@ -62,11 +64,9 @@ class World:
     def is_solid(self, world_x: int, world_y: int, entity=None) -> bool:
         """Check if block at world coordinates is solid for a given entity."""
         block = self.get_block(world_x, world_y)
-        if block == BlockType.DOOR:
+        if has_tag(block, "player_passable"):
             from entity.player import Player
             return not isinstance(entity, Player)
-
-        from world.block import is_solid
         return is_solid(block)
 
     def get_loaded_chunks(self) -> list[Chunk]:

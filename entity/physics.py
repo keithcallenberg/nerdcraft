@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from world.block import BlockType
+from config import GameConfig
+from world.block import BlockType, has_tag
 from world.world import World
 
 
@@ -28,6 +29,7 @@ class PhysicsEngine:
         self.auto_jump = auto_jump
         self.in_water_gravity_multiplier = max(1.0, float(in_water_gravity_multiplier))
         self._gravity_timers: dict[int, float] = {}
+        self._liquid_block = BlockType[GameConfig.get().water_block_id.upper()]
 
     def update(self, entity, dt: float) -> None:
         """Accumulate time and perform discrete gravity steps."""
@@ -35,7 +37,7 @@ class PhysicsEngine:
         timer = self._gravity_timers.get(eid, 0.0) + dt
 
         step_interval = self.gravity_interval
-        if self.world.get_block(entity.x, entity.y) == BlockType.WATER:
+        if has_tag(self.world.get_block(entity.x, entity.y), "liquid"):
             step_interval = self.gravity_interval * self.in_water_gravity_multiplier
 
         while timer >= step_interval:
@@ -46,7 +48,7 @@ class PhysicsEngine:
 
     def _gravity_step(self, entity) -> None:
         """Perform one discrete gravity or jump step."""
-        in_water = self.world.get_block(entity.x, entity.y) == BlockType.WATER
+        in_water = has_tag(self.world.get_block(entity.x, entity.y), "liquid")
 
         if entity.jump_remaining > 0:
             # Rising — try to move up

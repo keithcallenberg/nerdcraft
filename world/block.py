@@ -107,10 +107,12 @@ class BlockProperties:
     breakable: bool = True
     color_pair: int = 0
     light_radius: int = 0
+    tags: frozenset[str] = frozenset()
 
 
 _block_properties: Dict[BlockType, BlockProperties] = {}
 _initialized = False
+_max_light_radius = 0
 
 
 def block_exists(block_id: str) -> bool:
@@ -124,7 +126,7 @@ def _get_json_name(block_type: BlockType) -> str:
 
 def _init_from_config() -> None:
     """Initialize block properties from JSON configuration."""
-    global _block_properties, _initialized
+    global _block_properties, _initialized, _max_light_radius
 
     if _initialized:
         return
@@ -133,6 +135,7 @@ def _init_from_config() -> None:
 
     cfg = GameConfig.get()
     _block_properties.clear()
+    _max_light_radius = 0
 
     for block_type in BlockType:
         json_name = _get_json_name(block_type)
@@ -146,13 +149,16 @@ def _init_from_config() -> None:
                 breakable=block_cfg.breakable,
                 color_pair=color_pair,
                 light_radius=block_cfg.light_radius,
+                tags=cfg.get_block_tags(json_name),
             )
+            _max_light_radius = max(_max_light_radius, block_cfg.light_radius)
         else:
             _block_properties[block_type] = BlockProperties(
                 char='?',
                 solid=True,
                 breakable=True,
                 color_pair=0,
+                tags=frozenset(),
             )
 
     _initialized = True
@@ -173,6 +179,18 @@ def is_solid(block_type: BlockType) -> bool:
 def display_name(block_type: BlockType) -> str:
     """Get a human-readable display name for a block type."""
     return block_type.name.replace('_', ' ').title()
+
+
+def has_tag(block_type: BlockType, tag: str) -> bool:
+    """Return True when the block has a configured tag."""
+    _init_from_config()
+    return tag.strip().lower() in _block_properties[block_type].tags
+
+
+def max_light_radius() -> int:
+    """Return the largest configured light radius among all blocks."""
+    _init_from_config()
+    return _max_light_radius
 
 
 def reload_config() -> None:

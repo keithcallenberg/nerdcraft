@@ -13,7 +13,35 @@ if TYPE_CHECKING:
     from entity.player import Player
 
 # Save format version — bump when new state is persisted.
-SAVE_VERSION = 2
+SAVE_VERSION = 3
+LEGACY_BLOCK_ORDER = [
+    "air",
+    "grass",
+    "dirt",
+    "stone",
+    "coal_ore",
+    "iron_ore",
+    "gold_ore",
+    "diamond_ore",
+    "bedrock",
+    "trunk",
+    "leaves",
+    "water",
+    "concrete",
+    "wood",
+    "wood_plank",
+    "torch",
+    "stone_brick",
+    "workbench",
+    "forge",
+    "leather",
+    "sand",
+    "clay",
+    "door",
+    "cactus",
+    "snow",
+    "ice",
+]
 
 
 class SaveManager:
@@ -112,7 +140,6 @@ class SaveManager:
         from world.block import BlockType
         from world.chunk import Chunk
 
-        # Build reverse map: int value → BlockType
         _val_to_block = {b.value: b for b in BlockType}
 
         with open(self.save_path / "world.pkl", "rb") as f:
@@ -123,7 +150,11 @@ class SaveManager:
             chunk = Chunk(cx, cy, world.chunk_size)
             for lx, col in enumerate(raw_cols):
                 for ly, val in enumerate(col):
-                    chunk._blocks[lx][ly] = _val_to_block.get(val, BlockType.AIR)
+                    if isinstance(val, int):
+                        legacy_id = LEGACY_BLOCK_ORDER[val - 1] if 0 < val <= len(LEGACY_BLOCK_ORDER) else "air"
+                        chunk._blocks[lx][ly] = _val_to_block.get(legacy_id, BlockType.AIR)
+                    else:
+                        chunk._blocks[lx][ly] = _val_to_block.get(str(val), BlockType.AIR)
             world._chunks[(cx, cy)] = chunk
 
     def _write_player(

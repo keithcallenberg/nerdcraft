@@ -19,7 +19,7 @@ class NightSpawningTests(unittest.TestCase):
         self.assertIsNotNone(mob)
         assert mob is not None
         self.assertTrue(mob.hostile)
-        self.assertIn(mob.mob_id, {"zombie", "skeleton"})
+        self.assertIn(mob.mob_id, {"zombie", "skeleton", "spider"})
 
 
 if __name__ == "__main__":

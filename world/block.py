@@ -1,62 +1,101 @@
-"""Block types and their properties, loaded from JSON configuration."""
+"""Block types and properties loaded dynamically from JSON configuration."""
 
 from __future__ import annotations
-from enum import Enum, auto
+
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Dict
 
 
-class BlockType(Enum):
-    """All block types in the game.
+class _RegistryValue:
+    """Immutable registry-backed value object."""
 
-    These are dynamically mapped to JSON config block names.
-    The enum names should match the JSON keys (uppercase vs lowercase).
-    """
-    AIR = auto()
-    GRASS = auto()
-    DIRT = auto()
-    STONE = auto()
-    COAL_ORE = auto()
-    IRON_ORE = auto()
-    GOLD_ORE = auto()
-    DIAMOND_ORE = auto()
-    BEDROCK = auto()
-    TRUNK = auto()
-    LEAVES = auto()
-    WATER = auto()
-    CONCRETE = auto()
-    WOOD = auto()
-    WOOD_PLANK = auto()
-    TORCH = auto()
-    STONE_BRICK = auto()
-    WORKBENCH = auto()
-    FORGE = auto()
-    LEATHER = auto()
-    SAND = auto()
-    CLAY = auto()
-    DOOR = auto()
-    CACTUS = auto()
-    SNOW = auto()
-    ICE = auto()
+    __slots__ = ("content_id",)
+
+    def __init__(self, content_id: str):
+        self.content_id = str(content_id).strip().lower()
+
+    @property
+    def name(self) -> str:
+        return self.content_id.upper()
+
+    @property
+    def value(self) -> str:
+        return self.content_id
+
+    def __hash__(self) -> int:
+        return hash((type(self), self.content_id))
+
+    def __eq__(self, other: object) -> bool:
+        return type(self) is type(other) and getattr(other, "content_id", None) == self.content_id
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self.content_id!r})"
+
+    def __str__(self) -> str:
+        return self.content_id
+
+
+class _BlockTypeMeta(type):
+    """Metaclass exposing JSON-defined blocks through enum-like access."""
+
+    def _block_ids(cls) -> list[str]:
+        from config import GameConfig
+
+        return list(GameConfig.get().blocks.keys())
+
+    @property
+    def __members__(cls) -> dict[str, BlockType]:
+        return {block_id.upper(): cls(block_id) for block_id in cls._block_ids()}
+
+    def __iter__(cls):
+        return iter(cls.__members__.values())
+
+    def __getitem__(cls, key: str) -> BlockType:
+        block_id = str(key).strip().lower()
+        if block_id not in cls._block_ids():
+            raise KeyError(key)
+        return cls(block_id)
+
+    def __getattr__(cls, name: str) -> BlockType:
+        try:
+            return cls[name]
+        except KeyError as exc:
+            raise AttributeError(name) from exc
+
+    def __contains__(cls, key: object) -> bool:
+        if isinstance(key, BlockType):
+            return key.content_id in cls._block_ids()
+        if isinstance(key, str):
+            return key.strip().lower() in cls._block_ids()
+        return False
+
+
+class BlockType(_RegistryValue, metaclass=_BlockTypeMeta):
+    """JSON-defined block identifier."""
+
 
 @dataclass(frozen=True)
 class BlockProperties:
     """Properties for a block type."""
-    char: str  # ASCII character to render
-    solid: bool = True  # Can be collided with
-    breakable: bool = True  # Can be mined
-    color_pair: int = 0  # Curses color pair index
-    light_radius: int = 0  # Emits light in night rendering
+
+    char: str
+    solid: bool = True
+    breakable: bool = True
+    color_pair: int = 0
+    light_radius: int = 0
 
 
-# Block properties registry - will be populated from JSON
 _block_properties: Dict[BlockType, BlockProperties] = {}
 _initialized = False
 
 
+def block_exists(block_id: str) -> bool:
+    """Return True when a block id exists in JSON configuration."""
+    return block_id.strip().lower() in BlockType
+
+
 def _get_json_name(block_type: BlockType) -> str:
-    """Convert BlockType enum to JSON config name."""
-    return block_type.name.lower()
+    return block_type.value
 
 
 def _init_from_config() -> None:
@@ -67,7 +106,9 @@ def _init_from_config() -> None:
         return
 
     from config import GameConfig
+
     cfg = GameConfig.get()
+    _block_properties.clear()
 
     for block_type in BlockType:
         json_name = _get_json_name(block_type)
@@ -83,12 +124,11 @@ def _init_from_config() -> None:
                 light_radius=block_cfg.light_radius,
             )
         else:
-            # Fallback for blocks not in config
             _block_properties[block_type] = BlockProperties(
                 char='?',
                 solid=True,
                 breakable=True,
-                color_pair=0
+                color_pair=0,
             )
 
     _initialized = True
@@ -107,14 +147,16 @@ def is_solid(block_type: BlockType) -> bool:
 
 
 def display_name(block_type: BlockType) -> str:
-    """Get a human-readable display name for a block type (e.g. COAL_ORE -> 'Coal Ore')."""
+    """Get a human-readable display name for a block type."""
     return block_type.name.replace('_', ' ').title()
 
 
 def reload_config() -> None:
     """Reload block properties from JSON configuration."""
     global _initialized
+
     _initialized = False
     from config import GameConfig
+
     GameConfig.reload()
     _init_from_config()

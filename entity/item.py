@@ -1,4 +1,4 @@
-"""Item definitions for non-block inventory items (JSON-config driven)."""
+"""Item definitions loaded dynamically from config/items.json."""
 
 from __future__ import annotations
 
@@ -6,46 +6,45 @@ from dataclasses import dataclass
 from enum import Enum, auto
 
 from config import GameConfig, _load_json
+from world.block import _RegistryValue
 
 
-class ItemType(Enum):
-    """Non-placeable inventory item types."""
+class _ItemTypeMeta(type):
+    """Metaclass exposing JSON-defined items through enum-like access."""
 
-    APPLE = auto()
-    RAW_MEAT = auto()
-    COOKED_MEAT = auto()
-    ZOMBIE_FLESH = auto()
-    LEATHER = auto()
-    SILK = auto()
-    STRING = auto()
-    COAL = auto()
-    IRON_INGOT = auto()
-    GOLD_INGOT = auto()
-    DIAMOND = auto()
+    def _item_ids(cls) -> list[str]:
+        data = _load_json("items.json")
+        return list(data.get("items", {}).keys())
 
-    WOOD_PICKAXE = auto()
-    STONE_PICKAXE = auto()
-    IRON_PICKAXE = auto()
+    @property
+    def __members__(cls) -> dict[str, ItemType]:
+        return {item_id.upper(): cls(item_id) for item_id in cls._item_ids()}
 
-    WOOD_SWORD = auto()
-    STONE_SWORD = auto()
-    IRON_SWORD = auto()
-    DIAMOND_SWORD = auto()
-    BOW = auto()
-    WOOD_SPEAR = auto()
-    STONE_SPEAR = auto()
-    IRON_SPEAR = auto()
-    DIAMOND_SPEAR = auto()
+    def __iter__(cls):
+        return iter(cls.__members__.values())
 
-    LEATHER_HELMET = auto()
-    LEATHER_CHESTPIECE = auto()
-    LEATHER_PANTS = auto()
-    IRON_HELMET = auto()
-    IRON_CHESTPIECE = auto()
-    IRON_PANTS = auto()
-    DIAMOND_HELMET = auto()
-    DIAMOND_CHESTPIECE = auto()
-    DIAMOND_PANTS = auto()
+    def __getitem__(cls, key: str) -> ItemType:
+        item_id = str(key).strip().lower()
+        if item_id not in cls._item_ids():
+            raise KeyError(key)
+        return cls(item_id)
+
+    def __getattr__(cls, name: str) -> ItemType:
+        try:
+            return cls[name]
+        except KeyError as exc:
+            raise AttributeError(name) from exc
+
+    def __contains__(cls, key: object) -> bool:
+        if isinstance(key, ItemType):
+            return key.content_id in cls._item_ids()
+        if isinstance(key, str):
+            return key.strip().lower() in cls._item_ids()
+        return False
+
+
+class ItemType(_RegistryValue, metaclass=_ItemTypeMeta):
+    """JSON-defined item identifier."""
 
 
 class ItemClass(Enum):
@@ -77,8 +76,13 @@ _ITEM_PROPERTIES: dict[ItemType, ItemProperties] = {}
 _INITIALIZED = False
 
 
+def item_exists(item_id: str) -> bool:
+    """Return True when an item id exists in JSON configuration."""
+    return item_id.strip().lower() in ItemType
+
+
 def _json_name(item_type: ItemType) -> str:
-    return item_type.name.lower()
+    return item_type.value
 
 
 def _parse_item_class(raw: str | None) -> ItemClass:
@@ -131,21 +135,19 @@ def _init_from_config() -> None:
 
 def get_item_properties(item_type: ItemType) -> ItemProperties:
     """Get properties for a given item type."""
-
     _init_from_config()
     return _ITEM_PROPERTIES[item_type]
 
 
 def item_display_name(item_type: ItemType) -> str:
     """Human-friendly item display names."""
-
     return item_type.name.replace('_', ' ').title()
 
 
 def reload_items_config() -> None:
     """Reload item properties from JSON configuration."""
-
     global _INITIALIZED
+
     _INITIALIZED = False
     GameConfig.reload()
     _init_from_config()

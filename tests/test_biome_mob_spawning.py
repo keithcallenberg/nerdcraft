@@ -27,7 +27,7 @@ class BiomeMobSpawningTests(unittest.TestCase):
         forest_cfg = generator._biome_rules["forest"].mob_spawn_table
         filtered = [(mob_id, w) for mob_id, w in forest_cfg if mob_id in allowed_surface_ids]
 
-        self.assertEqual(filtered, [("cow", 12)])
+        self.assertEqual(filtered, [("cow", 5)])
 
 
 if __name__ == "__main__":

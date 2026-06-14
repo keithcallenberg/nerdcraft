@@ -9,10 +9,11 @@ from typing import Dict
 class _RegistryValue:
     """Immutable registry-backed value object."""
 
-    __slots__ = ("content_id",)
+    __slots__ = ("content_id", "_hash")
 
     def __init__(self, content_id: str):
         self.content_id = str(content_id).strip().lower()
+        self._hash = hash((type(self), self.content_id))
 
     @property
     def name(self) -> str:
@@ -23,7 +24,7 @@ class _RegistryValue:
         return self.content_id
 
     def __hash__(self) -> int:
-        return hash((type(self), self.content_id))
+        return self._hash
 
     def __eq__(self, other: object) -> bool:
         return type(self) is type(other) and getattr(other, "content_id", None) == self.content_id
@@ -57,6 +58,7 @@ class _BlockTypeMeta(type):
         if instance is None:
             instance = super().__call__(normalized)
             _BLOCK_INSTANCES[normalized] = instance
+            type.__setattr__(cls, normalized.upper(), instance)
         return instance
 
     @property
@@ -180,6 +182,11 @@ def reload_config() -> None:
     _initialized = False
     _BLOCK_ID_CACHE = ()
     _BLOCK_MEMBER_CACHE = {}
+    for key in list(_BLOCK_INSTANCES):
+        name = key.upper()
+        if hasattr(BlockType, name):
+            type.__delattr__(BlockType, name)
+    _BLOCK_INSTANCES.clear()
     from config import GameConfig
 
     GameConfig.reload()

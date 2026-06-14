@@ -30,6 +30,7 @@ class _ItemTypeMeta(type):
         if instance is None:
             instance = super().__call__(normalized)
             _ITEM_INSTANCES[normalized] = instance
+            type.__setattr__(cls, normalized.upper(), instance)
         return instance
 
     @property
@@ -173,5 +174,10 @@ def reload_items_config() -> None:
     _INITIALIZED = False
     _ITEM_ID_CACHE = ()
     _ITEM_MEMBER_CACHE = {}
+    for key in list(_ITEM_INSTANCES):
+        name = key.upper()
+        if hasattr(ItemType, name):
+            type.__delattr__(ItemType, name)
+    _ITEM_INSTANCES.clear()
     GameConfig.reload()
     _init_from_config()

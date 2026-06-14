@@ -9,16 +9,38 @@ from config import GameConfig, _load_json
 from world.block import _RegistryValue
 
 
+_ITEM_INSTANCES: dict[str, "ItemType"] = {}
+_ITEM_MEMBER_CACHE: dict[str, "ItemType"] = {}
+_ITEM_ID_CACHE: tuple[str, ...] = ()
+
+
 class _ItemTypeMeta(type):
     """Metaclass exposing JSON-defined items through enum-like access."""
 
-    def _item_ids(cls) -> list[str]:
-        data = _load_json("items.json")
-        return list(data.get("items", {}).keys())
+    def _item_ids(cls) -> tuple[str, ...]:
+        global _ITEM_ID_CACHE
+        if not _ITEM_ID_CACHE:
+            data = _load_json("items.json")
+            _ITEM_ID_CACHE = tuple(data.get("items", {}).keys())
+        return _ITEM_ID_CACHE
+
+    def _get_instance(cls, item_id: str) -> ItemType:
+        normalized = str(item_id).strip().lower()
+        instance = _ITEM_INSTANCES.get(normalized)
+        if instance is None:
+            instance = super().__call__(normalized)
+            _ITEM_INSTANCES[normalized] = instance
+        return instance
 
     @property
     def __members__(cls) -> dict[str, ItemType]:
-        return {item_id.upper(): cls(item_id) for item_id in cls._item_ids()}
+        global _ITEM_MEMBER_CACHE
+        if not _ITEM_MEMBER_CACHE:
+            _ITEM_MEMBER_CACHE = {
+                item_id.upper(): cls._get_instance(item_id)
+                for item_id in cls._item_ids()
+            }
+        return _ITEM_MEMBER_CACHE
 
     def __iter__(cls):
         return iter(cls.__members__.values())
@@ -27,7 +49,7 @@ class _ItemTypeMeta(type):
         item_id = str(key).strip().lower()
         if item_id not in cls._item_ids():
             raise KeyError(key)
-        return cls(item_id)
+        return cls._get_instance(item_id)
 
     def __getattr__(cls, name: str) -> ItemType:
         try:
@@ -146,8 +168,10 @@ def item_display_name(item_type: ItemType) -> str:
 
 def reload_items_config() -> None:
     """Reload item properties from JSON configuration."""
-    global _INITIALIZED
+    global _INITIALIZED, _ITEM_ID_CACHE, _ITEM_MEMBER_CACHE
 
     _INITIALIZED = False
+    _ITEM_ID_CACHE = ()
+    _ITEM_MEMBER_CACHE = {}
     GameConfig.reload()
     _init_from_config()

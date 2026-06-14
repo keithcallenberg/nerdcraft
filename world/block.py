@@ -35,17 +35,39 @@ class _RegistryValue:
         return self.content_id
 
 
+_BLOCK_INSTANCES: dict[str, "BlockType"] = {}
+_BLOCK_MEMBER_CACHE: dict[str, "BlockType"] = {}
+_BLOCK_ID_CACHE: tuple[str, ...] = ()
+
+
 class _BlockTypeMeta(type):
     """Metaclass exposing JSON-defined blocks through enum-like access."""
 
-    def _block_ids(cls) -> list[str]:
+    def _block_ids(cls) -> tuple[str, ...]:
         from config import GameConfig
 
-        return list(GameConfig.get().blocks.keys())
+        global _BLOCK_ID_CACHE
+        if not _BLOCK_ID_CACHE:
+            _BLOCK_ID_CACHE = tuple(GameConfig.get().blocks.keys())
+        return _BLOCK_ID_CACHE
+
+    def _get_instance(cls, block_id: str) -> BlockType:
+        normalized = str(block_id).strip().lower()
+        instance = _BLOCK_INSTANCES.get(normalized)
+        if instance is None:
+            instance = super().__call__(normalized)
+            _BLOCK_INSTANCES[normalized] = instance
+        return instance
 
     @property
     def __members__(cls) -> dict[str, BlockType]:
-        return {block_id.upper(): cls(block_id) for block_id in cls._block_ids()}
+        global _BLOCK_MEMBER_CACHE
+        if not _BLOCK_MEMBER_CACHE:
+            _BLOCK_MEMBER_CACHE = {
+                block_id.upper(): cls._get_instance(block_id)
+                for block_id in cls._block_ids()
+            }
+        return _BLOCK_MEMBER_CACHE
 
     def __iter__(cls):
         return iter(cls.__members__.values())
@@ -54,7 +76,7 @@ class _BlockTypeMeta(type):
         block_id = str(key).strip().lower()
         if block_id not in cls._block_ids():
             raise KeyError(key)
-        return cls(block_id)
+        return cls._get_instance(block_id)
 
     def __getattr__(cls, name: str) -> BlockType:
         try:
@@ -153,9 +175,11 @@ def display_name(block_type: BlockType) -> str:
 
 def reload_config() -> None:
     """Reload block properties from JSON configuration."""
-    global _initialized
+    global _initialized, _BLOCK_ID_CACHE, _BLOCK_MEMBER_CACHE
 
     _initialized = False
+    _BLOCK_ID_CACHE = ()
+    _BLOCK_MEMBER_CACHE = {}
     from config import GameConfig
 
     GameConfig.reload()
